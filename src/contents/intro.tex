@@ -6,7 +6,11 @@ of designs that aim to offer the ability of executing software on a computer
 owned by an untrusted party, while at the same time providing some guarantees
 about the privacy and integrity of the computation.
 
-
-
-
-Unlike the previous designs \cite{tpm} \cite{grawrock2009txt},
+SGX implements a \textit{remote attestation model} similar to its predecessors,
+TPM~\cite{tpm} and TXT~\cite{grawrock2009txt}. A system that is not under the
+computation owner's control, with an SGX-enabled processor, produces an
+attestation promising to the computation owner that a message was produced in a
+protected environment. The attestation includes a cryptographic hash
+(called \textit{measurement} in the Intel documentation) used by the
+computation owner to verify the protected environment, including the code and
+data loaded in the environment and the memory layout.
