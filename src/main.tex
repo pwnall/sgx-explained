@@ -1,0 +1,47 @@
+% This is based on "sig-alternate.tex" V1.9 April 2009
+% This file should be compiled with V2.4 of "sig-alternate.cls" April 2009
+%
+% ---------------------------------------------------------------------------------------------------------------
+% This .tex source uses a .bib file (from which the .bbl file % is produced).
+% REMEMBER HOWEVER: After having produced the .bbl file, and prior to final
+% submission, you *NEED* to 'insert' your .bbl file into your source .tex file
+% so as to provide ONE 'self-contained' source file.
+
+\documentclass[11pt,twocolumn]{article}
+\usepackage[11pt,nocopyright]{sigmin}
+\usepackage[square,comma,numbers,sort&compress]{natbib}
+\usepackage{times}
+\usepackage{microtype}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{url}
+\lstset{
+  numbers=left, frame=lines, tabsize=2, captionpos=b, numberstyle=\tiny,
+  columns=fullflexible, showstringspaces=false, basicstyle=\footnotesize\ttfamily,
+  extendedchars=true, breaklines=true
+}
+
+\setlength{\columnsep}{.25in}
+
+\begin{document}
+\title{Intel SGX Explained}
+\author{Victor Costan, Staphany Park, and Srinivas Devadas \\ \em MIT CSAIL}
+\date{}
+
+\maketitle
+
+\input{contents/abstract.tex}
+\input{contents/intro.tex}
+\input{contents/background.tex}
+\input{contents/sgx.tex}
+\input{contents/fixes.tex}
+
+\setlength{\bibsep}{1pt}
+\small
+\bibliographystyle{plain}
+%\bibliographystyle{abbrv}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,19 @@
+\begin{abstract}
+
+Intel's Software Guard Extensions (SGX) is a set of extensions to the Intel
+architecture that aims to provide integrity and privacy guarantees to
+security-sensitive computation performed on a computer where all the privileged
+software (kernel, hypervisor, etc) is potentially malicious.
+
+This paper analyzes Intel SGX, based on the 3
+papers~\cite{mckeen2013sgx, anati2013sgx, hoekstra2013sgx} that introduced it,
+and on its reference manual~\cite{intel2013sgxmanual}. We explain the threat
+model and mechanisms used by SGX and analyze their security properties. In
+conclusion, we agree with the Intel authors that SGX protects the integrity of
+sensitive computation, and provides some privacy guarantees. We show
+straight-forward methods for obtaining the memory access patterns in an SGX
+program. We argue that memory access pattern leaks can allow an adversary to
+learn private information, and analyze the limitations of SGX from this
+perspective.
+
+\end{abstract}
