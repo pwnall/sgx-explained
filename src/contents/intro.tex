@@ -15,15 +15,25 @@ computation owner's expectations. The attestation also includes information
 used to set up a secure communication channel with the software running inside
 the enclave.
 
-SGX stands out from its predecessors by the size of the code that the
-attestation covers. The attestations produced by the original TPM design
-covered all the software running on a computer, and TXT attestations covered
-the code inside a VMX \cite{uhlig2005vmx} virtual machine. In SGX, an enclave
-only contains the private data in a computation, and the code that operates on
-it.
+SGX stands out from its predecessors by the amount of code covered by the
+attestation. The attestations produced by the original TPM design covered all
+the software running on a computer, and TXT attestations covered the code
+inside a VMX \cite{uhlig2005vmx} virtual machine. In SGX, an enclave only
+contains the private data in a computation, and the code that operates on it.
 
-For example, in an application that performs image processing on confidential
-medical images, the enclave would contain the code for decrypting images,
-the image processing algorithm, and the code for encrypting the results,
-whereas the code for reading and writing encrypted data would be left outside
-the enclave.
+For example, a cloud service that performs image processing on confidential
+medical images could be implemented by having users upload encrypted images.
+The users would send the encryption keys to software running inside an enclave.
+The enclave would contain the code for decrypting images, the image processing
+algorithm, and the code for encrypting the results. The code that receives the
+uploaded encrypted images and stores them would be left outside the enclave.
+
+An SGX-enabled processor protects the integrity and privacy of the computation
+inside an enclave by isolating the enclave's code and data from the outside
+environment, including the operating system and hypervisor, and hardware
+devices attached to the system bus. At the same time, the SGX model remains
+compatible with the the traditional software layering in the Intel
+architecture, where the OS kernel and hypervisor manage the computer's
+resources.
+
+

@@ -1,27 +1,24 @@
-\section{Background and Related Work}
+\section{Background}
 \label{sec:background}
 
 Arguing about the security of an application running on an mainstream computer
-using the x86 platform requires understanding the interactions between
-all the parts of an x86 execution environment (protection modes, address
-translation hardware, caches). This section provides an overview of these
-features from the context of Intel TXT and SGX, touches on existing attacks on
-TXT that took advantage of unexpected interactions between the features, and
-points out holes in the SGX design that can be used to snoop on a program's
-memory access patterns, which can reveal information about the private data
-that the program is working on.
+using the Intel architecture requires understanding the interactions between
+all the parts of an x86 execution environment. This section provides an
+overview of the features referenced by the rest of the paper. The section is
+written from the context of SGX, but does not introduce any SGX concepts, so
+most experienced readers can safely skip the section and refer back if
+necessary.
 
 
 \subsection{Software Privilege Levels}
 \label{sec:rings}
 
 In an Infrastructure-as-a-Service (IaaS) cloud environment, such as Amazon EC2,
-commodity CPUs run software at four different privilege levels: System
-Management Mode (SMM), VMX root mode (also described as ring -1), kernel mode
-(ring 0) and user mode (ring 3), as shown in Figure \ref{fig:cpu_rings}. This
-section outlines the consequences of a successfully exploited vulnerability at
-each privilege level, and sets the stage for analyzing the SGX protection
-model.
+commodity CPUs run software at four different privilege levels, illustrated in
+Figure \ref{fig:cpu_rings} and described below. The rest of the section
+describes the privilege levels. We also point to successful exploits that
+execute at each privilege level, motivating the SGX design decision to assume
+that the host computer has malicious software running at all privilege levels.
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=50mm]{figures/cpu_rings.pdf}}
@@ -32,27 +29,34 @@ model.
   \label{fig:cpu_rings}
 \end{figure}
 
-SMM is intended for use by the motherboard manufacturers to implement features
-such as fan control and deep sleep, and/or to emulate missing hardware. SMM
-mode is entered by asserting the SMI\# pin on the CPU, which was initially
-designed exclusively for hardware use. However, the southbridges on most
-motherboards provide a method for the hypervisor and kernel to get the SMI\#
-pin asserted\footnote{Most southbridges assert SMI\# when a byte is written to
-port 0xb2 via the \textsc{out} opcode}. The SMM code and data are stored in a
-memory area called SMRAM, which, in theory, is not readable or writable when
-the processor isn't running in SMM, but its protection mechanisms were bypassed
-multiple times \cite{duflot2006smm} \cite{rutkowska2008remap}
-\cite{wojtczuk2009smm}, and SMM-based rootkits have been demonstrated
-\cite{wecherowski2009smm} \cite{embleton2010smm}.
+\textit{System Management Mode} (SMM) is intended for use by the motherboard
+manufacturers to implement features such as fan control and deep sleep, and/or
+to emulate missing hardware. SMM mode is entered by asserting the SMI\# pin on
+the CPU, which was initially designed exclusively for hardware use. However,
+the southbridges on most motherboards provide a method for privileged
+code\footnote{the hypervisor or operating system kernel} to get the SMI\# pin
+asserted\footnote{Most southbridges assert \texttt{SMI\#} when a byte is
+  written to port 0xb2 via the \textsc{out} opcode}.
+This opens up the avenue for SMM-based software exploits.
+
+The SMM code and data are stored in a contiguous subset of RAM called
+\textit{System Management RAM} (SMRAM), which, in theory, is not readable or
+writable when the processor isn't running in SMM. However, its protection
+mechanisms were bypassed multiple times \cite{duflot2006smm}
+\cite{rutkowska2008remap} \cite{wojtczuk2009smm}, and SMM-based rootkits have
+been demonstrated \cite{wecherowski2009smm} \cite{embleton2010smm}.
 
 IaaS cloud providers allow their customers to run their operating system of
-choice in a virtualized environment. Hardware virtualization
-\cite{uhlig2005intel}, called Virtual Machine Extensions (VMX) by Intel,
-adds support for a \textit{hypervisor} (also called a Virtual Machine Monitor
-/ VMM in the Intel documentation) that runs at a higher privilege level
-(VMX root mode) than OS kernels, and is responsible for allocating hardware
-resources across multiple operating systems that share the same physical
-machine. Hypervisor code generally runs at ring 0 in VMX root mode.
+choice in a virtualized environment. Hardware
+virtualization\cite{uhlig2005vmx}, called \textit{Virtual Machine Extensions}
+(VMX) by Intel, adds support for a \textit{hypervisor}, also called a
+Virtual Machine Monitor (VMM) in the Intel documentation. The hypervisor runs
+at a higher privilege level (VMX root mode) than the operating system, and is
+responsible for allocating hardware resources across multiple operating systems
+that share the same physical machine. The hypervisor uses the CPU's hardware
+virtualization features to make each operating system believe it is running in
+its own computer, called a \textit{virtual machine} (VM). Hypervisor code
+generally runs at ring 0 in VMX root mode.
 
 The popular Xen hypervisor uses VMX root mode for improved peformance and a
 smaller codebase \cite{zhang2008xen}. \cite{mccune2010trustvisor} proposes
@@ -60,44 +64,48 @@ using a hypervisor together with Intel TXT's dynamic root of trust for
 measurement (DRTM) to implement trusted execution.
 \cite{vasudevan2010requirements} argues that a dynamic root of trust mechanism,
 like Intel TXT, is necessary to ensure a hypervisor's integrity. Unfortunately,
-any SMM attack can be used to compromise Intel TXT \cite{wojtczuk2009txt}, and
-the TXT implementation is complex enough that security vulnerabilities have
-been found \cite{wojtczuk2009txt2} \cite{wojtczuk2011txt}.
+the TXT design requires an implementation complex enough that security
+vulnerabilities have been found \cite{wojtczuk2009txt2} \cite{wojtczuk2011txt}.
+Furthermore, any SMM attack can be used to compromise TXT
+\cite{wojtczuk2009txt}.
 
-Mainstream operating systems have monolithic kernels that include device
-drivers, filesystem code, networking stacks, and video rendering functionality,
-and run at ring 0 (kernel mode). Application code, such as a Web server or
-a game client, runs at ring 3 (user mode). Software running inside an SGX
-enclave (isolated environment) also executes at ring 3. The OS kernel, running
-at ring 0, is responsible for scheduling the execution of code inside enclaves
-and for allocating hardware resources (such as RAM) to the enclaves. In IaaS
-cloud environments, the virtual machine images provided by customers run in VMX
-non-root mode, so the kernel runs in VMX non-root ring 0, and the application
-code runs in VMX non-root ring 3. SGX is compatible with VMX, and the
-hypervisor is responsible for virtualizing a processor's SGX capabilities.
+The systems research literature recommends breaking up an operating system into
+a small \textit{kernel}, which runs at a high privilege level, known as the
+\textit{kernel mode} or \textit{system mode} and, in the Intel architecture, as
+\textit{ring 0}. The kernel allocates the computer's resources to the other
+system components, such as device drivers and services, which run at lower
+privilege levels. However, for performance reasons\footnote{Switching between
+rings is much slower than a normal procedure call.}, mainstream operating
+systems have large amounts of code running at ring 0. Their \textit{monolithic
+kernels} include device drivers, filesystem code, networking stacks, and video
+rendering functionality.
 
 The monolithic kernel design leads to many opportunities for security
 vulnerabilities in kernel code. For example the Linux kernel has had a
 significant number of vulnerabilities patched every year, for the past 10 years
 \cite{cvedetails2014linux} \cite{chen2011linux}. Also, a successful attack on
-SMM or the hypervisor trivially translates into a compromised kernel. SGX
-accounts for the possibility of a compromised kernel or hypervisor with an
-attestation mechanism covering an enclave's contents, and with a hardware
-isolation mechanism for the software inside the enclave. In \S \ref{sec:sgx},
-we argue that SGX, as it is currently documented in \cite{intel2013sgxmanual},
-appears to provide integrity for the software inside the enclave, but
-definitely does not provide privacy, as a compromised SMM, hypervisor, or OS
-kernel can obtain the enclave's memory access patterns at high granularity.
+SMM or the hypervisor trivially translates into a compromised kernel.
+
+Application code, such as a Web server or a game client, runs at the lowest
+privilege level, referred to as \textit{user mode} (\textit{ring 3} in the
+Intel architecture). In IaaS cloud environments, the virtual machine images
+provided by customers run in VMX non-root mode, so the kernel runs in VMX
+non-root ring 0, and the application code runs in VMX non-root ring 3.
 
 
 \subsection{Address Translation}
 \label{sec:paging}
 
-Recent commodity CPUs have many address translation modes, in order to run
-legacy software dating back to 1990 natively. This section only addresses the
-modes used in modern 64-bit operating systems and 64-bit cloud environments.
-\cite{jacob1998virtual} describes the generic concepts and applications of
-address translation.
+The software running inside an enclave is subject to address translation, which
+is used by the hypervisor and kernel to multiplex a computer's memory across
+virtual machines and applications. This section summarizes the address
+translation details specific to the Intel architecture. \cite{jacob1998virtual}
+describes the generic concepts and applications of address translation.
+
+The Intel architecture specifies many address translation modes, used to run
+legacy software dating back to 1990 natively. Most modes are not necessary for
+understanding SGX, so we only cover the translation modes used in modern 64-bit
+operating systems and 64-bit cloud environments.
 
 64-bit desktop operating systems use the addressing mode called IA-32e in
 Intel programming manual \cite{intel2013manual}, which translates 48-bit
@@ -125,20 +133,20 @@ contain the physical addresses that are the result of the address translation.
 
 Hardware virtualization (used in cloud computing) allows a hypervisor to run
 multiple operating systems concurrently using the same physical memory, by
-adding another layer of address translation. When extended page tables (EPT)
-are enabled, the process above is used to translate from a virtual address into
-a \textit{guest-physical address}. The translation from guest-physical
-addresses to actual physical addresses uses the same process as above, except
-the physical address of the root node is stored in the extended page table
-pointer (EPTP) field in the VM's control structure (VMCS). Figure
-\ref{fig:vmx_paging} illustrates the address translation process in the
+adding another layer of address translation, named the \textit{extended page
+tables} (EPT). When EPT are enabled, the process above is used to translate
+from a virtual address into a \textit{guest-physical address}. The translation
+from guest-physical addresses to actual physical addresses uses the same
+process as above, except the physical address of the root node is stored in the
+extended page table pointer (EPTP) field in the VM's control structure (VMCS).
+Figure \ref{fig:vmx_paging} illustrates the address translation process in the
 presence of hardware virtualization.
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=85mm]{figures/vmx_paging.pdf}}
   \caption{
     Address translation when hardware virtualization is enabled. A translation
-    requires up to 8 memory accesses.
+    requires up to 16 memory accesses.
   }
   \label{fig:vmx_paging}
 \end{figure}
@@ -149,14 +157,14 @@ our goals. The \textit{present} (P) flag is set to 0 to indicate pages that
 have been evicted from RAM to a cheaper and slower storage medium. When address
 translation encounters a page table entry where P is 0, the CPU generates a
 page fault (\#PF), and the OS kernel is responsible for loading the page back
-into RAM and resuming execution. If an extended page table (EPT) entry has the
-P flag set 0, the CPU performs a VM exit, and the hypervisor has an opportunity
-to bring the page into RAM. The \textit{accessed} (A) flag is set to 1 by the
-CPU whenever the address translation machinery reads a page table entry, and
-the \textit{dirty} (D) flag is set to 1 by the CPU when an entry is accessed by
-a memory write operation. The A and D flags give the hypervisor and OS kernel
-insight into application memory access patterns, providing the input for the
-algorithms that select which pages get to be evicted from RAM.
+into RAM and resuming execution. If an EPT entry has the P flag set to 0, the
+CPU performs a VM exit, and the hypervisor has an opportunity to bring the page
+into RAM. The \textit{accessed} (A) flag is set to 1 by the CPU whenever the
+address translation machinery reads a page table entry, and the \textit{dirty}
+(D) flag is set to 1 by the CPU when an entry is accessed by a memory write
+operation. The A and D flags give the hypervisor and kernel insight into
+application memory access patterns, providing the input for the algorithms that
+select which pages get to be evicted from RAM.
 
 Page table entries have flags that provide access control, in addition to the
 flags supporting page swapping. The interesting flags are the \textit{writable}
@@ -165,16 +173,68 @@ pages result in general protection faults (\#GP).} memory writes to a page, and
 the \textit{disable execution} (XD) flag, which can be set to 0 to prevent
 instruction fetches from a page.
 
-Address translation applies to the software running in an SGX enclave
-(isolated environment). This means that both the OS kernel and the hypervisor
-have an impact over the mapping of virtual addresses to physical addresses, and
-either of them can take advantage of the features above to obtain the SGX
-application's memory access pattern, at page granularity, as detailed in
-\S \ref{sec:sgx_leaks}.
+
+\subsection{Logical Processors}
+\label{sec:cores}
+
+Modern CPUs have multiple execution cores, and each core independently executes
+a stream of instructions (\textit{hardware thread} in the Intel documentation).
+The cores are exposed to system software as \textit{logical processors}, so
+that the code used to distribute work across processors in a multi-processor
+system works without changes on multi-core processors.
+
+
+Modern Intel CPUs feature hyper-threading, which means that each core has two
+(or more) sets of register files and local APICs, presented as logical
+processors running separate threads (see Figure \ref{fig:cpu_core}). The
+threads share the other core resources, such as the fetch and decode units,
+execution units and L1 and L2 caches. SGX does not prevent hyper-threading, so
+a malicious OS kernel or hypervisor can schedule a thread executing enclave
+code and a snooping thread on logical processors on same core. The snooping
+thread can use the processor's high-performance counter
+\cite{petters1999making} to get information about the instructions and memory
+access patterns of the thread executing enclave code.
+
+\begin{figure}[hbtp]
+  \center{\includegraphics[width=85mm]{figures/cpu_die.pdf}}
+  \caption{
+    A modern CPU die contains three levels of cache memory, as well as a
+    memory controller. All these components are in our TCB.
+  }
+  \label{fig:cpu_die}
+\end{figure}
+
+
+
+\begin{figure}[hbtp]
+  \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
+  \caption{
+    CPU core with two logical processors. Each logical processor has its own
+    APIC and execution state, and they share all the other core resources.
+  }
+  \label{fig:cpu_core}
+\end{figure}
+
+
 
 
 \subsection{CPU Caches}
 \label{sec:caching}
+
+Caches are small, fast memories that store recently accessed code and data.
+Thanks to the high locality in the memory access patterns of most applications,
+good caches have very high hit rates (90\%-99\%), and do a great job of hiding
+the (comparatively) high latency of RAM. At the same time, the large time
+differences between cached and un-cached memory accesses can be used to infer
+private information, via \textit{cache timing attacks}\cite{banescu2011cache}.
+
+This section describes the caching concepts needed to understand our claim that
+cache timing attacks can be used to obtain fine-grained memory access patterns
+for the software running inside an SGX enclave. \cite{smith1982cache},
+\cite{patterson2013architecture} and \cite{hennessy2012architecture} all
+provide good backgrounds on low-level cache implementation concepts.
+
+
 
 Desktop-class multi-core commodity CPUs have three levels of cache memory. Each
 core has its own L1 and L2, and all cores share an L3 cache. All cache levels
@@ -182,18 +242,8 @@ are located on the CPU die so, according to our threat model, they can be
 trusted. In particular, we can assume that software memory reads and writes for
 locations that are already cached (and therefore do not generate DRAM requests)
 cannot be directly observed by an attacker. This requires that the software's
-memory is confirmed to be cacheable with a write-back policy, and our system
+memory is configured to be cacheable with a write-back policy, and our system
 accounts for this requirement.
-
-Cache accesses can be indirectly observed by various timing attacks
-\cite{banescu2011cache}, by malicious software that time-shares a CPU or a core
-with the targeted software and takes advantage of a specific cache's layout
-and replacement algorithms. Our system prevents against these attacks, also by
-taking advantage of some details of the cache implementation on commodity CPU
-processors. This section describes the aspects that we rely on.
-\cite{smith1982cache}, \cite{patterson2013architecture} and
-\cite{hennessy2012architecture} all provide good backgrounds on low-level cache
-implementation concepts.
 
 The \textit{cache line} is the atomic unit of data transfer between the caches
 and the main memory. The cache line size is always a power of two. Assuming
@@ -241,8 +291,8 @@ L3 cache would introduce additional complexity in a design, its large size
 
 \subsection{Caching and Address Translation}
 
-Address translation (described in \S \ref{sec:paging}) requires 4 memory
-accesses for a 64-bit bare-metal kernel, and 8 memory accesses when a
+Address translation (described in \S \ref{sec:paging}) requires up to 4 memory
+accesses for a 64-bit bare-metal kernel, and up to 16 memory accesses when a
 hypervisor is present. To achieve high clock speeds, the CPU caches address
 translations in a TLB (translation look-aside buffer). The set index in an L1
 cache only uses the address bits that are not impacted by address translation,
@@ -285,5 +335,4 @@ against cache timing attacks.
   }
   \label{fig:cache_partitions}
 \end{figure}
-
 
