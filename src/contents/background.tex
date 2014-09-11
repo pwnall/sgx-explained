@@ -15,7 +15,7 @@ necessary.
 
 In an Infrastructure-as-a-Service (IaaS) cloud environment, such as Amazon EC2,
 commodity CPUs run software at four different privilege levels, illustrated in
-Figure \ref{fig:cpu_rings} and described below. The rest of the section
+Figure~\ref{fig:cpu_rings} and described below. The rest of the section
 describes the privilege levels. We also point to successful exploits that
 execute at each privilege level, motivating the SGX design decision to assume
 that the host computer has malicious software running at all privilege levels.
@@ -23,7 +23,7 @@ that the host computer has malicious software running at all privilege levels.
 \begin{figure}[hbtp]
   \center{\includegraphics[width=50mm]{figures/cpu_rings.pdf}}
   \caption{
-    The privilege leves in the x86 architecture, and the software that
+    The privilege levels in the x86 architecture, and the software that
     typically runs at each security level.
   }
   \label{fig:cpu_rings}
@@ -111,11 +111,11 @@ operating systems and 64-bit cloud environments.
 Intel programming manual \cite{intel2013manual}, which translates 48-bit
 \textit{virtual addresses} into \textit{physical addresses} of at most 52
 bits\footnote{The size of a physical address is CPU-dependent, and is 40 bits
-for recent desktop CPUs and 44 bits for recent high-end server CPUs.}. Figure
-\ref{fig:os_paging} illustrates the address translation process. The bottom 12
-bits of a virtual address are not changed by the translation. The top 36 bits
-are grouped into four 9-bit indexes used to navigate a data structure called
-\textit{the page tables}. Despite its name, the data structure closely
+for recent desktop CPUs and 44 bits for recent high-end server CPUs.}.
+Figure~\ref{fig:os_paging} illustrates the address translation process. The
+bottom 12 bits of a virtual address are not changed by the translation. The top
+36 bits are grouped into four 9-bit indexes used to navigate a data structure
+called \textit{the page tables}. Despite its name, the data structure closely
 resembles a perfectly balanced 512-ary search tree where the nodes do not store
 keys. Each node is an array of 512 8-byte entries that contain the physical
 addresses of the next-level children as well as some flags. The address of the
@@ -139,7 +139,7 @@ from a virtual address into a \textit{guest-physical address}. The translation
 from guest-physical addresses to actual physical addresses uses the same
 process as above, except the physical address of the root node is stored in the
 extended page table pointer (EPTP) field in the VM's control structure (VMCS).
-Figure \ref{fig:vmx_paging} illustrates the address translation process in the
+Figure~\ref{fig:vmx_paging} illustrates the address translation process in the
 presence of hardware virtualization.
 
 \begin{figure}[hbtp]
@@ -181,30 +181,36 @@ Modern CPUs have multiple execution cores, and each core independently executes
 a stream of instructions (\textit{hardware thread} in the Intel documentation).
 The cores are exposed to system software as \textit{logical processors}, so
 that the code used to distribute work across processors in a multi-processor
-system works without changes on multi-core processors.
+system works without changes on multi-core processors. This section covers the
+details in Intel's multi-core implementation needed to understand the aspects
+of SGX that support having multiple hardware threads running code in the same
+enclave, as well as the security implications of this design decision.
 
-
-Modern Intel CPUs feature hyper-threading, which means that each core has two
-(or more) sets of register files and local APICs, presented as logical
-processors running separate threads (see Figure \ref{fig:cpu_core}). The
-threads share the other core resources, such as the fetch and decode units,
-execution units and L1 and L2 caches. SGX does not prevent hyper-threading, so
-a malicious OS kernel or hypervisor can schedule a thread executing enclave
-code and a snooping thread on logical processors on same core. The snooping
-thread can use the processor's high-performance counter
-\cite{petters1999making} to get information about the instructions and memory
-access patterns of the thread executing enclave code.
+At the time of this writing, desktop-class Intel CPUs have 4 cores, and
+server-class CPUs have as many as 18 cores. The cores share the L3 cache
+(described in \S~\ref{sec:caching} below) and other on-chip resources, such as
+the memory controller, and controllers that interface with the system buses
+(see Figure~\ref{(fig:cpu_die}).
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=85mm]{figures/cpu_die.pdf}}
   \caption{
-    A modern CPU die contains three levels of cache memory, as well as a
-    memory controller. All these components are in our TCB.
+    A modern CPU die contains multiple cores. The cores share some on-chip
+    resources, such as the L3 cache and the memory controller.
   }
   \label{fig:cpu_die}
 \end{figure}
 
-
+Most Intel CPUs also feature \textit{hyper-threading}, which means that each
+core has two (or more) sets of register files and local APICs (see
+Figure~\ref{fig:cpu_core}), exposed as separate logical processors. The
+logical processors share many core resources, such as the fetch and decode
+units, the execution units, and the L1 and L2 caches (described in
+\S~\ref{sec:caching} below). This has security implications, as software
+running on one logical processor can use the high-performance counter
+\cite{petters1999making} to get information about the instructions and memory
+access patterns of another piece of software that is executed on another
+logical processor in the same core.
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
@@ -214,8 +220,6 @@ access patterns of the thread executing enclave code.
   }
   \label{fig:cpu_core}
 \end{figure}
-
-
 
 
 \subsection{CPU Caches}
@@ -234,16 +238,12 @@ for the software running inside an SGX enclave. \cite{smith1982cache},
 \cite{patterson2013architecture} and \cite{hennessy2012architecture} all
 provide good backgrounds on low-level cache implementation concepts.
 
-
-
-Desktop-class multi-core commodity CPUs have three levels of cache memory. Each
-core has its own L1 and L2, and all cores share an L3 cache. All cache levels
-are located on the CPU die so, according to our threat model, they can be
-trusted. In particular, we can assume that software memory reads and writes for
-locations that are already cached (and therefore do not generate DRAM requests)
-cannot be directly observed by an attacker. This requires that the software's
-memory is configured to be cacheable with a write-back policy, and our system
-accounts for this requirement.
+Desktop-class Intel CPUs have three levels of cache memory. Each core has its
+own L1 and L2, and all cores share an L3 cache. This means that a cache timing
+attack that aims at the L2 cache would have to rely on the hypervisor or kernel
+to schedule a hardware thread on a logical processor in the same core as the
+target software, whereas an attack on the L3 cache can be performed using any
+logical processor on the same CPU.
 
 The \textit{cache line} is the atomic unit of data transfer between the caches
 and the main memory. The cache line size is always a power of two. Assuming
@@ -253,7 +253,7 @@ $n - l$ bits determine the cache line that is used to store the data at the
 memory location. All recent processors have 64-byte cache lines.
 
 The L1 and L2 caches in recent processors are multi-way set-associative with
-direct set indexing, as shown in Figure \ref{fig:cpu_cache}. A $W$-way
+direct set indexing, as shown in Figure~\ref{fig:cpu_cache}. A $W$-way
 set-associative cache has its memory divided into \textit{sets}, where each set
 has $W$ lines. A memory location can be cached in any of the $w$ lines in a
 specific set that is determined by the highest $n - l$ bits of the location's
@@ -263,7 +263,7 @@ index $address_{n - 1 \ldots n - l} \bmod S$. In the common case where the
 number of sets in a cache is a power of two, so $S = 2^{s}$, the lowest $l$
 bits in an address make up the cache line offset, the next $s$ bits are the set
 index. The highest $n - s - l$ bits in an address are not used when selecting
-where a memory location will be cached. Figure \ref{fig:cpu_cache} shows the
+where a memory location will be cached. Figure~\ref{fig:cpu_cache} shows the
 cache structure and lookup process.
 
 \begin{figure}[hbtp]
@@ -281,17 +281,13 @@ cache structure and lookup process.
 
 According to the CPUID instruction results and the Intel programming manuals
 \cite{intel2013manual}, the L3 cache of recent processors does not use direct
-set indexing, and instead uses a ``complex'' indexing scheme. The manuals do
-not describe the scheme, so our system cannot rely on the L3 cache. Due to the
-lack of a specification, our system must treat the L3 cache as untrusted
-memory. This is rather unfortunate because, although the shared aspect of the
-L3 cache would introduce additional complexity in a design, its large size
-(30MB on high-end CPUs, compared to 256KB of per-core L2 cache) would make
-``taming'' this last level of cache memory very attractive.
+set indexing, and instead uses a ``complex'' indexing scheme, which is not
+described in Intel's documentation.
+
 
 \subsection{Caching and Address Translation}
 
-Address translation (described in \S \ref{sec:paging}) requires up to 4 memory
+Address translation (described in \S~\ref{sec:paging}) requires up to 4 memory
 accesses for a 64-bit bare-metal kernel, and up to 16 memory accesses when a
 hypervisor is present. To achieve high clock speeds, the CPU caches address
 translations in a TLB (translation look-aside buffer). The set index in an L1
@@ -299,8 +295,8 @@ cache only uses the address bits that are not impacted by address translation,
 so that set lookup and TLB lookup can be done in parallel. Given a page size
 $P = 2^{p}$ bytes, the requirement above is equivalent to $l + s \le p$. In the
 x86 architecture $p = 12$, and all recent processors have 64-byte cache lines
-($l = 6$) and 64 sets ($s = 6$), as shown in Figure
-\ref{fig:caching_and_paging}.
+($l = 6$) and 64 sets ($s = 6$), as shown in
+Figure~\ref{fig:caching_and_paging}.
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=85mm]{figures/caching_and_paging.pdf}}
