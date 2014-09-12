@@ -186,19 +186,28 @@ details in Intel's multi-core implementation needed to understand the aspects
 of SGX that support having multiple hardware threads running code in the same
 enclave, as well as the security implications of this design decision.
 
-At the time of this writing, desktop-class Intel CPUs have 4 cores, and
-server-class CPUs have as many as 18 cores. The cores share the L3 cache
-(described in \S~\ref{sec:caching} below) and other on-chip resources, such as
-the memory controller, and controllers that interface with the system buses
-(see Figure~\ref{(fig:cpu_die}).
-
-\begin{figure}[hbtp]
+\begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/cpu_die.pdf}}
   \caption{
     A modern CPU die contains multiple cores. The cores share some on-chip
     resources, such as the L3 cache and the memory controller.
   }
   \label{fig:cpu_die}
+\end{figure}
+
+At the time of this writing, desktop-class Intel CPUs have 4 cores, and
+server-class CPUs have as many as 18 cores. The cores share the L3 cache
+(described in \S~\ref{sec:caching} below) and other on-chip resources, such as
+the memory controller, and controllers that interface with the system buses
+(see Figure~\ref{fig:cpu_die}).
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
+  \caption{
+    CPU core with two logical processors. Each logical processor has its own
+    APIC and execution state, and they share all the other core resources.
+  }
+  \label{fig:cpu_core}
 \end{figure}
 
 Most Intel CPUs also feature \textit{hyper-threading}, which means that each
@@ -212,15 +221,6 @@ running on one logical processor can use the high-performance counter
 access patterns of another piece of software that is executed on another
 logical processor in the same core.
 
-\begin{figure}[hbtp]
-  \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
-  \caption{
-    CPU core with two logical processors. Each logical processor has its own
-    APIC and execution state, and they share all the other core resources.
-  }
-  \label{fig:cpu_core}
-\end{figure}
-
 
 \subsection{CPU Caches}
 \label{sec:caching}
@@ -229,8 +229,11 @@ Caches are small, fast memories that store recently accessed code and data.
 Thanks to the high locality in the memory access patterns of most applications,
 good caches have very high hit rates (90\%-99\%), and do a great job of hiding
 the (comparatively) high latency of RAM. At the same time, the large time
-differences between cached and un-cached memory accesses can be used to infer
-private information, via \textit{cache timing attacks}\cite{banescu2011cache}.
+differences between cached and un-cached memory accesses can be used to learn
+about an application's memory access patterns, via
+\textit{cache timing attacks}\cite{banescu2011cache}. The patterns, in turn,
+can reveal private information, such as whether certain bits in an encryption
+key are set or not.
 
 This section describes the caching concepts needed to understand our claim that
 cache timing attacks can be used to obtain fine-grained memory access patterns
@@ -266,7 +269,7 @@ index. The highest $n - s - l$ bits in an address are not used when selecting
 where a memory location will be cached. Figure~\ref{fig:cpu_cache} shows the
 cache structure and lookup process.
 
-\begin{figure}[hbtp]
+\begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/cpu_cache.pdf}}
   \caption{
     Cache organization and lookup, for a $W$-way set-associative cache with
@@ -298,7 +301,7 @@ x86 architecture $p = 12$, and all recent processors have 64-byte cache lines
 ($l = 6$) and 64 sets ($s = 6$), as shown in
 Figure~\ref{fig:caching_and_paging}.
 
-\begin{figure}[hbtp]
+\begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/caching_and_paging.pdf}}
   \caption{
     Virtual addresses from the perspective of cache lookup and address
@@ -318,7 +321,7 @@ determines the set index for a given memory location, and knowing which memory
 addresses are stored in the same set is crucial for mounting and defending
 against cache timing attacks.
 
-\begin{figure}[hbtp]
+\begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/cache_partitions.pdf}}
   \caption{
     Cache partitioning between two applications. Each application has some

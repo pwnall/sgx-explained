@@ -20,10 +20,16 @@ The code inside an enclave runs at ring 3 (user mode), so it has the same
 privileges as regular application code (see Figure \ref{fig:cpu_rings}).
 
 \begin{figure}[hbtp]
-  \center{\includegraphics[width=75mm]{figures/cpu_rings.pdf}}
+  \center{\includegraphics[width=65mm]{figures/pch.pdf}}
   \caption{
-    Enclaves hold an application's private data and the code that operates on
-    it. Therefore, they run at ring 3, in user mode.
+    The architecture of modern Intel systems.
+    The Platform Controller Hub (PCH) contains a service processor, called the
+    Intel Management Engine (ME). The processor has direct access to the
+    network, can read and modify RAM via DMA transfers, and can override the
+    CPU boot vector. The processor runs firmware stored in the same flash
+    memory as the BIOS code.
   }
-  \label{fig:computing_model}
+  \label{fig:pch}
 \end{figure}
+
+

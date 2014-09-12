@@ -1,4 +1,4 @@
-\section{Data Structures}
+\section{Memory Layout}
 \label{sec:enclaves}
 
 The central context of SGX is the \textit{enclave}, a protected environment
@@ -13,42 +13,23 @@ This section provides an overview of the data structures used by an enclave.
 The enclaves' code and data is stored in \textit{Processor Reserved Memory}
 (PRM), a contiguous range of RAM that cannot be directly accessed by other
 software, including privileged software such as the SMM code, the hypervisor,
-and the OS kernel. The CPU also prevents devices attached to the system bus
-from performing DMA transfers to/from the PRM. This is possible because, on
-modern systems, the northbridge is integrated into the CPU
-(see Figure \ref{fig:pch}).
+and the OS kernel. The memory controller is integrated on the CPU die (see
+Figure~\ref{fig:cpu_die}), so it can be trusted to prevent devices attached to
+the system bus from performing DMA transfers to/from the PRM.
 
-On systems with SGX-enabled CPUs, the BIOS is responsible for setting aside a
-contiguous range of RAM for \textit{Processor Reserved Memory} (PRM). The
-CPU prevents most programs (including the SMM handler, the hypervisor and the
-operating system kernel) from accessing the PRM.
-
-
-The PRM must be set up to use SGX features and, once configured, the PRM range
-cannot be changed. Furthermore, the PRM's size must be an integer power of two,
-and its start address must be aligned to the same power of two. The range
-restrictions reduce the complexity of checking if a RAM address is in the PRM
-to a bitwise AND and an equality comparison.
-
-\begin{figure}[hbtp]
-  \center{\includegraphics[width=65mm]{figures/pch.pdf}}
-  \caption{
-    The architecture of modern Intel systems.
-    The Platform Controller Hub (PCH) contains a service processor, called the
-    Intel Management Engine (ME). The processor has direct access to the
-    network, can read and modify RAM via DMA transfers, and can override the
-    CPU boot vector. The processor runs firmware stored in the same flash
-    memory as the BIOS code.
-  }
-  \label{fig:pch}
-\end{figure}
+Rejecting improper accesses to PRM is central to the SGX security model. The
+designers were aware of that, and took clear steps to reduce the complexity of
+the PRM checks, which in turn reduces the probability of bugs in the
+implementation. The PRM must be set up to use SGX features and, once
+configured, the PRM range cannot be changed. Furthermore, the PRM's size must
+be an integer power of two, and its start address must be aligned to the same
+power of two. The range restrictions reduce the complexity of checking if a RAM
+address is in the PRM to a bitwise AND and an equality comparison.
 
 % EPC and EPCM: SGX S 1.5, S 1.5.1, S 2.6.13, S 3.5, S 3.5.1
 
 The contents of enclaves and the associated data structures are stored in the
-\textit{Enclave Page Cache} (EPC). The EPC is a subset of the PRM
-
-, so the
+\textit{Enclave Page Cache} (EPC). The EPC is a subset of the PRM, so the
 protection measures described in the paragraphs above ensure that the enclaves'
 memory cannot be read or tampered with by any malicious software running on the
 host computer, or by malicious peripherals attached to the system bus. The
@@ -71,12 +52,23 @@ used by the EPC.
 
 % SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}
 
+
 \subsection{Enclave Structures}
 
-Each enclave has a \textit{SGX Enclave Control Structure} (SECS)
+% SECS: SGX S 2.6.1, S 2.6.1.1, S 3.1
+
+% ECREATE: SGX S 3.1, S 5.3
+The first step in creating an enclave is using the \texttt{ECREATE} instruction
+to designate an EPC page that becomes the enclave's \textit{SGX Enclave Control
+Structure} (SECS). All other instructions that operate on an enclave access the
+enclave's SECS directly or indirectly.
 
 
-% SECS: SGX S 2.6.1, S 2.6.1.1,
+
+The EPCM keeps track of which pages contain SECS
+
+
+
 
 
 % TCS: SGX S 2.6.2, S 2.6.2.{1,2,3,4}
