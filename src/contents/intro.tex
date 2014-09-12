@@ -16,10 +16,12 @@ used to set up a secure communication channel with the software running inside
 the enclave.
 
 SGX stands out from its predecessors by the amount of code covered by the
-attestation. The attestations produced by the original TPM design covered all
-the software running on a computer, and TXT attestations covered the code
-inside a VMX \cite{uhlig2005vmx} virtual machine. In SGX, an enclave only
-contains the private data in a computation, and the code that operates on it.
+attestation, which is in the Trusted Computing Base (TCB) for the system using
+hardware protection. The attestations produced by the original TPM design
+covered all the software running on a computer, and TXT attestations covered
+the code inside a VMX \cite{uhlig2005vmx} virtual machine. In SGX, an enclave
+only contains the private data in a computation, and the code that operates on
+it.
 
 For example, a cloud service that performs image processing on confidential
 medical images could be implemented by having users upload encrypted images.

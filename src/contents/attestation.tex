@@ -1,9 +1,6 @@
 \section{Security Model}
 \label{sec:attestation}
 
-The central context of SGX is the \textit{enclave}, a protected environment
-that contains the code and data pertaining to a security-sensitive computation.
-
 The rest of this section describes the security properties of
 enclaves, discussing the trade-offs made while trying to balance security with
 backwards compatibility.
@@ -15,9 +12,6 @@ information about private data. Therefore, the SGX programming model prescribes
 that code which accesses private data must be entirely contained inside an
 enclave. Jumping into and out of enclave code must be performed explicitly
 using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
-
-The code inside an enclave runs at ring 3 (user mode), so it has the same
-privileges as regular application code (see Figure \ref{fig:cpu_rings}).
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=65mm]{figures/pch.pdf}}
