@@ -170,7 +170,7 @@ Page table entries have flags that provide access control, in addition to the
 flags supporting page swapping. The interesting flags are the \textit{writable}
 (W) flag, which can be set to 0 to prohibit\footnote{Writes to non-writable
 pages result in general protection faults (\#GP).} memory writes to a page, and
-the \textit{disable execution} (XD) flag, which can be set to 0 to prevent
+the \textit{disable execution} (XD) flag, which can be set to 1 to prevent
 instruction fetches from a page.
 
 
