@@ -72,8 +72,10 @@ The contents of enclaves and the associated data structures are stored in the
 The SGX design handles multiple enclaves active at the same time, which is
 necesssary in multi-tasking environments. This is achieved by having the EPC
 split into 4kb pages, which can be associated to different enclaves. The system
-software is responsible for allocating physical EPC pages to enclaves, using
-specific SGX instructions.
+software uses SGX instructions to allocate unused pages to enclaves and to free
+previously used EPC pages. The SGX instructions are necessary to avoid having
+an EPC page simultaneously accessible by two different enclaves, which is
+non-trivial in the presence of TLBs (\S~\ref{sec:tlbs}).
 
 The CPU maintains some metadata for each EPC page into the \textit{Enclave Page
 Cache Map} (EPCM). The metadata tracks the enclave that each page was allocated

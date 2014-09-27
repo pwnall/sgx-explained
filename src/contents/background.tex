@@ -289,17 +289,19 @@ described in Intel's documentation.
 
 
 \subsection{Caching and Address Translation}
+\label{sec:tlbs}
 
 Address translation (described in \S~\ref{sec:paging}) requires up to 4 memory
 accesses for a 64-bit bare-metal kernel, and up to 16 memory accesses when a
 hypervisor is present. To achieve high clock speeds, the CPU caches address
-translations in a TLB (translation look-aside buffer). The set index in an L1
-cache only uses the address bits that are not impacted by address translation,
-so that set lookup and TLB lookup can be done in parallel. Given a page size
-$P = 2^{p}$ bytes, the requirement above is equivalent to $l + s \le p$. In the
-x86 architecture $p = 12$, and all recent processors have 64-byte cache lines
-($l = 6$) and 64 sets ($s = 6$), as shown in
-Figure~\ref{fig:caching_and_paging}.
+translations in \textit{translation look-aside buffers} (TLBs).
+
+The set index in an L1 cache only uses the address bits that are not impacted
+by address translation, so that set lookup and TLB lookup can be done in
+parallel. Given a page size $P = 2^{p}$ bytes, the requirement above is
+equivalent to $l + s \le p$. In the x86 architecture $p = 12$, and all recent
+processors have 64-byte cache lines ($l = 6$) and 64 sets ($s = 6$), as shown
+in Figure~\ref{fig:caching_and_paging}.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/caching_and_paging.pdf}}
@@ -335,3 +337,7 @@ against cache timing attacks.
   \label{fig:cache_partitions}
 \end{figure}
 
+The Intel architecture provides no TLB coherence across logical processors. The
+kernel is reponsible for flushing the appropriate TLB entries when modifying
+the page table, and the hypervisor must perform TLB flushes when modifying the
+EPT.
