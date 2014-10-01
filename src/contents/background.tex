@@ -108,7 +108,7 @@ understanding SGX, so we only cover the translation modes used in modern 64-bit
 operating systems and 64-bit cloud environments.
 
 64-bit desktop operating systems use the addressing mode called IA-32e in
-Intel programming manual \cite{intel2013manual}, which translates 48-bit
+Intel programming manual \cite{intel2014manual}, which translates 48-bit
 \textit{virtual addresses} into \textit{physical addresses} of at most 52
 bits\footnote{The size of a physical address is CPU-dependent, and is 40 bits
 for recent desktop CPUs and 44 bits for recent high-end server CPUs.}.
@@ -283,7 +283,7 @@ cache structure and lookup process.
 \end{figure}
 
 According to the CPUID instruction results and the Intel programming manuals
-\cite{intel2013manual}, the L3 cache of recent processors does not use direct
+\cite{intel2014manual}, the L3 cache of recent processors does not use direct
 set indexing, and instead uses a ``complex'' indexing scheme, which is not
 described in Intel's documentation.
 
@@ -337,7 +337,38 @@ against cache timing attacks.
   \label{fig:cache_partitions}
 \end{figure}
 
-The Intel architecture provides no TLB coherence across logical processors. The
-kernel is reponsible for flushing the appropriate TLB entries when modifying
-the page table, and the hypervisor must perform TLB flushes when modifying the
-EPT.
+The system software is responsible for invalidating TLBs when it changes the
+page tables that it manages. The Intel architecture has instructions that can
+be used by the kernel and hypervisor to invalidate the TLB entries covering a
+specific linear address. Some instructions invalidate all the TLB entries as a
+side-effect.
+
+
+\subsection{Caching and Logical Processors}
+\label{sec:cache_coherence}
+
+Intel's software developer manual \cite{intel2014manual} describes the ordering
+guarantees that a software developer can rely on when accessing the same memory
+location in multiple hardware threads. The memory model is a variation on the
+Total Store Order (TSO) model \cite{owens2009tso}, meaning that all the
+hardware threads will see the same order of writes.
+
+When the hardware threads that access the same memory location execute on
+different cores, they may cause the cache line containing the memory location
+to be loaded in each core's L1 and L2 cache. In order to provide TSO guarantees
+in these circumstances, the processor cores use a \textit{cache coherence
+protocol} that keeps the cache line copies in sync.
+
+% Propagation of Paging-Structure Changes to Multiple Processors: SDM S 4.10.5
+
+The cache coherence does not cover TLB entries. When modifying a page table
+or EPT, the kernel and hypervisor are responsible for performing a
+\textit{TLB shootdown}, which consists of stopping all the logical processors
+that use the page table / EPT about to be changed, performing the changes,
+executing TLB-invalidating instructions on the stopped logical processors, and
+then resuming execution on the stopped logical processors.
+
+\cite{hennessy2012architecture} provides a good introduction to cache coherence
+principles. \cite{intel2014manual} states that the coherence protocol used in
+Intel processors is based on MESI. At the time of this writing, the latest
+processors appear to be using a variant of MESIF \cite{goodman2009mesif}.

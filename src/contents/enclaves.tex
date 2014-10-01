@@ -30,6 +30,7 @@ the hypervisor to guest operating systems running in virtual machines.
 
 
 \subsection{Enclaves in RAM}
+\label{sec:prm}
 
 % PRM: SGX S 3.5
 % Interactions with DMA: SGX S 6.10
@@ -42,15 +43,6 @@ and the OS kernel. The memory controller is integrated on the CPU die (see
 Figure~\ref{fig:cpu_die}), so it can be trusted to prevent devices attached to
 the system bus from performing DMA transfers to/from the PRM.
 
-Rejecting improper accesses to PRM is central to the SGX security model. The
-designers were aware of that, and took clear steps to reduce the complexity of
-the PRM checks, which in turn reduces the probability of bugs in the
-implementation. The PRM must be set up to use SGX features and, once
-configured, the PRM range cannot be changed. Furthermore, the PRM's size must
-be an integer power of two, and its start address must be aligned to the same
-power of two. The range restrictions reduce the complexity of checking if a RAM
-address is in the PRM to a bitwise AND and an equality comparison.
-
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/sgx_epc.pdf}}
   \caption{
@@ -61,8 +53,18 @@ address is in the PRM to a bitwise AND and an equality comparison.
   \label{fig:sgx_epc}
 \end{figure}
 
+Rejecting improper accesses to PRM is central to the SGX security model. The
+designers were aware of that, and took clear steps to reduce the complexity of
+the PRM checks, which in turn reduces the probability of bugs in the
+implementation. The PRM must be set up to use SGX features and, once
+configured, the PRM range cannot be changed. Furthermore, the PRM's size must
+be an integer power of two, and its start address must be aligned to the same
+power of two. The range restrictions reduce the complexity of checking if a RAM
+address is in the PRM to a bitwise AND and an equality comparison.
+
 
 \subsection{The Enclave Page Cache (EPC)}
+\label{sec:epc}
 
 % EPC and EPCM: SGX S 1.5, S 1.5.1, S 2.6.13, S 3.5, S 3.5.1
 
@@ -72,28 +74,70 @@ The contents of enclaves and the associated data structures are stored in the
 The SGX design handles multiple enclaves active at the same time, which is
 necesssary in multi-tasking environments. This is achieved by having the EPC
 split into 4kb pages, which can be associated to different enclaves. The system
-software uses SGX instructions to allocate unused pages to enclaves and to free
-previously used EPC pages. The SGX instructions are necessary to avoid having
-an EPC page simultaneously accessible by two different enclaves, which is
-non-trivial in the presence of TLBs (\S~\ref{sec:tlbs}).
+software uses SGX instructions to allocate unused pages to enclaves, and to
+free previously allocated EPC pages.
+
+Normally, system software manages physical memory by directly modifying the
+contents of page tables, and is responsible for ensuring that the state not
+covered by cache coherency is synchronized across logical processors, by
+performing TLB shootdowns (\S~\ref{sec:tlbs}, \S~\ref{sec:cache_coherence}). If
+the system software does not perform a TLB shootdown correctly, application
+software can experience race conditions. In the context of SGX, one such race
+condition is having an EPC page simultaneously accessible by two different
+enclaves, which would compromise the SGX security guarantees. Therefore, the
+SGX instructions used for EPC management ensure that TLBs are invalidated
+properly.
+
+The SGX instructions that allocate a page to an enclave also copy data from a
+page outside PRM to the EPC page. Non-enclave software is not permitted to
+access the PRM, so the page allocation instructions provide the only
+opportunity for system software to load the initial code and data into an
+enclave.
+
+\subsubsection{The Enclave Page Cache Map (EPCM)}
+\label{sec:epcm}
 
 The CPU maintains some metadata for each EPC page into the \textit{Enclave Page
 Cache Map} (EPCM). The metadata tracks the enclave that each page was allocated
 to, so the processor can prevent the code inside an enclave from accessing EPC
 pages that belong to other enclaves.
 
-The EPCM metadata for a page also includes the expected linear address used to
-access the page. When an EPC page is accessed, the processor che
+% Access Control Requirements: SGX S 2.3
 
-% types
-access another enclave's pages, and that system software manages EPC pages in a
-way that is consistent with the SGX security model.
+The EPCM metadata for a page includes the expected linear address used to
+access the page (ENCLAVEADDRESS in Intel's documentation). This address must be
+specified when a page is allocated, and cannot be changed until the page is
+freed.
 
+When the result of a memory address translation is a physical address of an EPC
+page, the CPU ensures\footnote{A mismatch triggers a General Protection Fault.}
+that the linear address used in the address translation matches the expected
+linear address recorded in the page's EPCM entry. This prevents the system
+software, which manages the page tables and EPT, from mapping pages to
+unexpected addresses inside an enclave's address space.
 
-The SGX documentation does
-not state where the EPCM is stored, but we can hypothesize that it is either
-an on-chip memory, like the L3 cache, or stored in a PRM region that is not
-used by the EPC.
+A page's EPCM entry also records a \textit{type} for each page. The EPC that
+store an enclave's code or data have their type set to \textit{regular}
+(PT\_REG in the Intel documentation). Each page that is dedicated to an SGX key
+data structure has its EPCM entry's type set to the kind of data structure
+stored in the page. An EPC page's type is set when the page is allocated, and
+is immutable throughout the page's lifetime.
+
+Pages that store key SGX structures cannot be accessed directly, even by the
+code executing inside their enclaves. Furthermore, the SGX instructions that
+operate on SGX data structures check the EPCM type fields of their inputs
+against the expected types. This type system prevents software from
+intentionally or accidentally corrupting the key SGX data structures.
+
+The type-based access restrictions have the desirable side-effect of hiding the
+contents of the EPC pages holding key SGX structures from software, so the
+internal layouts of these data structures can change across new CPU revisions.
+Software cannot become dependent on a specific processor's implementation
+details.
+
+The SGX documentation does not state where the EPCM is stored, but we can
+hypothesize that it is either an on-chip memory, like the L3 cache, or stored
+in a PRM region that is not used by the EPC.
 
 
 % EPCM table: SGX S 2.6.13
@@ -113,11 +157,11 @@ used by the EPC.
   \hline
   X & 1 & allow execution of code inside the page, inside enclave\\
   \hline
-  EID & 64 & the ID of the enclave that owns the page\\
+  EID & 64 & identifies the enclave owning the page\\
   \hline
   PT & 8 & the page type (SECS, TCS, VA, regular)\\
   \hline
-  LINADDR & 48 & the \\
+  LINADDR & 48 & the linear address that should be used to access this page\\
   \hline
   \end{tabularx}}
   \caption{
@@ -130,7 +174,7 @@ used by the EPC.
 % SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}
 
 
-\subsection{Enclave Identity}
+\subsection{The SGX Enclave Control Structure (SECS)}
 
 % Main data structures: SGX S 1.4
 % SECS: SGX S 2.6.1, S 2.6.1.1, S 3.1
@@ -138,11 +182,13 @@ used by the EPC.
 % Implicit access: SGX S 2.3
 
 The first step in creating an enclave is using the \texttt{ECREATE} instruction
-to designate an EPC page that becomes the enclave's \textit{SGX Enclave Control
-Structure} (SECS). All other instructions that operate on an enclave access the
-enclave's SECS directly or indirectly.
+to designate a previously unused EPC page as the enclave's \textit{SGX Enclave
+Control Structure} (SECS). All instructions that operate on an enclave access
+the its control structure directly or indirectly.
 
-Once created, the SECS page is not directly accessible by enclave code, and its
+The SECS page's type in EPCM is PT\_SECS, so the page is not directly
+accessible by enclave code, and its
+
 exact format is not specified in the SGX documentation. \texttt{ECREATE} does
 read a 4kb page from non-EPC memory, the contents of which is used to specify
 a number of enclave properties.

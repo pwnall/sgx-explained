@@ -20,6 +20,9 @@ X Caching
 X - geometry
 X - what is specified in x86
 - interaction with paging
+X - TLBs
+X - cache coherence
+X - TLB shootdown
 
 X PRM
 X - restrictions
@@ -33,13 +36,13 @@ X - backed by EPCM
 
 X EPCM
 X - metadata
-- page types
+X - page types
 - instructions
 
 X SECS
 X - specified in RAM, unspecified in EPC
 - arch features
-X - EID
+- EID
 - MRENCLAVE
 - measuring state
 - probably used to sync ops
