@@ -28,6 +28,12 @@ X PRM
 X - restrictions
 X - set up at boot time
 
+X Context switching
+X - GPRs
+X - architecture extensions (SMM, AVX)
+X - XCR0
+X - XSAVE
+
 X EPC
 X - 4kb pages
 X - in PRM
@@ -41,22 +47,22 @@ X - page types
 
 X SECS
 X - specified in RAM, unspecified in EPC
-- arch features
-- EID
+X - EID
+X - arch features
 - MRENCLAVE
 - measuring state
 - probably used to sync ops
 
-TCS
-- per thread
+X TCS
+X - per thread
 - entry point in enclave
 - per/thread data (FS/GS)
-- list of SSAs
+X - list of SSAs
 
-SSA
-- GPRs
-- extended state (XSAVE)
-- page-aligned and sized
+X SSA
+X - GPRs
+X - extended state (XSAVE)
+X - page-aligned and sized
 
 VA
 - array of nonces
