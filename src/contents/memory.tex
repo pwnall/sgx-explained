@@ -75,7 +75,10 @@ The SGX design handles multiple enclaves active at the same time, which is
 necesssary in multi-tasking environments. This is achieved by having the EPC
 split into 4kb pages, which can be associated to different enclaves. The system
 software uses SGX instructions to allocate unused pages to enclaves, and to
-free previously allocated EPC pages.
+free previously allocated EPC pages. SGX also offers a method for system
+software to evict EPC pages into non-EPC memory, which allows the EPC to be
+over-committed, just like evicting pages to disk (swapping) allows the main
+memory to be over-committed.
 
 Normally, system software manages physical memory by directly modifying the
 contents of page tables, and is responsible for ensuring that the state not
@@ -208,6 +211,16 @@ data structure when it is created. Therefore, new CPU revisions must preserve
 the ability to initialize the key data structures from the less flexible
 software-visible layout.
 
+\begin{figure}[hbt!]
+  \center{\includegraphics[width=85mm]{figures/enclave_layout.pdf}}
+  \caption{
+    An enclave's memory layout. Each enclave has a SECS, and one TCS per
+    supported hardware thread. Each TCS points to a sequence of SSAs, and
+    specifies initial values for RIP, FS and GS.
+  }
+  \label{fig:sgx_epc}
+\end{figure}
+
 \subsubsection{The SGX Enclave Control Structure (SECS)}
 \label{sec:secs}
 
@@ -269,6 +282,12 @@ preempt the execution of enclave code and start running kernel code. This is
 accomplished by saving the enclave's context (register values) to an area
 inside the enclave, called a \textit{State Save Area} (SSA).
 
+Each TCS references a contiguous sequence of SSAs -- the OSSA field points to
+the first SSA, and the NSSA field indicates the sequence's length. When a
+logical processor needs to preempt enclave code, it uses the next available
+SSA, indicated by the CSSA field in the TCS. The CPU refuses to execute enclave
+code using a TCS where no SSA is available (CSSA $\ge$ NSSA).
+
 An SSA essentially consists of the values of the general-purpose registers
 (GPRs), and the result of running XSAVE (\S~\ref{sec:registers}) using the
 feature mask specified in the ATTRIBUTES.XFRM field in the enclave's SECS.
@@ -278,13 +297,27 @@ feature mask specified in the ATTRIBUTES.XFRM field in the enclave's SECS.
 Each SSA starts at the beginning of an EPC page, and takes up a fixed number of
 EPC pages, specified in the SSAFRAMESIZE field in the enclave's SECS. The SSA
 alignment and size restrictions most likely exist to simplify the SGX
-implementation. While the TCS is a key SGX data structure (its page has a
-dedicated EPCM type), an SSA uses up regular enclave pages, so its contents can
-be accessed by enclave code, and its layout is specified in the SGX
-documentation.
+implementation.
+
+The TCS is stored in a page whose EPCM entry has the type PT\_TCS, and
+therefore cannot be directly accessed by enclave software. However, SSAs are
+stored in regular pages, so they are accessible to enclave software, and their
+layout is defined in the SGX documentation.
 
 \subsubsection{The Version Array (VA)}
 \label{sec:va}
+
+Kernels can use the address translation feature (\S~\ref{sec:paging}) in the
+Intel architecture to implement virtual memory, where rarely used pages of RAM
+are evicted to cheaper but slower memory (usually a hard disk) while they are
+not accessed. Virtual memory allows software developers to write applications
+as if the computer's main memory is virtually unlimited.
+
+Similarly, SGX includes support for system software to evict EPC pages to
+non-EPC RAM, making it possible to have enclaves whose memory requirements
+exceed the computer's EPC size.
+
+
 
 % VA: SGX S 2.6.12
 % EPC and Management of EPC Pages: SGX S 3.5, 3.5.{2,3,4,5,6}
