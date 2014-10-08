@@ -218,7 +218,7 @@ software-visible layout.
     supported hardware thread. Each TCS points to a sequence of SSAs, and
     specifies initial values for RIP, FS and GS.
   }
-  \label{fig:sgx_epc}
+  \label{fig:enclave_layout}
 \end{figure}
 
 \subsubsection{The SGX Enclave Control Structure (SECS)}
@@ -317,12 +317,37 @@ Similarly, SGX includes support for system software to evict EPC pages to
 non-EPC RAM, making it possible to have enclaves whose memory requirements
 exceed the computer's EPC size.
 
+Non-EPC memory can be accessed by system software, which is untrusted in the
+SGX threat model, so the processor relies on encryption and message
+authentication codes to protect the integrity and privacy of the EPC page's
+data while it is evicted to non-EPC memory.
+
 
 
 % VA: SGX S 2.6.12
 % EPC and Management of EPC Pages: SGX S 3.5, 3.5.{2,3,4,5,6}
-
-
-
 % EPA: SGX S 5.3 EPA
+
+The EPC page eviction process is detailed in \S~\ref{sec:va}. For the purpose
+of this section, it is sufficient to know that a nonce (called a \textit{page
+version} in the Intel documentation) is generated when an EPC page is evicted.
+The nonce must be stored in a
+
+
+\begin{figure}[hbt!]
+  \center{\includegraphics[width=85mm]{figures/sgx_ewb.pdf}}
+  \caption{
+    The data flow of the EWB instruction that evicts an EPC page. The page's
+    content is encrypted in a non-EPC RAM page. A nonce is created and saved
+    in an empty slot inside a VA page. The page's EPCM metadata and a MAC
+    are saved in a separate area in non-EPC memory.
+  }
+  \label{fig:sgx_ewb}
+\end{figure}
+
+
+
+
+
+
 
