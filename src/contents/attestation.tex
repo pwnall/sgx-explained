@@ -1,29 +1,117 @@
-\section{Security Model}
+\section{Remote Attestation}
 \label{sec:attestation}
 
-The rest of this section describes the security properties of
-enclaves, discussing the trade-offs made while trying to balance security with
-backwards compatibility.
+\subsection{Enclave Measurement}
+\label{sec:measurement}
 
-Enclaves were designed to contain and protect the privacy-sensitive parts of an
-application. All the code that handles private data must receive integrity
-protection. Otherwise, a hostile environment could modify the code to leak
-information about private data. Therefore, the SGX programming model prescribes
-that code which accesses private data must be entirely contained inside an
-enclave. Jumping into and out of enclave code must be performed explicitly
-using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
+% SGX Enclave Control Structure (SECS): SGX S 2.6.1
 
-\begin{figure}[hbtp]
-  \center{\includegraphics[width=65mm]{figures/pch.pdf}}
+The enclave measurement process uses the MRENCLAVE field in the SECS of the
+enclave being measured. MRENCLAVE holds a 32-byte SHA-256 signature.
+
+% ECREATE: SGX S 2.6.3, SGX S 5.3 ECREATE
+
+The ECREATE instruction initializes the MRENCLAVE field in the newly created
+SECS using the SHA-256 initialization algorithm, then extends the hash with
+the ``ECREATE'' string, followed by the SSAFRAMESIZE and SIZE fields in the
+SECS.
+
+\begin{table}[hbt]
+  \center{\begin{tabularx}{\columnwidth}{| r | r | X |}
+  \hline
+  \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
+  \hline
+  0 & 8 & "ECREATE\textbackslash{}0" \\
+  \hline
+  8 & 8 & SECS.SSAFRAMESIZE \\
+  \hline
+  16 & 8 & SECS.SIZE \\
+  \hline
+  32 & 8 & 32 zero (0) bytes \\
+  \hline
+  \end{tabularx}}
   \caption{
-    The architecture of modern Intel systems.
-    The Platform Controller Hub (PCH) contains a service processor, called the
-    Intel Management Engine (ME). The processor has direct access to the
-    network, can read and modify RAM via DMA transfers, and can override the
-    CPU boot vector. The processor runs firmware stored in the same flash
-    memory as the BIOS code.
+    Data extended into MRENCLAVE by the ECREATE instruction.
   }
-  \label{fig:pch}
-\end{figure}
+  \label{fig:ecreate_mrenclave}
+\end{table}
 
+% EADD and EEXTEND Interaction: SGX S 3.1.1
+% EADD: SGX S 5.3 EADD
+
+The EADD instruction extends the MRENCLAVE field in the enclave's SECS with the
+``EADD'' string, followed by the page's linear address (relative to the start
+of the enclave), and the first 48 bytes of the SECINFO structure that contains
+the R, W, X values for the page's EPCM entry.
+
+\begin{table}[hbt]
+  \center{\begin{tabularx}{\columnwidth}{| r | r | X |}
+  \hline
+  \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
+  \hline
+  0 & 8 &
+  "EADD\textbackslash{}0\textbackslash{}0\textbackslash{}0\textbackslash{}0" \\
+  \hline
+  8 & 8 & PAGEINFO.LINADDR \\
+  \hline
+  16 & 48 & SECINFO (first 48 bytes) \\
+  \hline
+  \end{tabularx}}
+  \caption{
+    Data extended into MRENCLAVE by the EADD instruction.
+  }
+  \label{fig:eadd_mrenclave}
+\end{table}
+
+% EEXTEND: SGX S 5.3 EEXTEND
+
+The EEXTEND instruction extends the MRENCLAVE field in the enclave's SECS with
+the ``EEXTEND'' string, followed by the linear address of the 256-byte chunk
+(relative to the start of the enclave).
+
+\begin{table}[hbt]
+  \center{\begin{tabularx}{\columnwidth}{| r | r | X |}
+  \hline
+  \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
+  \hline
+  0 & 8 & "EEXTEND\textbackslash{}0" \\
+  \hline
+  8 & 8 & ENCLAVEOFFSET \\
+  \hline
+  16 & 48 & 48 zero (0) bytes \\
+  \hline
+  \hline
+  64 & 64 & bytes 0 - 64 in the chunk \\
+  \hline
+  \hline
+  128 & 64 & bytes 64 - 128 in the chunk \\
+  \hline
+  \hline
+  192 & 64 & bytes 128 - 192 in the chunk \\
+  \hline
+  \hline
+  256 & 64 & bytes 192 - 256 in the chunk \\
+  \hline
+  \end{tabularx}}
+  \caption{
+    Data extended into MRENCLAVE by the EEXTEND instruction.
+  }
+  \label{fig:eadd_mrenclave}
+\end{table}
+
+% EINIT: SGX S 5.3 EINIT
+
+The EINIT instruction
+
+\subsection{The Attestation Process}
+
+
+% EINIT Token Structure (EINITTOKEN): SGX S 2.6.8
+
+
+
+% Enclave Signature Structure (SIGSTRUCT): SGX S 2.6.7
+
+
+% Internal CREGs: SGX S 5.1.4
 

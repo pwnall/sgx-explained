@@ -64,8 +64,8 @@ X - GPRs
 X - extended state (XSAVE)
 X - page-aligned and sized
 
-VA
-- array of nonces
+X VA
+X - array of nonces
 - can be evicted itself, creating a tree
 
 EINITTOKEN
