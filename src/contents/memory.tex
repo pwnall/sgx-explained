@@ -1,7 +1,7 @@
 \section{Memory Organization}
 \label{sec:memory}
 
-The central context of SGX is the \textit{enclave}, a protected environment
+The central concept of SGX is the \textit{enclave}, a protected environment
 that contains the code and data pertaining to a security-sensitive computation.
 This section provides an overview of the data structures used by an enclave.
 
@@ -115,7 +115,7 @@ contents of an EPCM entry.
   \hline
   VALID & 1 & 0 for un-allocated EPC pages \\
   \hline
-  BLOCKED & 1 & page is being evicted (\S~\ref{TBD})\\
+  BLOCKED & 1 & page is being evicted (\S~\ref{sec:sgx_ewb})\\
   \hline
   R & 1 & allow reads by enclave code\\
   \hline
