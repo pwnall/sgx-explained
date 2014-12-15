@@ -1,0 +1,192 @@
+\section{The Hardware Underpinnings of SGX}
+
+The security of SGX hinges on the assumption that it is very difficult for an
+attacker to produce an attestation that contains attacker-supplied information
+in the enclave field. In order to evaluate this claim, we must understand the
+hardware protection mechanisms and the encryption schemes involved in the
+process.
+
+Most of the material in this section comes from Intel's
+patents~\cite{intel2013patent1, intel2013patent2}, because the SGX papers and
+reference consider this information an implementation detail. We point out when
+a piece of information matches the SGX manual or one of the SGX papers.
+
+According to the Intel patents, the SGX instructions are implemented in
+microcode. The statement in \cite{ananti2013sgx} that a microcode update
+changes the platform TCB confirms this finding. The patents state that SGX
+requires very few hardware changes, and most of the implementation is in
+microcode, as a positive fact, fueling our suspicion that minimizing hardware
+changes was a high priority in the SGX design.
+
+
+\subsection{Memory Protection Mechanisms}
+
+The SGX reference manual states that the Processor Reserved Memory (PRM) is
+allocated by the BIOS, by setting the PRM range registers (PRMRR). The patents
+refer to this range as the secure enclave range registers (SERR), and state
+that the memory range is protected from DMA accesses by a dedicated pair of
+entries in the memory controller's SAD (System Address Decoder) and TAD
+(Target Address Decoder), which are briefly described in \cite{ziakas2010qpi}.
+The patents state that the SAD and TAD entries mirror the PRMRR registers
+which, if done correctly, does prevent against DMA snooping.
+
+The SGX reference manual states that the EPC memory is protected against
+physical snooping attacks on the DRAM by an implementation-dependent mechanism,
+and suggests that the most likely implementation is a Memory Encryption Engine
+(MEE). The MEE is called a crypto engine in the Intel patents, which state that
+the crypto engine is connected to the QuickPath Interconnect (QPI) home agent
+in each processor, and it encrypts all RAM accesses in a range called the
+Crypto Memory Aperture (CMA), before they reach the memory controller. The CMA
+range is configured by setting the Crypto Memory Range Registers (CMRR). The
+CMA contains the EPC, EPCM, and other data structured used by the SGX
+implementations, which leads us to believe that the CMA covers the entire PRM
+range, and the CMRR and PRMRR are identical. One of the SGX
+papers~\cite{mckeen2013sgx} states that the PRM may be covered by one or more
+MEE regions.
+
+The data inside the CMA is lost when the CPU is powered down (including when it
+enters the S3 power management state), so enclaves must be either torn down by
+the OS, or their EPC pages must be evicted to RAM, and eventually to disk.
+
+The EPC encryption described above is only intended to defend against physical
+attacks. Enclaves are isolated from system software (the OS and hypervisor) by
+access control checks in the CPU, as described in \S~\ref{sec:epcm}. The
+patents specify the protection algorithm with more clarity.
+
+The patents also specify that the memory access checks are performed in the
+Page-Miss Handler (PMH) microcode, which is invoked during TLB misses. The PMH
+performs the SGX access checks described below. If the access checks succeed,
+the PMH creates a TLB entry, as it normally would. If the access checks fail,
+the PMH aborts, which results in a Page Fault. The desire to restrict SGX
+access checks to the PMH introduces the requirement to flush a logical
+processor's TLBs when it enters or exits enclave mode. This is accomplished by
+adding 1 bit to TLB entries, which differentiates between enclave pages and
+non-enclave pages. On enclave entry and exit, all the TLB entries that have the
+enclave bit set are flushed. One of the SGX papers~\cite{mckeen2013sgx}
+confirms that the EPCM is checked by the PMH. The Intel patents state that
+future implementations may optimize away the TLB flushes by adding enclave ID
+tags to TLB entries.
+
+The SGX access checks occur after the normal page address translation process
+(described in the Intel Software Developer Manual~\cite{intel2014manual})
+completes. If the resulting physical address does not fall within the CMA, the
+SGX access checks do not apply. A CMA memory access is only allowed if
+originates from the CPU's microcode (used to implement the SGX instructions),
+or if it targets an EPC page, and the logical processor performing the access
+is executing the enclave that owns the page. This is checked by the following
+steps:
+
+\begin{enumerate}
+  \item the physical address must fall in an EPC range
+  \item the page's EPCM entry must have the present (P) bit set, and not have
+        the blocked (B) bit set
+  \item the current enclave's ID must match the enclave ID in the page's EPCM
+        entry
+  \item the linear address used to access the page must match the one in the
+        page's EPCM entry
+\end{enumerate}
+
+
+The Intel patents call ELRANGE the Enclave Linear Space (ELS) range.
+
+
+
+\subsection{Key Hierarchy and Derivation}
+
+According to Intel's patents, the SGX implementation relies on a complex key
+derivation process rooted on global secret keys in the CPU circuitry, and on
+secrets embedded in the processor's eFUSEs. eFUSE information can be extracted
+efficiently (Chipworks quoted us \$50-250k for extracting the entire eFUSE
+contents from an Intel i5 processor), so some of the eFUSE secrets are
+encrypted with a master key (referred to as a ``global wrapping logic key'' in
+the patents).
+
+The patents state that encrypting the eFUSE secrets by the logic key makes them
+harder to extract via hardware monitoring tools, and protects them while in
+transit to the CPU during the manufacturing process. This assumes that it is
+very expensive to obtain the global key from a CPU, by virtue of the low
+feature size.
+
+The SGX patents describe two ``logic keys'' embedded in the CPU's circuitry,
+which are the same for all CPUs in a stepping, making them essentially global
+keys. The \textit{global wrapping logic key} is a 128-bit AES key, and it is
+used to encrypt a subset a 256-bit A.x value used to re-create the CPU's EPID
+key, and a 128-bit \textit{pre-seed key 0}. The eFUSEs also contain a 128-bit
+\textit{pre-seed key 1} and a 32-bit EPID group ID, which are stored in
+cleartext.
+
+The SGX manuals~\cite{intel2013sgxmanual, intel2014sgx2manual} mention a
+16-byte CPU security version number (SVN), which contains the version numbers
+of various TCB components, and is a source in the key derivation process. The
+patents further specify that the SVN register is made up of (most likely 8-bit)
+sections that contain the SVNs of each layer in the SGX initialization process,
+and that each initialization step sets the corresponding section to its SVN,
+and then locks it for the duration of the power-up cycle.
+
+Intel's patents disclose that the key derivation process uses 128-bit AES in
+ECB mode as a pseudo-random function (PRF). When an SVN is an input to a key
+derivation process, a \textit{PRF loop} is used, where the PRF is applied to
+a constant
+
+
+
+\cite{anati2013sgx} confirms that the attestation uses Intel's
+EPID~\cite{brickell2009epid} group signature scheme.
+
+
+Key Request Inputs
+
+\begin{table}[hbt]
+  \center{\begin{tabularx}{\columnwidth}{| l | l | X |}
+  \hline
+  \textbf{Name} & \textbf{Size} & \textbf{Description}\\
+  \hline
+  Key Name & 2 & Which key will be derived \\
+  \hline
+  Policy & 2 & Whether the key derivation uses MRENCLAVE or MRSIGNER \\
+  \hline
+  ISV SVN & 2 & Developer-assigned SVN \\
+  \hline
+  CPU SVN & 16 & 128-bit TCB SVN \\
+  \hline
+  KeyID & 32 & Used for wear-out protection \\
+  \hline
+  Attribute Mask & 16 & Which SECS ATTRIBUTES are used in Seal Key \\
+  \hline
+  MISC Mask & 2 & Which SECS MISCSELECT bits are used in Seal Key \\
+  \hline
+  \end{tabularx}}
+  \caption{Values of the PT (page type) field in an EPCM entry.}
+  \label{fig:key_request_inputs}
+\end{table}
+
+Key names: LAUNCH, PROVISION, PROVISION\_SEAL, REPORT, SEAL.
+
+
+\subsection{Data Structures}
+
+The Intel patents state that the 128-bit enclave key is stored in the enclave's
+SECS page, and that SGX security depends on enclaves not being able to read
+their own SECS pages. They also state that the enclave key is used to encrypt
+the EPC pages when they are evicted to untrusted RAM. The patents also state
+that the enclave's SECS page contains the SVN of the launch permit creator.
+
+The Intel patents state that each TCS has two fields that store the values of
+the DR7 and IA32\_DEBUGCTL registers during EENTER, and are used to restore the
+original values during EEXIT and AEX.
+
+The Intel patents state that the enclave ID used in EPCM entries is the
+phyisical address of the page holding the enclave's SECS, without the bottom
+12 bits that are guaranteed to be zero. The SGX manual indicates that when an
+EPC page is allocated via EADD, the physical address of its enclave's SECS is
+cached, until the page is removed via EREMOVE. This, together with the fact
+that the enclave ID's location in the SECS is not specified, indicates that the
+enclave's ID is indeed the physical address of its SECS page.
+
+
+The Intel patents indicate that EREPORT's KeyID is initialized to a random
+value on each processor power cycle, and is incremented after $2^{32}$ AES
+operations that use the value. They also indicate that each EREPORT may
+increment the KeyID by 1.
+
+
