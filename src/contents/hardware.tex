@@ -61,31 +61,30 @@ the PMH aborts, which results in a Page Fault. The desire to restrict SGX
 access checks to the PMH introduces the requirement to flush a logical
 processor's TLBs when it enters or exits enclave mode. This is accomplished by
 adding 1 bit to TLB entries, which differentiates between enclave pages and
-non-enclave pages. On enclave entry and exit, all the TLB entries that have the
-enclave bit set are flushed. One of the SGX papers~\cite{mckeen2013sgx}
-confirms that the EPCM is checked by the PMH. The Intel patents state that
-future implementations may optimize away the TLB flushes by adding enclave ID
-tags to TLB entries.
+non-enclave pages.
+On enclave entry and exit, all the TLB entries that have the enclave bit set
+are flushed. One of the SGX papers~\cite{mckeen2013sgx} confirms that the EPCM
+is checked by the PMH.
+The SGX manual also confirms this: ``The Intel SGX access control itself is
+implemented as an extension to the traditional IA-32 paging/EPT state
+machine.''
+The Intel patents state that future implementations may optimize away the TLB
+flushes by adding enclave ID tags to TLB entries.
 
 The SGX access checks occur after the normal page address translation process
 (described in the Intel Software Developer Manual~\cite{intel2014manual})
-completes. If the resulting physical address does not fall within the CMA, the
-SGX access checks do not apply. A CMA memory access is only allowed if
-originates from the CPU's microcode (used to implement the SGX instructions),
-or if it targets an EPC page, and the logical processor performing the access
-is executing the enclave that owns the page. This is checked by the following
-steps:
-
-\begin{enumerate}
-  \item the physical address must fall in an EPC range
-  \item the page's EPCM entry must have the present (P) bit set, and not have
-        the blocked (B) bit set
-  \item the current enclave's ID must match the enclave ID in the page's EPCM
-        entry
-  \item the linear address used to access the page must match the one in the
-        page's EPCM entry
-\end{enumerate}
-
+completes.
+If the resulting physical address does not fall within the CMA, the
+SGX access checks do not apply.
+A CMA memory access is only allowed if originates from the CPU's microcode
+(used to implement the SGX instructions), or if it an admissible enclave
+access.
+The latter is true if the logical processor making the memory access is in
+enclave mode, the accessed physical address falls in an EPC range, the page's
+EPCM entry has the present (P) bit set and does not have the blocked (B) bit
+set, the current enclave's ID matches the enclave ID in the page's EPCM entry,
+and the linear address used to access the page matches the one in the page's
+EPCM entry.
 
 The Intel patents call ELRANGE the Enclave Linear Space (ELS) range.
 

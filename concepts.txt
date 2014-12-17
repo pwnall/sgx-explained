@@ -148,7 +148,7 @@ Attestation Model
 - the signing enclave and inter-enclave attestation
 - crypto
 - key derivation
-- enclaves cannot be moved across processes
+- enclaves cannot be moved across processors
 
 Page-Level Memory Access Patterns
 

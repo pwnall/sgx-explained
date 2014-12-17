@@ -8,7 +8,7 @@ This section provides an overview of the data structures used by an enclave.
 
 \subsection{Memory Ownership vs Management}
 
-% Access Control Requirements: SGX S 2.3
+% Access Control Requirements: SGX/SGX2 S 2.3
 
 Enclaves use RAM to store their code and data, and need logical processors to
 execute their code in order to perform the computation they were designed to
@@ -21,7 +21,7 @@ the applications that enclose the enclaves. Enclave code runs at ring 3
 (\S~\ref{sec:rings}), just like application code, so that it cannot
 interfere with the privileged software that manages resources.
 
-% Interactions with VMX: SGX S 6.5, 6.5.{1,2,3,4,5}
+% Interactions with VMX: SGX/SGX2 S 6.5, 6.5.{1,2,3,4,5}
 
 The rest of the paper will use the term \textit{system software} to refer to
 the privileged software that manages resources. On most computers, this is an
@@ -32,9 +32,9 @@ the hypervisor to guest operating systems running in virtual machines.
 \subsection{Enclaves in RAM}
 \label{sec:prm}
 
-% PRM: SGX S 3.5
-% Interactions with DMA: SGX S 6.10
-% Interactions with Memory Configuration: SGX S 6.11
+% PRM: SGX/SGX2 S 3.5
+% Interactions with DMA: SGX/SGX2 S 6.10
+% Interactions with Memory Configuration: SGX/SGX2 S 6.11
 
 The enclaves' code and data is stored in \textit{Processor Reserved Memory}
 (PRM), a contiguous range of RAM that cannot be directly accessed by other
@@ -66,7 +66,8 @@ address is in the PRM to a bitwise AND and an equality comparison.
 \subsection{The Enclave Page Cache (EPC)}
 \label{sec:epc}
 
-% EPC and EPCM: SGX S 1.5, S 1.5.1, S 2.6.13, S 3.5, S 3.5.1
+% EPC and EPCM: SGX/SGX2 S 1.5, S 1.5.1, S 3.5, S 3.5.1
+%               SGX S 2.6.13, SGX2 S 2.6.19
 
 The contents of enclaves and the associated data structures are stored in the
 \textit{Enclave Page Cache} (EPC), which is a subset of the PRM.
@@ -106,7 +107,7 @@ to, so the processor can prevent the code inside an enclave from accessing EPC
 pages that belong to other enclaves. Table~\ref{fig:epcm_entry} shows the
 contents of an EPCM entry.
 
-% EPCM table: SGX S 2.6.13
+% EPCM table: SGX/SGX2 S 2.6.13
 
 \begin{table}[hbt]
   \center{\begin{tabularx}{\columnwidth}{| l | r | X |}
@@ -137,7 +138,7 @@ contents of an EPCM entry.
 \end{table}
 
 
-% Access Control Requirements: SGX S 2.3
+% Access Control Requirements: SGX/SGX2 S 2.3
 
 The EPCM metadata for a page includes the expected linear address used to
 access the page (ENCLAVEADDRESS in Intel's documentation). This address must be
@@ -184,20 +185,17 @@ is immutable throughout the page's lifetime.
 \end{table}
 
 
-The SGX documentation does not state where the EPCM is stored, but we can
-hypothesize that it is either an on-chip memory, like the L3 cache, or stored
-in a PRM region that is not used by the EPC. The exact layout of an EPCM entry
-is not defined either, but Table~\ref{fig:epcm_entry} suggests that each entry
-takes up 16 bytes, with most fields packed in the bottom 12 bits and top few
-bits of the expected linear address.
+The SGX documentation does not state where the EPCM is stored, but guarantees
+that the EPCM is ``trusted memory''. The documentation also does not describe
+the EPCM layout.
 
-% SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}
+% SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}, SGX2 S 2.11, S 2.11.{1,2}
 
 
 \subsection{Key SGX Structures}
 \label{sec:key_structures}
 
-% Access Control Requirements: SGX S 2.3
+% Access Control Requirements: SGX/SGX2 S 2.3
 
 Pages that store key SGX structures cannot be accessed directly, even by the
 code executing inside their enclaves. Furthermore, the SGX instructions that
@@ -230,10 +228,10 @@ software-visible layout.
 \subsubsection{The SGX Enclave Control Structure (SECS)}
 \label{sec:secs}
 
-% Main data structures: SGX S 1.4
-% SECS: SGX S 2.6.1, S 2.6.1.1, S 3.1
-% ECREATE: SGX S 3.1, S 5.3
-% Implicit access: SGX S 2.3
+% Main data structures: SGX/SGX2 S 1.4
+% SECS: SGX S 2.6.1, S 2.6.1.1, SGX2 S 2.7, S 2.7.1, SGX/SGX2 S 3.1
+% ECREATE: SGX/SGX2 S 3.1, S 5.3
+% Implicit access: SGX/SGX2 S 2.5.3
 
 The first step in creating an enclave is using the \texttt{ECREATE} instruction
 to designate a previously unused EPC page as the enclave's \textit{SGX Enclave
@@ -250,7 +248,7 @@ documentation). The enclave's starting address has to be aligned by the enclave
 size, which simplifies checking if a linear address belongs to an enclave or
 not, just like in the case of PRM physical addresses.
 
-% SECS.ATTRIBUTES.XFRM: SGX S 6.7.2.1
+% SECS.ATTRIBUTES.XFRM: SGX/SGX2 S 6.7.2.1
 
 The software-visible SECS also has an ATTRIBUTE field that specifies the Intel
 achitecture features used by the enclave code. For example, the MODE64BIT flag
@@ -269,7 +267,7 @@ attestation process, which is explained in \S~\ref{sec:attestation}.
 \subsubsection{The Thread Control Structure (TCS)}
 \label{sec:tcs}
 
-% TCS: SGX S 2.6.2, S 2.6.2.{1,2,3,4}
+% TCS: SGX S 2.6.2, S 2.6.2.{1,2,3,4}, SGX2 S 2.8, S 2.8.{1,2,3,4}
 
 A logical processor uses a \textit{Thread Control Structure} (TCS) while
 executing code inside an enclave, so enclaves must have at least as many TCS
@@ -280,7 +278,7 @@ The fields in the software-visible TCS layout direct the context switches
 performed by a logical processor when it transitions between non-enclave and
 enclave code.
 
-% SSA: SGX S 2.6.3
+% SSA: SGX S 2.6.3, SGX2 S 2.9
 
 In some cases (e.g., when receiving an interrupt), the processor needs to
 preempt the execution of enclave code and start running kernel code. This is
@@ -297,7 +295,7 @@ An SSA essentially consists of the values of the general-purpose registers
 (GPRs), and the result of running XSAVE (\S~\ref{sec:registers}) using the
 feature mask specified in the ATTRIBUTES.XFRM field in the enclave's SECS.
 
-% SECS.SSAFRAMESIZE: SGX S 6.7.2.2
+% SECS.SSAFRAMESIZE: SGX/SGX2 S 6.7.2.2
 
 Each SSA starts at the beginning of an EPC page, and takes up a fixed number of
 EPC pages, specified in the SSAFRAMESIZE field in the enclave's SECS. The SSA
