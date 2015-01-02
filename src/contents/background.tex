@@ -309,7 +309,7 @@ good caches have very high hit rates (90\%-99\%), and do a great job of hiding
 the (comparatively) high latency of RAM. At the same time, the large time
 differences between cached and un-cached memory accesses can be used to learn
 about an application's memory access patterns, via
-\textit{cache timing attacks}\cite{banescu2011cache}. The patterns, in turn,
+\textit{cache timing attacks} \cite{banescu2011cache}. The patterns, in turn,
 can reveal private information, such as whether certain bits in an encryption
 key are set or not.
 
@@ -450,4 +450,50 @@ then resuming execution on the stopped logical processors.
 principles. \cite{intel2014manual} states that the coherence protocol used in
 Intel processors is based on MESI. At the time of this writing, the latest
 processors appear to be using a variant of
-MESIF~\cite{goodman2009mesif, ziakas2010qpi}.
+MESIF \cite{goodman2009mesif, ziakas2010qpi, intel2009qpi}.
+
+
+\subsection{Memory Hierarchy}
+\label{sec:uncore}
+
+According to Intel's patents, the SGX memory protection relies on special
+entries in the \textit{System Address Decoder} (SAD) and \textit{Target Address
+Decoder} (TAD).  A thorough understanding of the memory hierarchy is required
+in order to understand this aspect of the SGX implementation.
+
+On recent Intel processors, most of the memory hierarchy is implemented on the
+processor chip. The Intel documentation refers to these on-chip components as
+\textit{the uncore}. The overview sections in Intel's uncore performance
+monitoring documentation \cite{intel2014uncore, intel2012uncore,
+intel2010uncore} provide a glimpse into the largely undocumented uncore
+structures.
+
+The recent Intel architectures are designed to support systems with multiple
+processors connected by a network of point-to-point links called the
+\textit{Quick-Path Interconnect} (QPI) \cite{intel2009qpi}.
+
+The QPI protocol layer defines the cache coherence protocol, which is a variant
+of MESIF \cite{goodman2009mesif}, an extension of MESI. The QPI protocol
+defines caching agents, which are connected to the last-level cache in a
+processor, and home agents, which are connected to memory controllers. Cache
+agents make requests to home agents for cache line data on cache misses, while
+home agents keep track of cache line ownership, and obtain the cache line data
+from other cache line agents, or from the memory controller. Each processor has
+its own home agent and caching agents.
+
+UBox - uncore configuration controller; master for reading and writing
+physically distributed registers across the uncore using the message
+channel; receives interrupts from system and dispatches them to the
+appropriate core; system lock master (e.g. QPI bus lock)
+
+CBox - last-level cache (LLC) coherence engine; the interface between a core
+and a slice of the LLC; acts as the QPI cache agent for that slice of LLC;
+CBoxes are co-located with cores and connected in a ring interconnect
+
+The physical memory space is split up between CBoxes. The ``complex'' caching
+algorithm mentioned in the Intel software development manual
+\cite{intel2014manual} includes a ``hashing'' step that maps a physical address
+to a CBox, and thus a slice of the LLC.
+
+SBox - connects rings on processors with multiple rings
+
