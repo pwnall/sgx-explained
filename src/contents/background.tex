@@ -461,13 +461,6 @@ entries in the \textit{System Address Decoder} (SAD) and \textit{Target Address
 Decoder} (TAD).  A thorough understanding of the memory hierarchy is required
 in order to understand this aspect of the SGX implementation.
 
-On recent Intel processors, most of the memory hierarchy is implemented on the
-processor chip. The Intel documentation refers to these on-chip components as
-\textit{the uncore}. The overview sections in Intel's uncore performance
-monitoring documentation \cite{intel2014uncore, intel2012uncore,
-intel2010uncore} provide a glimpse into the largely undocumented uncore
-structures.
-
 The recent Intel architectures are designed to support systems with multiple
 processors connected by a network of point-to-point links called the
 \textit{Quick-Path Interconnect} (QPI) \cite{intel2009qpi}.
@@ -480,6 +473,13 @@ agents make requests to home agents for cache line data on cache misses, while
 home agents keep track of cache line ownership, and obtain the cache line data
 from other cache line agents, or from the memory controller. Each processor has
 its own home agent and caching agents.
+
+On recent Intel processors, most of the memory hierarchy is implemented on the
+processor chip. The Intel documentation refers to these on-chip components as
+\textit{the uncore}. The overview sections in Intel's uncore performance
+monitoring documentation \cite{intel2014uncore, intel2012uncore,
+intel2010uncore} provide a glimpse into the largely undocumented uncore
+structures, called \textit{boxes} by the Intel documentation.
 
 UBox - uncore configuration controller; master for reading and writing
 physically distributed registers across the uncore using the message
