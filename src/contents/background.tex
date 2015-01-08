@@ -4,10 +4,13 @@
 Arguing about the security of an application running on an mainstream computer
 using the Intel architecture requires understanding the interactions between
 all the parts of an x86 execution environment. This section provides an
-overview of the features referenced by the rest of the paper. The section is
-written from the context of SGX, but does not introduce any SGX concepts, so
-most experienced readers can safely skip the section and refer back if
-necessary.
+overview of the features referenced by the rest of the paper. Unless specified
+otherwise, the information in this section can be found in Intel's
+\textit{Software Development Manual} \cite{intel2014sdm} (SDM).
+
+Each of the sub-sections below explains how its information is relevant to
+to SGX, but does not introduce any SGX concepts. Experienced readers can safely
+skip this section and refer back if necessary.
 
 
 \subsection{Software Privilege Levels}
@@ -96,31 +99,35 @@ non-root ring 0, and the application code runs in VMX non-root ring 3.
 \subsection{Address Translation}
 \label{sec:paging}
 
-The software running inside an enclave is subject to address translation, which
-is used by the hypervisor and kernel to multiplex a computer's memory across
-virtual machines and applications. This section summarizes the address
-translation details specific to the Intel architecture. \cite{jacob1998virtual}
-describes the generic concepts and applications of address translation.
+Modern OS kernels rely on address translation to multiplex a computer's RAM
+among multiple processes. In turn, hypervisors use address translation to
+multiplex the RAM among that operating systems that run concurrently. The
+software running inside a SGX enclave is subject to address translation, and
+the implementation of SGX relies heavily on the translation implementation in
+Intel processors. This section summarizes the Intel-specific software-visible
+details needed to understand SGX, while \S~\ref{sec:tlbs} covers some
+architectural specifics. \cite{jacob1998virtual} describes the generic concepts
+and applications of address translation.
 
 The Intel architecture specifies many address translation modes, used to run
 legacy software dating back to 1990 natively. Most modes are not necessary for
 understanding SGX, so we only cover the translation modes used in modern 64-bit
 operating systems and 64-bit cloud environments.
 
-64-bit desktop operating systems use the addressing mode called IA-32e in
-Intel programming manual \cite{intel2014manual}, which translates 48-bit
-\textit{virtual addresses} into \textit{physical addresses} of at most 52
-bits\footnote{The size of a physical address is CPU-dependent, and is 40 bits
-for recent desktop CPUs and 44 bits for recent high-end server CPUs.}.
-Figure~\ref{fig:os_paging} illustrates the address translation process. The
-bottom 12 bits of a virtual address are not changed by the translation. The top
-36 bits are grouped into four 9-bit indexes used to navigate a data structure
-called \textit{the page tables}. Despite its name, the data structure closely
-resembles a perfectly balanced 512-ary search tree where the nodes do not store
-keys. Each node is an array of 512 8-byte entries that contain the physical
-addresses of the next-level children as well as some flags. The address of the
-root node is stored in the CR3 register. The arrays in the last-level nodes
-contain the physical addresses that are the result of the address translation.
+64-bit desktop operating systems use the addressing mode called IA-32e by
+Intel's documentation, which translates 48-bit \textit{virtual addresses} into
+\textit{physical addresses} of at most 52 bits\footnote{The size of a physical
+  address is CPU-dependent, and is 40 bits for recent desktop CPUs and 44 bits
+for recent high-end server CPUs.}.  Figure~\ref{fig:os_paging} illustrates the
+address translation process. The bottom 12 bits of a virtual address are not
+changed by the translation. The top 36 bits are grouped into four 9-bit indexes
+used to navigate a data structure called \textit{the page tables}. Despite its
+name, the data structure closely resembles a perfectly balanced 512-ary search
+tree where nodes have fixed keys.  Each node is an array of 512 8-byte entries
+that contain the physical addresses of the next-level children as well as some
+flags. The address of the root node is stored in the CR3 register. The arrays
+in the last-level nodes contain the physical addresses that are the result of
+the address translation.
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=85mm]{figures/os_paging.pdf}}
@@ -131,22 +138,26 @@ contain the physical addresses that are the result of the address translation.
   \label{fig:os_paging}
 \end{figure}
 
-Hardware virtualization (used in cloud computing) allows a hypervisor to run
-multiple operating systems concurrently using the same physical memory, by
-adding another layer of address translation, named the \textit{extended page
-tables} (EPT). When EPT are enabled, the process above is used to translate
-from a virtual address into a \textit{guest-physical address}. The translation
-from guest-physical addresses to actual physical addresses uses the same
-process as above, except the physical address of the root node is stored in the
-extended page table pointer (EPTP) field in the VM's control structure (VMCS).
-Figure~\ref{fig:vmx_paging} illustrates the address translation process in the
-presence of hardware virtualization.
+Hypervisors have access to another layer of address translation, named
+\textit{extended page tables} (EPT), to multiplex the physical memory across
+operating systems. When EPT are enabled, the process above is used to translate
+from a virtual address into a \textit{guest-physical address}, effectively
+giving each OS kernel the illusion that it controls the entire machine's RAM.
+The translation from guest-physical addresses to actual physical addresses uses
+the same process as above, except the physical address of the root node is
+stored in the extended page table pointer (EPTP) field in the VM's control
+structure (VMCS). Figure~\ref{fig:vmx_paging} illustrates the address
+translation process in the presence of hardware virtualization.
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=85mm]{figures/vmx_paging.pdf}}
   \caption{
-    Address translation when hardware virtualization is enabled. A translation
-    requires up to 16 memory accesses.
+    Address translation when hardware virtualization is enabled. The
+    kernel-managed page tables contain guest-physical addresses, so each level
+    in the kernel's page table requires a full walk of the hypervisor's
+    extended page table (EPT).  A translation requires up to 20 memory accesses
+    (the bold boxes), assuming the physical address of the kernel's PML4 is
+    cached.
   }
   \label{fig:vmx_paging}
 \end{figure}
@@ -174,74 +185,16 @@ the \textit{disable execution} (XD) flag, which can be set to 1 to prevent
 instruction fetches from a page.
 
 
-\subsection{Logical Processors}
-\label{sec:cores}
-
-% Hardware parallelism.
-
-% Multiple sockets - processors.
-
-% Cores.
-
-% Logical processors.
-
-Modern CPUs have multiple execution cores, and each core independently executes
-a stream of instructions (\textit{hardware thread} in the Intel documentation).
-The cores are exposed to system software as \textit{logical processors}, so
-that the code used to distribute work across processors in a multi-processor
-system works without changes on multi-core processors. This section covers the
-details in Intel's multi-core implementation needed to understand the aspects
-of SGX that support having multiple hardware threads running code in the same
-enclave, as well as the security implications of this design decision.
-
-\begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cpu_die.pdf}}
-  \caption{
-    A modern CPU die contains multiple cores. The cores share some on-chip
-    resources, such as the L3 cache and the memory controller.
-  }
-  \label{fig:cpu_die}
-\end{figure}
-
-At the time of this writing, desktop-class Intel CPUs have 4 cores, and
-server-class CPUs have as many as 18 cores. The cores share the L3 cache
-(described in \S~\ref{sec:caching} below) and other on-chip resources, such as
-the memory controller, and controllers that interface with the system buses
-(see Figure~\ref{fig:cpu_die}).
-
-\begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
-  \caption{
-    CPU core with two logical processors. Each logical processor has its own
-    APIC and execution state, and they share all the other core resources.
-  }
-  \label{fig:cpu_core}
-\end{figure}
-
-Most Intel CPUs also feature \textit{hyper-threading}, which means that each
-core has two (or more) sets of register files and local APICs (see
-Figure~\ref{fig:cpu_core}), exposed as separate logical processors. The
-logical processors share many core resources, such as the fetch and decode
-units, the execution units, and the L1 and L2 caches (described in
-\S~\ref{sec:caching} below). This has security implications, as software
-running on one logical processor can use the high-performance counter
-\cite{petters1999making} to get information about the instructions and memory
-access patterns of another piece of software that is executed on another
-logical processor in the same core.
-
-
 \subsection{Context Switching}
 \label{sec:registers}
 
 Application software targeting the 64-bit Intel architecture uses a variety of
 registers to interact with the CPU features. The values in these registers
-seen by a hardware thread make up the application's state, or context. In order
-to implement preemptive multi-threading, kernels must be able to switch the
-thread executed by a logical processor, which requires \textit{context
-switching}, namely saving a thread's context, and replacing it with another
-thread's previously saved context. This section covers the context switching
-features used by SGX when a logical processor starts or stops executing code
-that belongs to an enclave.
+make up an application's state, or context. Kernels multiplex a CPU among
+multiple software threads by \textit{context switching}, namely saving a
+thread's context, and replacing it with another thread's previously saved
+context. This section covers the context switching features used by SGX when a
+logical processor starts or stops executing code that belongs to an enclave.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/cpu_registers.pdf}}
@@ -308,13 +261,168 @@ how much memory it needs to allocate for the context of each of the
 application's threads.
 
 
-\subsection{CPU Caches}
+\subsection{A Computer Map}
+
+This section maps out a computer using the Intel architecture at three zoom
+levels: the motherboard, the CPU, and the execution core, focusing on the
+concepts needed to understand SGX and analyze its security properties. Most
+details in here are documented in Intel's
+\textit{Optimization Reference Manual} \cite{intel2014optimization}.
+
+\subsubsection{The Motherboard}
+\label{sec:motherboard}
+
+A computer's components are connected by a printed circuit board called a
+\textit{motherboard}, which consists of \textit{sockets} connected by
+\textit{buses}. Sockets connect chip-carrying \textit{packages}, to the board.
+The Intel documentation uses the term ``package'' to specifically refer to a
+CPU.
+
+The buses most relevant to SGX (see Figure~\ref{fig:motherboard} are the
+\textit{Quick-Path Interconnect} (QPI) \cite{intel2009qpi}, a network of
+point-to-point links that connect processors, the \textit{double data rate}
+(DDR) bus that connects a CPU to DRAM, and the \textit{Peripheral Component
+Interconnect Express} (PCIe) bus that connects a CPU to peripherals such as a
+\textit{Network Interface Card} (NIC).
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=45mm]{figures/motherboard.pdf}}
+  \caption{
+    The motherboard structures that are most relevant to SGX.
+  }
+  \label{fig:motherboard}
+\end{figure}
+
+The SGX trusted computing base includes the processor package, and excludes the
+other hardware in the computer. This implies that, SGX must be able to fend off
+attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
+\cite{wojtczuk2011txt}, as well as passive or active bus-tapping attacks, such
+as the memory bus tap used to hack the Xbox \cite{huang2003xbox} and the
+memory glitching attack that subverted the PlayStation 3 hypervisor
+\cite{hotz2010ps3}.
+
+\subsubsection{The Processor}
+\label{sec:cpu_die}
+
+An Intel processor's die, illustrated in Figure~\ref{fig:cpu_die}, is divided
+into two broad areas: the \textit{core area} implements the functionality that
+comes to mind when thinking of a CPU, while the \textit{uncore} provides
+functions that were typically hosted on separate chips, but were integrated to
+save power and improve latency.
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=85mm]{figures/cpu_die.pdf}}
+  \caption{
+    The major components in a modern CPU die. \S~\ref{sec:cpu_die} gives
+    an uncore overview. \S~\ref{sec:cpu_core} describes execution cores.
+    \S~\ref{sec:cpu_uncore} takes a deeper look at the uncore.
+  }
+  \label{fig:cpu_die}
+\end{figure}
+
+At a conceptual level, the uncore of modern processors includes a memory
+controller that interfaces with the DDR bus, an I/O controller that can
+arbitrate the PCIe bus, and a growing number of integrated controllers for
+peripherals, such as a NIC and a GPU.
+
+The SGX design relies on the fact that the processor die includes the memory
+and I/O controller, and thus can prevent any device from accessing protected
+memory areas via \textit{Direct Memory Access} (DMA) transfers.
+\S~\ref{sec:cpu_uncore} takes a deeper look at the uncore organization and at
+the mechanism used by the SGX implementation to protect sensitive memory.
+
+\subsubsection{The Core}
+\label{sec:cpu_core}
+
+Virtually all modern Intel processors have core areas consisting of multiple
+copies of the execution core circuitry, each of which is called a
+\textit{core}.  At the time of this writing, desktop-class Intel CPUs have 4
+cores, and server-class CPUs have as many as 18 cores.
+
+Most Intel CPUs feature \textit{hyper-threading}, which means that a core
+(shown in Figure~\ref{fig:cpu_core}) has two copies of the register files
+backing the execution context described in \S~\ref{sec:registers}, and can
+execute two separate streams of instructions simultaneously. Hyper-threading
+increases the utilization of the shared fetch, decode and execution units, in
+the presence of memory stalls.
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
+  \caption{
+    CPU core with two logical processors. Each logical processor has its own
+    execution context and local APIC, and they share all the other core
+    resources.
+  }
+  \label{fig:cpu_core}
+\end{figure}
+
+A hyper-threaded core is exposed to system software as two \textit{logical
+processors}, also named \textit{hardware threads} in the Intel documentation.
+The logical processor abstraction allows the code used to distribute work
+across processors in a multi-processor system to function without any change on
+multi-core hyper-threaded processors.
+
+The high level of resource sharing introduced by hyper-threading introduces a
+security vulnerability. Software running on one logical processor can use the
+high-performance counter \cite{petters1999making} to get information about the
+instructions and memory access patterns of another piece of software that is
+executed on the other logical processor in the same core.
+
+
+\subsection{CPU Microcode}
+\label{sec:microcode}
+
+Intel's SGX patents disclose that all the SGX features, except for DRAM
+encryption, were implemented as microcode extensions. This section explains the
+microcode feature in Intel CPUs. The limitations of microcode can explain
+seemingly arbitrary decisions in the SGX design, and a thorough understanding
+is crucial to evaluating the feasibility of SGX modification proposals.
+
+The x86 architecture defines a \textit{complex instruction set} (CISC).
+However, virtually all modern CPUs are architected following \textit{reduced
+instruction set} (RISC) principles. This is accomplished by having the
+instruction decode stage (see Figure~\ref{fig:cpu_core}) break down each x86
+instruction into \textit{micro-ops} for every instruction. The other CPU stages
+work exclusively with micro-ops.
+
+The majority of x86 instructions are handled by the hardware decoding path,
+which can emit at most 4 micro-ops per instruction. Complex instructions use a
+slower decoding path that reads micro-ops from a \textit{microcode store ROM}
+(MSROM).
+
+Modern Intel processors implement a microcode update facility. The SDM
+describes microcode updates from the perspective of an OS kernel and
+hypervisor. Each core can be updated independently, and the updates must be
+re-applied on each boot cycle. A core can be updated multiple times, but each
+update must have a bigger version than the core's current version.
+
+The update facility increases the attractiveness of developing architectural
+features as microcode extensions. The SGX enclave measurements produced by the
+processor include the microcode version, hinting that the SGX designers
+anticipated the need to use microcode updates.
+
+\cite{hawkes2012microcode} used fault injection and timing analysis to conclude
+that each recent Intel microcode update is signed with a 2048-bit RSA key and
+a (possibly non-standard) 256-bit hash algorithm. This implies that Intel
+already has a microcode implementation of RSA-2048 signature checking, which
+may explain why SGX uses RSA signatures in its enclave structures.
+
+\cite{chen2014microcode} sets out to analyze the structure of microcode used in
+all x86 processors, but is unable to obtain any details about Intel's
+microcode. Fortunately, even though the microcode structure is undocumented,
+the 4 micro-ops limitation can be used to guess intelligently whether an
+architectural feature is implemented in microcode. For example, the context
+switch in \S~\ref{sec:registers} is most likely done in microcode, whereas
+simple arithmetic and memory access is handled directly by hardware.
+
+
+\subsection{Memory Caching}
 \label{sec:caching}
 
 Caches are small, fast memories that store recently accessed code and data.
 Thanks to the high locality in the memory access patterns of most applications,
 good caches have very high hit rates (90\%-99\%), and do a great job of hiding
-the (comparatively) high latency of RAM. At the same time, the large time
+the (comparatively) high latency of DRAM. At the same time, the large time
 differences between cached and un-cached memory accesses can be used to learn
 about an application's memory access patterns, via
 \textit{cache timing attacks} \cite{banescu2011cache}. The patterns, in turn,
@@ -368,10 +476,8 @@ cache structure and lookup process.
   \label{fig:cpu_cache}
 \end{figure}
 
-According to the CPUID instruction results and the Intel programming manuals
-\cite{intel2014manual}, the L3 cache of recent processors does not use direct
-set indexing, and instead uses a ``complex'' indexing scheme, which is not
-described in Intel's documentation.
+The SDM does not describe the L3 indexing scheme, but we develop some
+understanding of it in \S~\ref{sec:cpu_uncore}.
 
 
 \subsection{Caching and Address Translation}
@@ -433,11 +539,11 @@ side-effect.
 \subsection{Caching and Logical Processors}
 \label{sec:cache_coherence}
 
-Intel's software developer manual \cite{intel2014manual} describes the ordering
-guarantees that a software developer can rely on when accessing the same memory
-location in multiple hardware threads. The memory model is a variation on the
-Total Store Order (TSO) model \cite{owens2009tso}, meaning that all the
-hardware threads will see the same order of writes.
+Intel's SDM describes the ordering guarantees that a software developer can
+rely on when accessing the same memory location in multiple hardware threads.
+The memory model is a variation on the Total Store Order (TSO) model
+\cite{owens2009tso}, meaning that all the hardware threads will see the same
+order of writes.
 
 When the hardware threads that access the same memory location execute on
 different cores, they may cause the cache line containing the memory location
@@ -455,23 +561,18 @@ executing TLB-invalidating instructions on the stopped logical processors, and
 then resuming execution on the stopped logical processors.
 
 \cite{hennessy2012architecture} provides a good introduction to cache coherence
-principles. \cite{intel2014manual} states that the coherence protocol used in
-Intel processors is based on MESI. At the time of this writing, the latest
-processors appear to be using a variant of
-MESIF \cite{goodman2009mesif, ziakas2010qpi, intel2009qpi}.
+principles. Intel's optimization reference \cite{intel2014optimization} states
+that the coherence protocol used in Intel processors is
+MESIF \cite{goodman2009mesif}, a variant of MESI.
 
 
 \subsection{The Memory Subsystem}
-\label{sec:uncore}
+\label{sec:cpu_uncore}
 
 According to Intel's patents, the SGX memory protection relies on special
 entries in the \textit{Source Address Decoder} (SAD) and \textit{Target Address
 Decoder} (TAD).  A thorough understanding of the memory hierarchy is required
 in order to understand this aspect of the SGX implementation.
-
-The recent Intel architectures are designed to support systems with multiple
-processors connected by a network of point-to-point links called the
-\textit{Quick-Path Interconnect} (QPI) \cite{intel2009qpi}.
 
 The QPI protocol layer defines the cache coherence protocol, which is a variant
 of MESIF \cite{goodman2009mesif}, an extension of MESI. The QPI protocol
@@ -499,9 +600,8 @@ and a slice of the LLC; acts as the QPI cache agent for that slice of LLC;
 CBoxes are co-located with cores and connected in a ring interconnect
 
 The physical memory space is split up between CBoxes. The ``complex'' caching
-algorithm mentioned in the Intel software development manual
-\cite{intel2014manual} includes a ``hashing'' step that maps a physical address
-to a CBox, and thus a slice of the LLC.
+algorithm mentioned in the Intel SDM includes a ``hashing'' step that maps a
+physical address to a CBox, and thus a slice of the LLC.
 
 Each CBox contains a Source Address Decoder (SAD), and the configurations of
 all SADs in a core are identical, replicated by the UBox. The SAD takes in a
