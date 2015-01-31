@@ -1,0 +1,45 @@
+\subsection{CPU Microcode}
+\label{sec:microcode}
+
+Intel's SGX patents disclose that all the SGX features, except for DRAM
+encryption, were implemented as microcode extensions. This section explains the
+microcode feature in Intel CPUs. The limitations of microcode can explain
+seemingly arbitrary decisions in the SGX design, and a thorough understanding
+is crucial to evaluating the feasibility of SGX modification proposals.
+
+The x86 architecture defines a \textit{complex instruction set} (CISC).
+However, virtually all modern CPUs are architected following \textit{reduced
+instruction set} (RISC) principles. This is accomplished by having the
+instruction decode stage (see Figure~\ref{fig:cpu_core}) break down each x86
+instruction into \textit{micro-ops} for every instruction. The other CPU stages
+work exclusively with micro-ops.
+
+The majority of x86 instructions are handled by the hardware decoding path,
+which can emit at most 4 micro-ops per instruction. Complex instructions use a
+slower decoding path that reads micro-ops from a \textit{microcode store ROM}
+(MSROM).
+
+Modern Intel processors implement a microcode update facility. The SDM
+describes microcode updates from the perspective of an OS kernel and
+hypervisor. Each core can be updated independently, and the updates must be
+re-applied on each boot cycle. A core can be updated multiple times, but each
+update must have a bigger version than the core's current version.
+
+The update facility increases the attractiveness of developing architectural
+features as microcode extensions. The SGX enclave measurements produced by the
+processor include the microcode version, hinting that the SGX designers
+anticipated the need to use microcode updates.
+
+\cite{hawkes2012microcode} used fault injection and timing analysis to conclude
+that each recent Intel microcode update is signed with a 2048-bit RSA key and
+a (possibly non-standard) 256-bit hash algorithm. This implies that Intel
+already has a microcode implementation of RSA-2048 signature checking, which
+may explain why SGX uses RSA signatures in its enclave structures.
+
+\cite{chen2014microcode} sets out to analyze the structure of microcode used in
+all x86 processors, but is unable to obtain any details about Intel's
+microcode. Fortunately, even though the microcode structure is undocumented,
+the 4 micro-ops limitation can be used to guess intelligently whether an
+architectural feature is implemented in microcode. For example, the context
+switch in \S~\ref{sec:registers} is most likely done in microcode, whereas
+simple arithmetic and memory access is handled directly by hardware.
