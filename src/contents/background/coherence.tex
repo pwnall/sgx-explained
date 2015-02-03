@@ -1,0 +1,76 @@
+\subsection{Cache Coherence}
+\label{sec:cache_coherence}
+
+The Intel architecture was designed to support application software that was
+not written with caches in mind. One aspect of this is the Total Store Order
+(TSO) \cite{owens2009tso} memory model, the guarantee that concurrently running
+hardware threads see the same order of DRAM writes. Given that a memory
+location might be copied in multiple caches on different cores, or even
+different processors, providing the TSO guarantees requires a \textit{cache
+coherence protocol} that keeps the cache line copies in sync. This section
+covers some cache coherence implementation details that are necessary for
+understanding SGX. \cite{hennessy2012architecture} provides a good introduction
+to cache coherence principles.
+
+The cache coherence mechanism is not visible to software, so it only briefly
+mentioned in the SDM. Fortunately, Intel's optimization reference
+\cite{intel2014optimization} and the datasheets referenced in
+\S~\ref{sec:cpu_die} provide more information. Intel processors use variations
+of the MESIF \cite{goodman2009mesif} protocol, which is implemented in the CPU
+and in the protocol layer of the QPI bus.
+
+The SDM and the CPUID instructions indicate that the L3 cache, also known as
+the \textit{last-level cache} (LLC) is \textit{inclusive}, meaning that any
+location cached by an L1 or L2 cache must also be cached in the LLC. This
+design decision reduces complexity in many implementation aspects. We estimate
+that the bulk of the cache coherence implementation is in the CPU's uncore,
+because cache synchronization can be achieved without having to communicate to
+the lower cache levels, which are inside execution cores.
+
+Unfortunately, a cache timing attack can take advantage of the fact that the
+LLC is inclusive and shared among CPU cores. This allows an attacker thread
+to monitor a target thread that runs on a core in the same CPU die. The
+attacker can evict lines in the target core's cache by filling up the L3 cache,
+and then probe the L3 cache to find out when the target causes cache evictions.
+The evicted lines disclose some bits in the target thread's memory accesses.
+
+The QPI protocol defines \textit{cache agents}, which are connected to the
+last-level cache in a processor, and \textit{home agents}, which are connected
+to memory controllers. Cache agents make requests to home agents for cache line
+data on cache misses, while home agents keep track of cache line ownership, and
+obtain the cache line data from other cache line agents, or from the memory
+controller. The QPI routing layer supports multiple agents per socket, and each
+processor has its own caching agents, and at least one home agent.
+
+The CPU uncore (see Figure~\ref{fig:cpu_die}) has a bidirectional ring
+interconnect used for communication between execution cores and the other
+uncore components. The execution cores are connected to the ring by
+\textit{CBoxes}, which route their LLC accesses. The routing is static, as the
+LLC is divided into same-size slices (common slice sizes are 1.5Mb and 2.5Mb),
+and an undocumented hashing scheme maps each possible physical address to
+exactly one LLC slice. Intel's documentation states that the hashing scheme was
+designed to avoid having a slice become a hotspot. The hashing scheme is the
+reason why the L3 cache is documented as having a ``complex'' indexing scheme,
+as opposed to the direct indexing used in the L1 and L2 caches.
+
+The number of LLC slices matches the number of cores in the CPU, and each LLC
+slice shares a CBox with a core. The CBoxes implement the cache coherence
+engine, so each CBox acts as the QPI cache agent for its LLC slice. CBoxes
+use a \textit{Source Address Decoder} (SAD) to route DRAM requests to the
+appropriate home agents. Conceptually, the SAD takes in a memory address and
+access type, and outputs a transaction type (coherent, non-coherent, IO) and a
+node ID. Each CBox contains a SAD replica, and the configurations of all SADs
+in a package are identical.
+
+The SAD configurations are kept in sync by the \textit{UBox}, which is the
+uncore configuration controller, and connects the \textit{System agent} to the
+ring. The UBox is responsible for reading and writing physically distributed
+registers across the uncore. The UBox also receives interrupts from system and
+dispatches them to the appropriate core.
+
+On recent Intel processors, the uncore also contains at least one memory
+controller. Each integrated memory controller (iMC or MBox in Intel's
+documentation) is connected to the ring by a \textit{home agent} (HA or
+\textit{BBox} in Intel's datasheets). Each home agent contains a
+\textit{Target Address Decoder} (TAD), which maps each physical DRAM address to
+a specific DRAM channel.
