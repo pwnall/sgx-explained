@@ -42,9 +42,21 @@ obtain the cache line data from other cache line agents, or from the memory
 controller. The QPI routing layer supports multiple agents per socket, and each
 processor has its own caching agents, and at least one home agent.
 
-The CPU uncore (see Figure~\ref{fig:cpu_die}) has a bidirectional ring
-interconnect used for communication between execution cores and the other
-uncore components. The execution cores are connected to the ring by
+
+% Ring Interconnect and Last Level Cache: Optimization S 2.5.5.3
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=90mm]{figures/cpu_uncore.pdf}}
+  \caption{
+    The stops on the ring interconnect used for inter-core and core-uncore
+    communication.
+  }
+  \label{fig:cpu_uncore}
+\end{figure}
+
+The CPU uncore has a bidirectional ring interconnect, shown in Figure
+\ref{fig:cpu_uncore} used for communication between execution cores and the
+other uncore components. The execution cores are connected to the ring by
 \textit{CBoxes}, which route their LLC accesses. The routing is static, as the
 LLC is divided into same-size slices (common slice sizes are 1.5Mb and 2.5Mb),
 and an undocumented hashing scheme maps each possible physical address to
