@@ -2,11 +2,11 @@
 \label{sec:cache_coherence}
 
 The Intel architecture was designed to support application software that was
-not written with caches in mind. One aspect of this is the Total Store Order
-(TSO) \cite{owens2009tso} memory model, the guarantee that concurrently running
-hardware threads see the same order of DRAM writes. Given that a memory
-location might be copied in multiple caches on different cores, or even
-different processors, providing the TSO guarantees requires a \textit{cache
+not written with caches in mind. One aspect of this support is the Total Store
+Order (TSO) \cite{owens2009tso} memory model, the guarantee that all the
+hardware threads in a computer see the same order of DRAM writes. Given that a
+memory location might be copied in multiple caches on different cores, or even
+on different processors, providing the TSO guarantees requires a \textit{cache
 coherence protocol} that keeps the cache line copies in sync. This section
 covers some cache coherence implementation details that are necessary for
 understanding SGX. \cite{hennessy2012architecture} provides a good introduction

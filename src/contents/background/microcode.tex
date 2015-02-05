@@ -19,11 +19,16 @@ which can emit at most 4 micro-ops per instruction. Complex instructions use a
 slower decoding path that reads micro-ops from a \textit{microcode store ROM}
 (MSROM).
 
+% Microcode Update Facilities: SDM S 9.11
+% Responsibilities of the BIOS: SDM 9.11.8.1
+
 Modern Intel processors implement a microcode update facility. The SDM
 describes microcode updates from the perspective of an OS kernel and
 hypervisor. Each core can be updated independently, and the updates must be
 re-applied on each boot cycle. A core can be updated multiple times, but each
-update must have a bigger version than the core's current version.
+update must have a bigger version than the core's current version. The current
+SDM version at the time of this writing indicates that a microcode update is
+up to 16 kB in size.
 
 The update facility increases the attractiveness of developing architectural
 features as microcode extensions. The SGX enclave measurements produced by the
