@@ -16,12 +16,14 @@ A computer's components are connected by a printed circuit board called a
 The Intel documentation uses the term ``package'' to specifically refer to a
 CPU.
 
-The buses most relevant to SGX (see Figure~\ref{fig:motherboard}) are the
-\textit{Quick-Path Interconnect} (QPI) \cite{intel2009qpi}, a network of
-point-to-point links that connect processors, the \textit{double data rate}
-(DDR) bus that connects a CPU to DRAM, and the \textit{Peripheral Component
-Interconnect Express} (PCIe) bus that connects a CPU to peripherals such as a
-\textit{Network Interface Card} (NIC).
+Figure~\ref{fig:motherboard} shows the most relevant chips, from an SGX
+perspective. The CPU's package (described in \S~\ref{sec:cpu_die}) is the only
+piece of trusted hardware in the SGX model. The \textit{Platform Controller
+Hub} (PCH) houses (relatively) low-speed I/O controllers driving the slower
+buses in the system, like SATA, used by storage devices, and USB, used by
+input peripherals. Motherboards also have a flash memory chip that hosts
+firmware which implements the \textit{Unified Extensible Firmware Interface}
+(UEFI). The firmware contains the boot code and the SMM handler.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/motherboard.pdf}}
@@ -31,6 +33,24 @@ Interconnect Express} (PCIe) bus that connects a CPU to peripherals such as a
   \label{fig:motherboard}
 \end{figure}
 
+The relevant buses are the \textit{Quick-Path Interconnect} (QPI)
+\cite{intel2009qpi}, a network of point-to-point links that connect processors,
+the \textit{double data rate} (DDR) bus that connects a CPU to DRAM, the
+\textit {Direct Media Interface} (DMI) bus that connects a CPU to the PCH,
+the \textit{Peripheral Component Interconnect Express} (PCIe) bus that connects
+a CPU to peripherals such as a \textit{Network Interface Card} (NIC), and the
+\textit {Serial Programming Interface} (SPI) used by the PCH to communicate
+with the flash memory.
+
+In high-end systems, the PCH also contains a service processor, called the
+Intel \textit{Management Engine} (ME) \cite{ruan2014intelme}.  The ME runs
+firmware stored in the same flash memory chip as the UEFI firmware. The
+Management Engine is intended for remote system management and troubleshooting,
+and has tremendous privileges. The ME is running even when the system is in
+\textit{Soft Off} mode (ACPI G2/S5), when the CPU and RAM are unpowered. Also,
+the ME can access the network via a NIC without CPU support, can read and
+modify RAM via DMA transfers, and can override the CPU boot vector.
+
 The SGX trusted computing base includes the processor package, and excludes the
 other hardware in the computer. It follows that SGX must be able to fend off
 attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
@@ -38,6 +58,21 @@ attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
 as the memory bus tap used to hack the Xbox \cite{huang2003xbox} and the
 memory glitching attack that subverted the PlayStation 3 hypervisor
 \cite{hotz2010ps3}.
+
+The flash memory stores the SMM handler and Intel ME firmware, which run with
+high privileges. Furthermore, the contents of flash memory persists across
+power cycles. This opens up the possibility for an attacker that gains SPI
+access to deploy a persistent payload that runs at high privilege. To prevent
+against these attacks, most of the firware is signed. For example, the ME
+checks that its firmware was signed by a burned-in Intel public key. However,
+both the computer firmware checks \cite{wojtczuk2010bios} and the ME firmware
+checks \cite{tereshkin2009amt} have been subverted in the past.
+
+The SGX threat model explicitly considers SMM to be untrusted. However, it does
+not account for malicious code running on the Management Engine. Unfortunately,
+the ME, PCH and DMI are Intel-proprietary and largely undocumented, so we
+cannot assess the impact of an ME attack on software running inside an SGX
+enclave.
 
 
 \subsubsection{The Processor}

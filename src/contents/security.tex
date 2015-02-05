@@ -38,18 +38,3 @@ that code which accesses private data must be entirely contained inside an
 enclave. Jumping into and out of enclave code must be performed explicitly
 using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
 
-\begin{figure}[hbtp]
-  \center{\includegraphics[width=65mm]{figures/pch.pdf}}
-  \caption{
-    The architecture of modern Intel systems.
-    The Platform Controller Hub (PCH) contains a service processor, called the
-    Intel Management Engine (ME). The processor has direct access to the
-    network, can read and modify RAM via DMA transfers, and can override the
-    CPU boot vector. The processor runs firmware stored in the same flash
-    memory as the BIOS code.
-  }
-  \label{fig:pch}
-\end{figure}
-
-
-
