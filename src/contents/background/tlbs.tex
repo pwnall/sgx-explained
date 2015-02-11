@@ -9,30 +9,79 @@ addresses pointing to the same physical address) correctly. However, address
 translation requires up to 20 memory accesses (see
 Figure~\ref{fig:vmx_paging}), so it is impractical to perform a full address
 translation for every cache access. Instead, address translation results are
-cached in \textit{translation look-aside buffers} (TLBs).
+cached in the \textit{translation look-aside buffer} (TLB).
 
-In the Intel architecture, caches are almost transparent to software, but the
-TLBs are not. The system software is responsible for invalidating TLBs when it
-changes the page tables that it manages. The CPU implements instructions that
-can be used by privileged software to invalidate the TLB entries covering a
-specific linear address. Some instructions invalidate all the TLB entries as a
-side-effect.
+Table~\ref{fig:tlb_timings} shows the levels of the TLB hierarchy. Recent
+processors have separate L1 TLBs for instructions and data, and a shared L2
+TLB. Each core has its own TLB (see Figure~\ref{fig:cpu_core}). When a virtual
+address is not contained in a core's TLB, the \textit{Page Miss Handler} (PMH)
+performs a \textit{page walk} (page table / EPT traversal) to translate the
+virtual address, and the result is stored in the TLB.
+
+\begin{table}[hbt]
+  \center{\begin{tabular}{| l | r | r |}
+  \hline
+  \textbf{Memory} & \textbf{Entries} & \textbf{Access Time}\\
+  \hline
+  L1 I-TLB & 128 + 8 = 136 & 1 cycle \\
+  \hline
+  L1 D-TLB & 64 + 32 + 4 = 100 & 1 cycle \\
+  \hline
+  L2 TLB & 1536 + 8 = 1544 & 7 cycles \\
+  \hline
+  Page Tables & $2^{36} \approx 6 \cdot 10^{10} $ & 18 cycles - 200ms \\
+  \hline
+  \end{tabular}}
+  \caption{
+    Approximate sizes and access times for each level in the TLB hierarchy,
+    from \cite{7zip2014haswell}.
+  }
+  \label{fig:tlb_timings}
+\end{table}
+
+% Caching Translations in TLBs: SDM S 4.10.2.2
+% Caches for Paging Structures: SDM S 4.10.3.1
+
+In the Intel architecture, the PMH is implemented in hardware and/or microcode,
+and the TLB is never directly exposed to software and its implementation
+details are not documented.  The SDM does state that each TLB entry contains
+the physical address associated with a virtual address, and the metadata needed
+to resolve a memory access. For example, the processor needs to check the
+writable (W) flag on every write, and issue a General Protection fault (\#GP)
+if the write targets a read-only page.  Therefore, the TLB entry for each
+virtual address caches the logical-and of all the relevant W flags in the page
+table structures leading up to the page.
+
+The TLB is transparent to application software. However, kernels and
+hypervisors must make sure that the TLBs do not get out of sync with the page
+tables and EPTs. When changing a page table or EPT, the system software must
+use the INVLPG instruction to invalidate any TLB entries for the virtual
+address whose translation changed. Some instructions \textit{flush the TLBs},
+meaning that they invalidate all the TLB entries, as a side-effect.
 
 % Propagation of Paging-Structure Changes to Multiple Processors: SDM S 4.10.5
 
-The cache coherence does not cover TLB entries. When modifying a page table
-or EPT, the kernel and hypervisor are responsible for performing a
-\textit{TLB shootdown}, which consists of stopping all the logical processors
-that use the page table / EPT about to be changed, performing the changes,
-executing TLB-invalidating instructions on the stopped logical processors, and
-then resuming execution on the stopped logical processors.
+The TLB is not covered by the cache coherence mechanism described in
+\S~\ref{sec:cache_coherence}. Therefore, when modifying a page table or EPT on
+a multi-core / multi-processor system, the system software is responsible for
+performing a \textit{TLB shootdown}, which consists of stopping all the logical
+processors that use the page table / EPT about to be changed, performing the
+changes, executing TLB-invalidating instructions on the stopped logical
+processors, and then resuming execution on the stopped logical processors.
 
-The set index in an L1 cache only uses the address bits that are not impacted
-by address translation, so that set lookup and TLB lookup can be done in
-parallel. Given a page size $P = 2^{p}$ bytes, the requirement above is
-equivalent to $l + s \le p$. In the x86 architecture $p = 12$, and all recent
-processors have 64-byte cache lines ($l = 6$) and 64 sets ($s = 6$), as shown
-in Figure~\ref{fig:caching_and_paging}.
+Address translation constrains the L1 cache design. On Intel processors, the
+set index in an L1 cache only uses the address bits that are not impacted by
+address translation, so that the L1 set lookup can be done in parallel with the
+TLB lookup. This is critical for achieving a low latency when both the L1 TLB
+and the L1 cache are hit.
+
+Given a page size $P = 2^{p}$ bytes, the requirement
+above translates to $l + s \le p$. In the Intel architecture, $p = 12$, and all
+recent processors have 64-byte cache lines ($l = 6$) and 64 sets ($s = 6$) in
+the L1 caches, as shown in Figure~\ref{fig:caching_and_paging}.
+The L2 and L3 caches are only accessed if the L1 misses, so the physical
+address for the memory access is known at that time, and can be used for
+indexing.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/caching_and_paging.pdf}}
@@ -46,13 +95,6 @@ in Figure~\ref{fig:caching_and_paging}.
   \label{fig:caching_and_paging}
 \end{figure}
 
-The L2 cache in recent Intel processors uses physical indexing
-\cite{patterson2013architecture}. The indexing method is not documented in
-Intel's manuals and is not reported by the CPUID instruction, as it is
-considered to be an implementation detail. However, the indexing method
-determines the set index for a given memory location, and knowing which memory
-addresses are stored in the same set is crucial for mounting and defending
-against cache timing attacks.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/cache_partitions.pdf}}

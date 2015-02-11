@@ -25,7 +25,7 @@ The SGX reference manual states that the Processor Reserved Memory (PRM) is
 allocated by the BIOS, by setting the PRM range registers (PRMRR). The patents
 refer to this range as the secure enclave range registers (SERR), and state
 that the memory range is protected from DMA accesses by a dedicated pair of
-SAD / TAD entries (\S~\ref{sec:cpu_uncore}).
+SAD / TAD entries (\S~\ref{sec:cache_coherence}).
 The patents state that the SAD and TAD entries mirror the PRMRR registers
 which, if done correctly, does prevent against DMA snooping.
 

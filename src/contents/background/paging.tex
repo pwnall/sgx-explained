@@ -66,13 +66,10 @@ translation process in the presence of hardware virtualization.
 
 Each entry in the page tables has some boolean flags, in addition to the
 pointer to the next level. The following flags are particularly interesting for
-our goals. The \textit{present} (P) flag is set to 0 to indicate pages that
-have been evicted from RAM to a cheaper and slower storage medium. When address
-translation encounters a page table entry where P is 0, the CPU generates a
-page fault (\#PF), and the OS kernel is responsible for loading the page back
-into RAM and resuming execution. If an EPT entry has the P flag set to 0, the
-CPU performs a VM exit, and the hypervisor has an opportunity to bring the page
-into RAM. The \textit{accessed} (A) flag is set to 1 by the CPU whenever the
+our goals. The \textit{present} (P) flag is set to 0 to indicate unused parts
+of the address space, which do not have physical memory associated with them,
+or pages that have been evicted from RAM to a cheaper and slower storage
+medium.  The \textit{accessed} (A) flag is set to 1 by the CPU whenever the
 address translation machinery reads a page table entry, and the \textit{dirty}
 (D) flag is set to 1 by the CPU when an entry is accessed by a memory write
 operation. The A and D flags give the hypervisor and kernel insight into
@@ -82,6 +79,8 @@ select which pages get to be evicted from RAM.
 Page table entries have flags that provide access control, in addition to the
 flags supporting page swapping. The interesting flags are the \textit{writable}
 (W) flag, which can be set to 0 to prohibit\footnote{Writes to non-writable
-pages result in general protection faults (\#GP).} memory writes to a page, and
-the \textit{disable execution} (XD) flag, which can be set to 1 to prevent
-instruction fetches from a page.
+pages result in \#GP exceptions (\S~\ref{sec:faults}).} memory writes to a
+page, the \textit{disable execution} (XD) flag, which can be set to 1 to
+prevent instruction fetches from a page, and the \textit{supervisor} (S) flag,
+which can be set to 1 to prohibit accesses from application software running at
+ring 3.
