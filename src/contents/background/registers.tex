@@ -2,9 +2,11 @@
 \label{sec:registers}
 
 Application software targeting the 64-bit Intel architecture uses a variety of
-registers to interact with the CPU features. The values in these registers
-make up an application's state, or context. Kernels multiplex a CPU among
-multiple software threads by \textit{context switching}, namely saving a
+CPU registers to interact with the processor's features. The values in these
+registers make up an application's state, or context. Kernels multiplex a
+CPU\footnote{Actually, each hardware thread is multiplexed among software
+threads. See \S~\ref{sec:cpu_core}.}
+among multiple software threads by \textit{context switching}, namely saving a
 thread's context, and replacing it with another thread's previously saved
 context. This section covers the context switching features used by SGX when a
 logical processor starts or stops executing code that belongs to an enclave.
@@ -14,7 +16,8 @@ logical processor starts or stops executing code that belongs to an enclave.
   \caption{
     CPU registers in the 64-bit Intel architecture. RSP can be used as a
     general-purpose register (GPR), e.g., in pointer arithmetic, but it always
-    points to the top of the program's stack.
+    points to the top of the program's stack. Segment registers are covered in
+    \S~\ref{sec:segments}.
   }
   \label{fig:cpu_registers}
 \end{figure}
@@ -23,13 +26,9 @@ Integers and memory addresses are stored in 16 \textit{general-purpose
 registers} (GPRs). RAX, RBX, RCX, RDX, RSI, RDI, RSP, and RBP are extended
 versions of the GPRs available to 32-bit programs, and R9-R16 are new
 registers. RSP is reserved for pointing to the top of the \textit{stack}, which
-is used to save state during procedure calls.
-
-In 64-bit mode, the values of most segment registers (CS, DS, ES, SS) are
-ignored. The FS and GS segment registers generally point to the current
-thread's \textit{thread-local storage}, so they are still partially supported
-in 64-bit mode. The base addresses loaded in FS and GS are used when computing
-linear addresses, whereas the limits are ignored.
+is automatically read and modified by the CPU instructions for procedure calls,
+(e.g., CALL and RET), and by explicit stack handling instructions such as PUSH
+and POP.
 
 All applications also use the RIP register, which contains the address of the
 currently executing instruction, and the RFLAGS register, whose bits (e.g.,
@@ -42,7 +41,7 @@ which are shown in Table~\ref{fig:xsave_state}.
 \begin{table}[hbt]
   \center{\begin{tabularx}{\columnwidth}{| l | X | l |}
   \hline
-  \textbf{Feature} & \textbf{Registers} & \textbf{Feature bit}\\
+  \textbf{Feature} & \textbf{Registers} & \textbf{XCR0 bit}\\
   \hline
   FPU & FP0 - FP7, FSW, FTW & 0 \\
   \hline

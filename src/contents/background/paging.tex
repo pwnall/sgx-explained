@@ -16,6 +16,8 @@ legacy software dating back to 1990 natively. Most modes are not necessary for
 understanding SGX, so we only cover the translation modes used in modern 64-bit
 operating systems and 64-bit cloud environments.
 
+% IA-32e Paging: SDM S 4.5
+
 64-bit desktop operating systems use the addressing mode called IA-32e by
 Intel's documentation, which translates 48-bit \textit{virtual addresses} into
 \textit{physical addresses} of at most 52 bits\footnote{The size of a physical
@@ -39,6 +41,8 @@ the address translation.
   }
   \label{fig:os_paging}
 \end{figure}
+
+% VMX Support for Address Translation: SDM S 4.11
 
 Hypervisors have access to another layer of address translation, named
 \textit{extended page tables} (EPT), to multiplex the physical memory across
@@ -75,6 +79,8 @@ address translation machinery reads a page table entry, and the \textit{dirty}
 operation. The A and D flags give the hypervisor and kernel insight into
 application memory access patterns, providing the input for the algorithms that
 select which pages get to be evicted from RAM.
+
+% Page-Level Protection: SDM S 5.11, S 5.11.{1,2,3,4}
 
 Page table entries have flags that provide access control, in addition to the
 flags supporting page swapping. The interesting flags are the \textit{writable}

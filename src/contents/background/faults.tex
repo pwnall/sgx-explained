@@ -5,19 +5,17 @@ Applications software needs a method to invoke the kernel, because it cannot
 perform privileged operations, such as network or disk I/O. At the same time,
 ring 3 software cannot be offered the ability to jump arbitrarily into kernel
 code, because that would compromise the kernel's ability to isolate
-applications and enforce security invariants.
-\footnote{For example, when an application wishes to write a file to the disk,
-the kernel must check if the application's user has access to that file. If the
-ring 3 code could perform an arbitrary jump in kernel space, it would be able
-to skip the access check.}
+applications and enforce security invariants.\footnote{For example, when an
+application wishes to write a file to the disk, the kernel must check if the
+application's user has access to that file. If the ring 3 code could perform an
+arbitrary jump in kernel space, it would be able to skip the access check.}
 Therefore, the processor has designated methods for switching privilege levels,
-which protect the integrity of the privileged software.  This section describes
+which protect the integrity of the privileged software. This section describes
 the privilege switching mechanisms that impact the SGX design. Furthermore,
 the process of calling code inside an enclave is similar to switching
 privilege levels, because the enclave code must be protected from
 
-% Performing Fast Calls to System Procedures with the SYSENTER and SYSEXIT
-%     Instructions: SDM S 5.8.7
+% Fast System Calls in 64-Bit Mode: SDM S 5.8.8
 % Architectural MSRs: SDM S 35.1
 
 \begin{figure}[hbt]
@@ -31,13 +29,19 @@ privilege levels, because the enclave code must be protected from
 On modern processors, application software uses the SYSCALL instruction to
 to invoke ring 0 code, and the kernel uses SYSRET to switch the privilege level
 back to ring 3. SYSCALL jumps into a predefined kernel location, which is
-specified by writing to \textit{architectural Model Specific Registers (MSRs)}.
-\footnote{Despite the ``model-specific'' in MSR, \textit{architectural} MSRs
-are a part of the Intel architecture, and their semantics are stable across
-processor generations.} MSRs can only be read or written by ring 0 code,
-therefore application softeware cannot execute arbitrary kernel code.
+specified by writing to \textit{architectural\footnote{Despite the
+``model-specific'' in MSR, \textit{architectural} MSRs are a part of the Intel
+architecture, and their semantics are stable across processor generations.}
+Model Specific Registers (MSRs)}. MSRs can only be read or written by ring 0
+code, therefore application softeware cannot execute arbitrary kernel code.
+The SYSRET instruction switches back to ring 3 and jumps to the address in RDX,
+which is expected to be set by the application code that uses SYSCALL. Note
+that SYSCALL and SYSRET do not need a stack, because kernel calls are not
+recursive.
 
 % Interrupt and Exception Handling: SDM S 6.1, S 6.2
+% Access Rights: SDM S 4.6
+% Page-Fault Exceptions: SDM S 4.7
 
 The processor also performs a switch from ring 3 to ring 0 when a hardware
 exception (also called \textit{fault}) occurs in application software.  Some
@@ -48,6 +52,8 @@ register from ring 3. A \textit{page fault} (\#PF) occurs when address
 translation encounters a page table entry whose P flag is 0, or attempting to
 use a page in a way inconsistent with the access bits in its page table entry,
 for example accessing a page whose S bit is set from ring 3.
+
+% Interrupt Descriptor Table (IDT): SDM S 6.10
 
 When an exception occurs, the CPU performs a ring switch, and calls the
 \textit{fault handler} for that exception. The locations of the fault handlers
@@ -70,7 +76,7 @@ that ring 3 software cannot access it.
   \hline
   43..40 & Type (14 or 15 in 64-bit mode) \\
   \hline
-  34..32 & Interrupt Stack Table \\
+  34..32 & Interrupt Stack Table (IST) index \\
   \hline
   31..16 & Handler CS \\
   \hline
@@ -83,6 +89,10 @@ that ring 3 software cannot access it.
   }
   \label{fig:idt_entry}
 \end{table}
+
+Each IDT entry has a 3-bit index pointing into the Interrupt Stack Table (IST),
+which is an array of 8 stack pointers stored in the Task State Segment (TSS).
+Modern kernels set up a single TSS, so it can be considered a global structure.
 
 
 
