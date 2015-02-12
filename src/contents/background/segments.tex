@@ -83,15 +83,19 @@ load a valid selector into it. The CPU uses the ring number in the CS selector
 to track the current privilege level, and uses one of the type bits to know
 whether it's running 64-bit code, or 32-bit code in compatibility mode.
 
-TODO: SS
+% Null Segment Selector Checking: SDM S 5.4.1, S 5.4.1.1
 
+The DS and ES segment registers are completely ignored, and can have null
+selectors loaded in them. The CPU loads a null selector in SS when switching
+privilege levels, discussed in \S~\ref{sec:faults}.
 
 % Segment Loading Instructions in IA-32e Mode: SDM S 3.4.4
 % Segmentation in IA-32e Mode: SDM S 3.2.4
 
 Modern kernels only use one descriptor table, the \textit{Global Descriptor
 Table} (GDT), whose virtual address is stored in the GDTR register. Table~
-\ref{fig:gdt_layout} shows a typical GDT layout.
+\ref{fig:gdt_layout} shows a typical GDT layout that can be used by 64-bit
+kernels to run both 32-bit and 64-bit applications.
 
 \begin{table}[hbt]
   \center{\begin{tabular}{| l | l |}

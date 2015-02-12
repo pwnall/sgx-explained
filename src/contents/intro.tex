@@ -39,3 +39,31 @@ architecture, where the OS kernel and hypervisor manage the computer's
 resources.
 
 
+\subsection{SGX Lightning Tour}
+\label{sec:intro_sgx}
+
+SGX sets aside a memory region, called the \textit{Processor Reserved Memory}
+(PRM, \S~\ref{sec:prm}). The CPU protects the PRM from all non-enclave memory
+accesses, including kernel, hypervisor and SMM (\S~\ref{sec:rings}) accesses,
+and DMA accesses (\S~\ref{sec:computer}) from other devices.
+
+The PRM holds the \textit{Enclave Page Cache} (EPC, \S~\ref{sec:epc}), which
+consists of 4kb pages that store enclave code and data. The system software,
+which is untrusted, is in charge of assigning EPC pages to enclaves. The CPU
+tracks each EPC page's state in the \textit{Enclave Page Cache Metadata} (EPCM,
+\S~\ref{sec:epcm}), to ensure that each EPC page belongs to exactly one
+enclave.
+
+The initial code and data in an enclave is loaded by untrusted system software.
+During the setup stage (\S~\ref{sec:lifecycle}), the system software asks the
+CPU to copy data from unprotected memory (outside PRM) into EPC pages, and
+assigns the pages to the enclave being setup (\S~\ref{sec:epcm}). This
+means that the initial enclave state is known to the system software.
+
+After all the enclave's pages are loaded into EPC, the system software asks the
+CPU to mark the enclave as initialized, at which point application software can
+run the code inside the enclave. After an enclave is initialized, the loading
+method described above is disabled.
+
+
+
