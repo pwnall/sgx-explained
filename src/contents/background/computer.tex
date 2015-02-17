@@ -51,6 +51,14 @@ and has tremendous privileges. The ME is running even when the system is in
 the ME can access the network via a NIC without CPU support, can read and
 modify RAM via DMA transfers, and can override the CPU boot vector.
 
+The PCIe bus is an extended, point-to-point version of the PCI standard, which
+provides a method for any peripheral connected to the bus to perform
+\textit{Direct Memory Access} (DMA), transferring data to and from DRAM without
+involving an execution core and spending CPU cycles. The PCI standard includes
+a configuration mechanism that assigns a range of DRAM to each peripheral, but
+makes no provisions for preventing a rogue peripheral from accessing DRAM
+outside the range that has been assigned to it.
+
 The SGX trusted computing base includes the processor package, and excludes the
 other hardware in the computer. It follows that SGX must be able to fend off
 attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
@@ -98,11 +106,12 @@ currently integrated on the CPU die to save power and improve latency.
 % System Agent: Optimization S 2.2.6
 
 At a conceptual level, the uncore of modern processors includes a memory
-controller that interfaces with the DDR bus, an I/O controller that can
-arbitrate the PCIe bus, and a growing number of integrated controllers for
-peripherals, such as a NIC and a GPU. The uncore structure is described in some
-processor family datasheets \cite{intel2014datasheet, intel2010datasheet}, and
-in the overview sections in Intel's uncore performance monitoring documentation
+controller that interfaces with the DDR bus, an \textit{integrated I/O
+controller} (IIO) that can arbitrate the PCIe bus, and a growing number of
+integrated peripherals, such as a \textit{Graphics Processing Unit} (GPU), and
+potentially a NIC. The uncore structure is described in some processor family
+datasheets \cite{intel2014datasheet, intel2010datasheet}, and in the overview
+sections in Intel's uncore performance monitoring documentation
 \cite{intel2014uncore, intel2012uncore, intel2010uncore}.
 
 The SGX design relies on the fact that the processor die includes the memory

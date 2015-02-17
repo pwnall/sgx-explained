@@ -86,3 +86,20 @@ documentation) is connected to the ring by a \textit{home agent} (HA or
 \textit{BBox} in Intel's datasheets). Each home agent contains a
 \textit{Target Address Decoder} (TAD), which maps each physical DRAM address to
 a specific DRAM channel.
+
+The integration of the memory controller on the CPU brings the ability to
+filter DMA. Accesses from a peripheral connected to the PCIe bus will be
+handled by the integrated I/O controller and placed on the ring interconnect
+via the Ubox, then reach the iMC. Therefore, on modern systems, DMA goes
+through both the SAD and TAD. Intel TXT takes advantage of this to set up a
+protected DRAM range. For example, \cite{intel2015datasheet} documents an
+``Intel TXT DMA Protected Range'' IIO configuration register. According to
+Intel's patents, the SGX implementation uses the same mechanism to protect
+enclave memory from outside accesses.
+
+Very recent processors also include the Generic Debug eXternal Connection
+(GDXC) \cite{yuffe2011sandybridge, intel2011gdxc}, which collects and filters
+ring traffic, and reports it to an external debugger. While GDXC is very useful
+for debugging the CPU as well as the systems embedding it, it may compromise
+the security of SGX enclaves. Due to the insufficient documentation on this
+topic, this paper ignores the possibility of GDXC-based attacks.
