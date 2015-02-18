@@ -121,3 +121,24 @@ kernels to run both 32-bit and 64-bit applications.
   \label{fig:gdt_layout}
 \end{table}
 
+% TSS Descriptor: SDM S 7.2.2
+% TSS Descriptor in 64-bit mode: SDM S 7.2.3
+% Task Register: SDM S 7.2.4
+% Task Management in 64-bit Mode: SDM S 7.7
+
+The last entry in Table~\ref{fig:gdt_layout} is a descriptor for the
+\textit{Task State Segment} (TSS), which was designed to implement hardware
+context switching, named \textit{task switching} in the Intel documentation.
+The descriptor is stored in the \textit{Task Register} (TR), which behaves like
+the other segment registers described above.
+
+Task switching was removed from the 64-bit architecture, but the TR segment
+register was preserved, and it points to a repurposed TSS data structure. The
+64-bit TSS contains a \textit{I/O map}, which indicates what parts of the I/O
+address space can be accessed directly from ring 3, and the
+\textit{Interrupt Stack Table} (IST), which is used for privilege level
+switching (\S~\ref{sec:faults}).
+
+Modern operating systems do not allow application software any direct access to
+the I/O address space, so the kernel sets up a single TSS and loads it into TR
+during early initialization.

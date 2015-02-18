@@ -11,6 +11,9 @@ thread's context, and replacing it with another thread's previously saved
 context. This section covers the context switching features used by SGX when a
 logical processor starts or stops executing code that belongs to an enclave.
 
+% 64-Bit Mode Execution Environment: SDM vol1 S 3.2.1
+% Basic Program Execution Registers: SDM vol1 S 3.4
+
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/cpu_registers.pdf}}
   \caption{
@@ -27,13 +30,17 @@ registers} (GPRs). RAX, RBX, RCX, RDX, RSI, RDI, RSP, and RBP are extended
 versions of the GPRs available to 32-bit programs, and R9-R16 are new
 registers. RSP is reserved for pointing to the top of the \textit{stack}, which
 is automatically read and modified by the CPU instructions for procedure calls,
-(e.g., CALL and RET), and by explicit stack handling instructions such as PUSH
-and POP.
+such as \texttt{CALL} and \texttt{RET} (return), and by explicit stack handling
+instructions such as PUSH and POP.
 
 All applications also use the RIP register, which contains the address of the
 currently executing instruction, and the RFLAGS register, whose bits (e.g.,
 the carry flag - CF) are individually used to store comparison results and
 control various instructions.
+
+% XSAVE-Supported Features and State-Component Bitmaps: SDM vol1 S 13.1
+% Enabling the XSAVE Feature Set and XSAVE-Enabled Features: SDM vol1 S13.3
+% XSAVE-managed State: SDM vol1 S 13.5
 
 Software might use other registers to interact with specific features, some of
 which are shown in Table~\ref{fig:xsave_state}.
@@ -55,11 +62,11 @@ which are shown in Table~\ref{fig:xsave_state}.
 \end{table}
 
 The Intel architecture provides a future-proof method for an OS kernel to save
-the values of feature-specific registers used by an application. The XSAVE
-instruction takes in a bitmap of features, and writes the registers used by
-the features whose bits are set to 1 in a memory area that can be used by the
-XRESTORE instruction to load the saved values back into feature-specific
-registers.
+the values of feature-specific registers used by an application. The
+\texttt{XSAVE} instruction takes in a bitmap of features, and writes the
+registers used by the features whose bits are set to 1 in a memory area that
+can be used by the \texttt{XRSTOR} instruction to load the saved values back
+into feature-specific registers.
 
 Application software declares the features that it plans to use to the kernel,
 so the kernel knows what XSAVE bitmap to use when context-switching. When
@@ -67,7 +74,7 @@ receiving the system call, the kernel sets the XCR0 register to the feature
 bitmap declared by the application. The CPU generates a fault if application
 software attempts to use features that are not enabled by XCR0, so applications
 cannot modify feature-specific registers that the kernel wouldn't take into
-account when context-switching. The kernel can use the CPUID instruction to
-learn the size of the XSAVE memory area for a given feature bitmap, and compute
-how much memory it needs to allocate for the context of each of the
-application's threads.
+account when context-switching. The kernel can use the \texttt{CPUID}
+instruction to learn the size of the XSAVE memory area for a given feature
+bitmap, and compute how much memory it needs to allocate for the context of
+each of the application's threads.

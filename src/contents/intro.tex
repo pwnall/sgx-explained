@@ -45,10 +45,10 @@ resources.
 SGX sets aside a memory region, called the \textit{Processor Reserved Memory}
 (PRM, \S~\ref{sec:prm}). The CPU protects the PRM from all non-enclave memory
 accesses, including kernel, hypervisor and SMM (\S~\ref{sec:rings}) accesses,
-and DMA accesses (\S~\ref{sec:computer}) from other devices.
+and DMA accesses (\S~\ref{sec:motherboard}) from peripherals.
 
 The PRM holds the \textit{Enclave Page Cache} (EPC, \S~\ref{sec:epc}), which
-consists of 4kb pages that store enclave code and data. The system software,
+consists of 4KB pages that store enclave code and data. The system software,
 which is untrusted, is in charge of assigning EPC pages to enclaves. The CPU
 tracks each EPC page's state in the \textit{Enclave Page Cache Metadata} (EPCM,
 \S~\ref{sec:epcm}), to ensure that each EPC page belongs to exactly one

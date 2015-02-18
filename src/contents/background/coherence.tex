@@ -19,13 +19,13 @@ mentioned in the SDM. Fortunately, Intel's optimization reference
 of the MESIF \cite{goodman2009mesif} protocol, which is implemented in the CPU
 and in the protocol layer of the QPI bus.
 
-The SDM and the CPUID instructions indicate that the L3 cache, also known as
-the \textit{last-level cache} (LLC) is \textit{inclusive}, meaning that any
-location cached by an L1 or L2 cache must also be cached in the LLC. This
-design decision reduces complexity in many implementation aspects. We estimate
-that the bulk of the cache coherence implementation is in the CPU's uncore,
-because cache synchronization can be achieved without having to communicate to
-the lower cache levels, which are inside execution cores.
+The SDM and the \texttt{CPUID} instruction output indicate that the L3 cache,
+also known as the \textit{last-level cache} (LLC) is \textit{inclusive},
+meaning that any location cached by an L1 or L2 cache must also be cached in
+the LLC. This design decision reduces complexity in many implementation
+aspects. We estimate that the bulk of the cache coherence implementation is in
+the CPU's uncore, because cache synchronization can be achieved without having
+to communicate to the lower cache levels, which are inside execution cores.
 
 Unfortunately, a cache timing attack can take advantage of the fact that the
 LLC is inclusive and shared among CPU cores. This allows an attacker thread
