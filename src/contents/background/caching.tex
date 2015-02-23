@@ -63,6 +63,9 @@ cache (see Figure~\ref{fig:cpu_core}), while the L3 cache is in the CPU's
 uncore (see Figure~\ref{fig:cpu_die}), and is shared by all the cores in the
 package.
 
+% Cache and Memory Subsystem: Optimization S 2.1.4
+% Cache Hierarchy: Optimization S 2.2.5
+
 \begin{table}[hbt]
   \center{\begin{tabular}{| l | r | r |}
   \hline
@@ -70,7 +73,7 @@ package.
   \hline
   Core Registers & 1 KB & no latency \\
   \hline
-  L1 Cache & 32 KB & 4 cycles \\
+  L1 D-Cache & 32 KB & 4 cycles \\
   \hline
   L2 Cache & 256 KB & 10 cycles \\
   \hline

@@ -2,11 +2,18 @@
 \label{sec:rings}
 
 In an Infrastructure-as-a-Service (IaaS) cloud environment, such as Amazon EC2,
-commodity CPUs run software at four different privilege levels, illustrated in
-Figure~\ref{fig:cpu_rings} and described below. The rest of the section
-describes the privilege levels. We also point to successful exploits that
-execute at each privilege level, motivating the SGX design decision to assume
-that the host computer has malicious software running at all privilege levels.
+commodity CPUs run software at four different privilege levels. The rest of the
+section describes the privilege levels. We also point to successful exploits
+that execute at each privilege level, motivating the SGX design decision to
+assume that the host computer has malicious software running at all privilege
+levels.
+
+Figure~\ref{fig:cpu_rings} shows the privilege levels in the Intel
+architecture. Software running at each level is strictly more powerful than
+software running at less privileged levels. It follows that software running at
+a level can access the code and data at less privileged levels, and compromise
+the software running at these levels. Thus, software at each level must trust
+all the software running at more privileged levels.
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=50mm]{figures/cpu_rings.pdf}}
@@ -17,14 +24,16 @@ that the host computer has malicious software running at all privilege levels.
   \label{fig:cpu_rings}
 \end{figure}
 
+% System Management Mode: SDM S 34
+
 \textit{System Management Mode} (SMM) is intended for use by the motherboard
 manufacturers to implement features such as fan control and deep sleep, and/or
-to emulate missing hardware. SMM mode is entered by asserting the SMI\# pin on
-the CPU, which was initially designed exclusively for hardware use. However,
-the southbridges on most motherboards provide a method for privileged
-code\footnote{the hypervisor or operating system kernel} to get the SMI\# pin
-asserted\footnote{Most southbridges assert \texttt{SMI\#} when a byte is
-  written to port 0xb2 via the \textsc{out} opcode}.
+to emulate missing hardware. SMM mode is entered by sending the CPU an SMI
+signal, which was initially designed exclusively for hardware use, and only
+produced when the SMI\# pin was asserted on the CPU's chip package. However, in
+modern systems, privileged code\footnote{the hypervisor or operating system
+kernel} can send an SMI signal.\footnote{Any modern CPU's LAPIC
+(\S~\ref{sec:interrupts}) can be programmed to send an SMI IPI.}
 This opens up the avenue for SMM-based software exploits.
 
 The SMM code and data are stored in a contiguous subset of RAM called

@@ -1,5 +1,5 @@
 \subsection{Privilege Level Switching}
-\label{sec:faults}
+\label{sec:privilege_switches}
 
 Applications software needs a method to invoke the kernel, because it cannot
 perform privileged operations, such as network or disk I/O. At the same time,
@@ -18,6 +18,10 @@ considerations behind privilege switching is useful when analyzing SGX, because
 the process of calling code inside an enclave is similar to switching privilege
 levels, as an enclave's code must be able to enforce its own security
 invariants, just like an OS kernel.
+
+
+\subsubsection{System Calls}
+\label{sec:syscalls}
 
 % Fast System Calls in 64-Bit Mode: SDM S 5.8.8
 % Architectural MSRs: SDM S 35.1
@@ -42,6 +46,10 @@ The SYSRET instruction switches back to ring 3 and jumps to the address in RCX,
 which is set by the SYSCALL instruction. The SYSCALL / SYSRET pair is optimized
 for speed by avoiding any memory references. The design can get away without a
 stack because kernel calls are not recursive.
+
+
+\subsubsection{Faults}
+\label{sec:faults}
 
 % Interrupt and Exception Handling: SDM S 6.1, S 6.2
 % Access Rights: SDM S 4.6
@@ -137,7 +145,19 @@ After the exception handler completes, it uses the \texttt{IRET} (interrupt
 return) instruction to load the registers from the on-stack snapshot and switch
 back to ring 3.
 
+The Intel architecture gives the fault handler complete control over the parts
+of the execution context not listed in Table~\ref{fig:fault_stack}. This
+privilege is used by some handlers (e.g., \#GP) to perform context switches
+(\S~\ref{sec:registers}) after a process is terminated due to a bug. However,
+in the SGX threat model, system software is not trusted, and giving it access
+to an enclave's execution context would expose potentially sensitive
+information, and present an opportunity to compromise the enclave's integrity.
+Therefore, SGX cannot use the current fault handling process, and must modify
+it.
 
+
+\subsubsection{VM Exits}
+\label{sec:vm_exits}
 
 If an EPT entry has the P flag set to 0, the CPU performs a VM exit, and the
 hypervisor has an opportunity to bring the page into RAM.

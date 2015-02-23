@@ -7,12 +7,20 @@ microcode feature in Intel CPUs. The limitations of microcode can explain
 seemingly arbitrary decisions in the SGX design, and a thorough understanding
 is crucial to evaluating the feasibility of SGX modification proposals.
 
+% Intel® Microarchitecture Code Name Sandy Bridge Pipeline Overview:
+%     Optimization S 2.2.1
+% The Front End: Optimization S 2.2.2
+
 The x86 architecture defines a \textit{complex instruction set} (CISC).
 However, virtually all modern CPUs are architected following \textit{reduced
 instruction set} (RISC) principles. This is accomplished by having the
 instruction decode stage (see Figure~\ref{fig:cpu_core}) break down each x86
 instruction into \textit{micro-ops} for every instruction. The other CPU stages
 work exclusively with micro-ops.
+
+% Legacy Decode Pipeline (Instruction Decode): Optimization S 2.2.2.1
+% Instruction Decode: Optimization S 2.3.2.4
+% Front End Overview: Optimization S 2.4.2
 
 The majority of x86 instructions are handled by the hardware decoding path,
 which can emit at most 4 micro-ops per instruction. Complex instructions use a
@@ -45,6 +53,27 @@ may explain why SGX uses RSA signatures in its enclave structures.
 all x86 processors, but is unable to obtain any details about Intel's
 microcode. Fortunately, even though the microcode structure is undocumented,
 the 4 micro-ops limitation can be used to guess intelligently whether an
-architectural feature is implemented in microcode. For example, the context
-switch in \S~\ref{sec:registers} is most likely done in microcode, whereas
-simple arithmetic and memory access is handled directly by hardware.
+architectural feature is implemented in microcode. For example, it is safe to
+assume that \texttt{XSAVE} (\S~\ref{sec:registers}), which was takes over 200
+micro-ops on recent CPUs \cite{fog2014microops}, is most likely performed in
+microcode, whereas simple arithmetic and memory access is handled directly by
+hardware.
+
+While Intel publishes the latest microcode versions for its CPUs, the release
+notes associated with the updates are not publicly available. This is
+unfortunate, as the release notes could be used to confirm guesses that certain
+features are implemented in microcode. However, some information can be
+inferred by reading through the Errata section in Intel's Specification Updates
+\cite{intel2010errata, intel2015errata, intel2015errata2}. The phrase ``it is
+possible for BIOS to contain a workaround for this erratum'' generally means
+that a microcode update was issued. For example, Errata AH in
+\cite{intel2010errata} implies that string instructions (\texttt{REP MOV}) are
+implemented in microcode, which was confirmed by Intel
+\cite{abraham2006repmov}.
+
+Errata AH43 and AH91 in \cite{intel2010errata}, and AAK73 in
+\cite{intel2015errata} imply that address translation (\S~\ref{sec:paging}) is
+at least partially implemented in microcode. Errata AAK53, AAK63, and AAK70,
+AAK178 in \cite{intel2015errata}, and BT138, BT210,  in \cite{intel2015errata2}
+imply that VM entries and exits (\S~\ref{sec:faults}) are implemented in
+microcode.

@@ -1,2 +1,66 @@
-\subsection{Hardware Interrupts}
+\subsection{Interrupts}
 \label{sec:interrupts}
+
+Peripherals use \textit{interrupts} to signal the occurrence of an event that
+must be handled by system software. For example, a keyboard issues interrupts
+when a key is pressed or depressed. System software also relies on interrupts
+to implement preemptive multi-threading. This section presents the details
+needed to understand the concerns and tools that interrupts bring to the SGX
+implementation.
+
+% Advanced Programmable Interrupt Controller (APIC): SDM S 10
+% Message Signalled Interrupts (MSI): SDM S 10.11
+
+Peripherals use bus-specific protocols to signal interrupts. For example, PCIe
+relies on \textit{Message Signaled Interrupts} (MSI), which are memory writes
+issued to specially designed memory addresses. The bus-specific interrupt
+signals are received by the \textit{I/O Advanced Programmable Interrupt
+Controller} (IOAPIC) in the PCH, shown in Figure~\ref{fig:motherboard}.
+
+% Local APIC ID: SDM S 10.4.6
+% Extended xAPIC (x2APIC): SDM S 10.12
+
+The IOAPIC routes interrupt signals to one or more \textit{Local Advanced
+Programmable Interrupt Controllers} (LAPICs). As shown in
+Figure~\ref{fig:cpu_die}, each logical CPU has a LAPIC that can receive
+interrupt signals from the IOAPIC. The IOAPIC routing process assigns each
+interrupt to an 8-bit \textit{interrupt vector}, used to identify the interrupt
+sources, and a 32-bit \textit{APIC ID} used to identify the LAPIC that receives
+the interrupt.
+
+% Handling Interrupts: SDM S 10.8
+
+Each LAPIC uses a 256-bit \textit{Interrupt Request Register} (IRR) to track
+the un-serviced interrupts that it has received, based on the interrupt vector
+number. When the corresponding logical processor is available, the LAPIC copies
+the highest-priority un-serviced interrupt vector to the
+\textit{In-Service Register} (ISR), and invokes the logical processor's
+interrupt handling process.
+
+% Issuing Interprocessor Interrupts: SDM S 10.6
+% Interrupt Command Register (ICR): SDM S 10.6.1
+
+At the architectural level, interrupt handling reuses many of the mechanisms in
+fault handling (\S~\ref{sec:faults}). The interrupt vector number in the
+LAPIC's ISR is used to locate an interrupt handler in the IDT, and the handler
+is invoked, possibly after a privilege switch is performed. The interrupt
+handler does the processing that the device requires, and then writes the
+LAPIC's \textit{End Of Interrupt} (EOI) register to signal the fact that it has
+completed handling the interrupt.
+
+Interrupts are treated like faults, so interrupt handlers have full control
+over the execution environment of the application being interrupted. This is
+used to implement pre-emptive multi-threading, which relies on a clock device
+that generates interrupts periodically, and on an interrupt handler that
+performs context switches. While useful for multi-threading, this aspect of the
+architecture also implies SGX design must include changes to the interrupt
+handling process, in order to protect an enclave's execution state from an
+interrupt handler that is invoked while an enclave's code is executing.
+
+System software can cause an interrupt on any logical processor by writing the
+target processor's APIC ID into the \textit{Interrupt Command Register} (ICR)
+of the LAPIC associated with the logical processor that the software is runing
+on. These interrupts, called \textit{Inter-Processor Interrupts} (IPI), are
+needed to implement TLB shoot-downs (\S~\ref{sec:tlbs}). The IPI mechanism can
+also be used to send SMI interrupts, which opens up an avenue for a malicious
+kernel or hypervisor to mount a SMM mode (\S~\ref{sec:rings}) attack.
