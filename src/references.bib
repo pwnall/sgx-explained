@@ -40,7 +40,7 @@
   year={2013},
   note={329298-002US}
 }
-@patent{intel2013patent1,
+@misc{intel2013patent1,
   title={Method and apparatus to provide secure application execution},
   author={McKeen, Francis X and Rozas, Carlos V and Savagaonkar, Uday R and
           Johnson, Simon P and Scarlata, Vincent and Goldsmith, Michael A and
@@ -55,6 +55,22 @@
           McKeen, Francis X and Rozas, Carlos V},
   year={2013},
   note={US Patent App. 13/838,237}
+}
+@misc{intel2014patent3,
+  title={Paging in secure enclaves},
+  author={McKeen, F.X. and Goldsmith, M.A. and Huntley, B.E. and Johnson, S.P.
+          and Leslie, R. and Rozas, C.V. and Savagaonkar, U.R. and Scarlata,
+          V.R. and Shanbhogue, V. and Smith, W.H. and others},
+  year={2014},
+  note={US Patent App. 13/729,277}
+}
+@misc{intel2014patent4,
+  title={Memory management in secure enclaves},
+  author={Leslie, R. and Rozas, C.V. and Scarlata, V.R. and Johnson, S.P. and
+          Savagaonkar, U.R. and Huntley, B.E. and Shanbhogue, V. and Anati,
+          I. and McKeen, F.X. and Goldsmith, M.A. and others},
+  year={2014},
+  note={US Patent App. 13/729,371}
 }
 
 % Overview
@@ -314,65 +330,6 @@
   note={323535-001}
 }
 
-% Background: Microcode.
-@article{hawkes2012microcode,
-  title={Security Analysis of x86 Processor Microcode},
-  author={Hawkes, Ben},
-  year={2012},
-  howpublished="\url{http://inertiawar.com/microcode/}",
-  note={[Online; accessed 7-January-2015]}
-}
-@article{chen2014microcode,
-  title={Security Analysis of x86 Processor Microcode},
-  author={Chen, Daming D and Ahn, Gail-Joon},
-  year={2014},
-  howpublished="\url{https://www.dcddcc.com/pubs/paper_microcode.pdf}",
-  note={[Online; accessed 7-January-2015]}
-}
-@article{fog2014microops,
-  title={Instruction Tables - Lists of instruction latencies, throughputs and
-         micro-operation breakdowns for Intel, AMD and VIA CPUs},
-  author={Fog, Agner},
-  year={2014},
-  month={12},
-  howpublished="\url{http://www.agner.org/optimize/instruction_tables.pdf}",
-  note={[Online; accessed 23-January-2015]}
-}
-@book{intel2010errata,
-  title={Intel{\textregistered} Core 2 Duo and Intel{\textregistered} Core 2
-         Solo Processor for Intel{\textregistered} Centrino{\textregistered}
-         Duo Processor Technology Intel{\textregistered}
-         Celeron{\textregistered} Processor 500 Series - Specification Update},
-  author={Intel Corporation},
-  year={2010},
-  month={12},
-  note={314079-026},
-}
-@book(intel2015errata,
-  title={Intel{\textregistered} Xeon{\textregistered} Processor 5500 Series -
-         Specification Update},
-  author={Intel Corporation},
-  year={2015},
-  month={2},
-  note={321324-018US},
-}
-@book{intel2015errata2,
-  title={Intel{\textregistered} Xeon{\textregistered} Processor E5 Product
-         Family - Specification Update},
-  author={Intel Corporation},
-  year={2015},
-  month={1},
-  note={326150-018}
-}
-@misc{abraham2006repmov,
-  title={Time to revisit REP;MOVS - Comment},
-  author={Abraham, Seth},
-  howpublished="\url{https://software.intel.com/en-us/forums/topic/275765}",
-  year={2006},
-  month={8},
-  note={[Online; accessed 23-January-2015]}
-}
-
 % Background: Caching.
 @article{banescu2011cache,
   title={Cache Timing Attacks},
@@ -437,16 +394,22 @@
   note={330784-002},
 }
 @inproceedings{yuffe2011sandybridge,
-  title={A Fully Integrated Multi-CPU, GPU and Memory Controller 32nm processor},
-  author={Yuffe, Marcelo and Knoll, Ernest and Mehalel, Moty and Shor, Joseph and Kurts, Tsvika},
-  booktitle={Solid-State Circuits Conference Digest of Technical Papers (ISSCC), 2011 IEEE International},
+  title={A Fully Integrated Multi-CPU, GPU and Memory Controller 32nm
+         processor},
+  author={Yuffe, Marcelo and Knoll, Ernest and Mehalel, Moty and Shor, Joseph
+          and Kurts, Tsvika},
+  booktitle={Solid-State Circuits Conference Digest of Technical Papers
+             (ISSCC), 2011 IEEE International},
   pages={264--266},
   year={2011},
   organization={IEEE}
 }
 @patent{intel2011gdxc,
-  title={Generic Debug eXternal Connection (GDXC) for High Integration Integrated Circuits},
-  author={Kurts, Tsvika and Savransky, Guillermo and Ratner, Jason and Hazan, Eilon and Skaba, Daniel and Elmosnino, Sharon and Santhanakrishnan, Geeyarpuram N},
+  title={Generic Debug eXternal Connection (GDXC) for High Integration
+         Integrated Circuits},
+  author={Kurts, Tsvika and Savransky, Guillermo and Ratner, Jason and Hazan,
+          Eilon and Skaba, Daniel and Elmosnino, Sharon and Santhanakrishnan,
+          Geeyarpuram N},
   year={2011},
   note={US Patent 8,074,131}
 }
@@ -458,6 +421,111 @@
   year={2014},
   note={[Online; accessed 10-Februrary-2015]}
 }
+
+% Background: Booting
+@book{intel2010booting,
+  title={Minimal Intel{\textregistered} Architecture Boot Loader—Bare Bones
+         Functionality Required for Booting an Intel{\textregistered}
+         Architecture Platform},
+  author={Intel Corporation},
+  year={2010},
+  month={1},
+  note={323246}
+}
+@misc{coreboot2015manual,
+  title={Developer Manual},
+  author={Coreboot},
+  year={2014},
+  month={9},
+  note={[Online; accessed 4-March-2015]}
+}
+
+% Background: Microcode.
+@patent{intel1999exceptions,
+  title={Exception handling in a processor that performs speculative
+         out-of-order instruction execution},
+  author={Papworth, D.B. and Hinton, G.J. and Fetterman, M.A. and Colwell, R.P.
+          and Glew, A.F.},
+  year={1999},
+  note={US Patent 5,987,600}
+}
+@patent{intel1997pmh,
+  title={Method and apparatus for performing page table walks in a
+         microprocessor capable of processing speculative instructions},
+  author={Glew, A. and Hinton, G. and Akkary, H.},
+  year={1997},
+  note={US Patent 5,680,565}
+}
+@patent{intel1999events,
+  title={Method and apparatus for generating event handler vectors based on
+         both operating mode and event type},
+  author={Rodgers, S.D. and Vidwans, R. and Huang, J. and Fetterman, M.A. and
+          Huck, K.},
+  year={1999},
+  note={US Patent 5,889,982}
+}
+
+
+
+
+@article{hawkes2012microcode,
+  title={Security Analysis of x86 Processor Microcode},
+  author={Hawkes, Ben},
+  year={2012},
+  howpublished="\url{http://inertiawar.com/microcode/}",
+  note={[Online; accessed 7-January-2015]}
+}
+@article{chen2014microcode,
+  title={Security Analysis of x86 Processor Microcode},
+  author={Chen, Daming D and Ahn, Gail-Joon},
+  year={2014},
+  howpublished="\url{https://www.dcddcc.com/pubs/paper_microcode.pdf}",
+  note={[Online; accessed 7-January-2015]}
+}
+@article{fog2014microops,
+  title={Instruction Tables - Lists of instruction latencies, throughputs and
+         micro-operation breakdowns for Intel, AMD and VIA CPUs},
+  author={Fog, Agner},
+  year={2014},
+  month={12},
+  howpublished="\url{http://www.agner.org/optimize/instruction_tables.pdf}",
+  note={[Online; accessed 23-January-2015]}
+}
+@book{intel2010errata,
+  title={Intel{\textregistered} Core 2 Duo and Intel{\textregistered} Core 2
+         Solo Processor for Intel{\textregistered} Centrino{\textregistered}
+         Duo Processor Technology Intel{\textregistered}
+         Celeron{\textregistered} Processor 500 Series - Specification Update},
+  author={Intel Corporation},
+  year={2010},
+  month={12},
+  note={314079-026},
+}
+@book(intel2015errata,
+  title={Intel{\textregistered} Xeon{\textregistered} Processor 5500 Series -
+         Specification Update},
+  author={Intel Corporation},
+  year={2015},
+  month={2},
+  note={321324-018US},
+}
+@book{intel2015errata2,
+  title={Intel{\textregistered} Xeon{\textregistered} Processor E5 Product
+         Family - Specification Update},
+  author={Intel Corporation},
+  year={2015},
+  month={1},
+  note={326150-018}
+}
+@misc{abraham2006repmov,
+  title={Time to revisit REP;MOVS - Comment},
+  author={Abraham, Seth},
+  howpublished="\url{https://software.intel.com/en-us/forums/topic/275765}",
+  year={2006},
+  month={8},
+  note={[Online; accessed 23-January-2015]}
+}
+
 
 % Hardware
 

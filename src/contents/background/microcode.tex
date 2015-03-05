@@ -2,10 +2,17 @@
 \label{sec:microcode}
 
 Intel's SGX patents disclose that all the SGX features, except for DRAM
-encryption, were implemented as microcode extensions. This section explains the
-microcode feature in Intel CPUs. The limitations of microcode can explain
-seemingly arbitrary decisions in the SGX design, and a thorough understanding
-is crucial to evaluating the feasibility of SGX modification proposals.
+encryption, were implemented as microcode extensions. The limitations of
+microcode can explain seemingly arbitrary decisions in the SGX design, and a
+thorough understanding is crucial to evaluating the feasibility of SGX
+modification proposals. The first sub-section below presents the relevant facts
+pertaining to microcode in Intel's optimization reference
+\cite{intel2014optimization} and SDM. The following subsections summarize
+information gleamed from Intel's patents and other researchers' findings.
+
+
+\subsubsection{Official Information}
+\label{sec:microcode_official}
 
 % Intel® Microarchitecture Code Name Sandy Bridge Pipeline Overview:
 %     Optimization S 2.2.1
@@ -43,6 +50,59 @@ features as microcode extensions. The SGX enclave measurements produced by the
 processor include the microcode version, hinting that the SGX designers
 anticipated the need to use microcode updates.
 
+\subsubsection{Organization}
+
+
+% Microcode handles exceptions:
+%   US 5,987,600 - 2:39-57, 4:13-27, 4:39-53, 4:65-5:6, 8:42-58, 10:54-60,
+%                  11:18-42, 12:11-17, 12:54-58, 15:46-48, 15:59-62
+%   US 5,889,982 - 11:40-42, 11:44-46,
+
+% Microcode handles memory exceptions (#PF):
+%   US 5,987,600 - 14:26-49, 14:55-61, 14:66-15:3
+%   US 5,680,565 - 11:29-37,
+%   US 5,889,982 - 14:41-43, 15:47-51,
+
+% Microcode performs assisted PMH walk
+%   US 5,680,565 - Abstract 1-2 and last 3 lines, 4:9-19, 4:22-28, 12:24-25,
+%                  13:42-44, 13:48-54, 13:59-64, 14:12-21, 14:23-29, 14:61-66,
+%                  15:1-12, 15:16-39
+
+% Microcode handles events (exceptions and assists):
+%   US 5.889,982 - 9:23-25, 9:34-42, 15:7-11, 15:27-55
+
+% Microcode handles traps:
+%   US 5,987,600 - 15:16-18, 15:36-40
+
+% Microcode handles interrupts:
+%   US 5,987,600 - 16:2-5, 16:18-21
+
+% Microcode implementation details:
+%   US 5,987,600 - 5:39-49, 5:53-6:32, 5:35-39, 5:42-53, 11:53-60, 11:64-67,
+%                  12:6-10, 12:41-45, 14:15-19
+%   US 5,680,565 - 2:53-56
+%   US 5,889,982 - 6:49-65, 7:8-12, 10:11-14, 13:16-20,
+
+% PMH implementation (stuffed loads)
+%   US 5,680,565 - 2:60-3:3, 3:25-28, 3:33-52, 3:56, 3:58-4:4, 11:17-21,
+%                  11:45-48, 11:50-52, 12:30-34, 12:20-22, 12:40-43, 13:20-22,
+%                  14:42-58, 15:54-57
+
+% Event ROM
+%  US 5,889,982 - 16:57-63, 16:66-17:3
+
+\cite{intel1999exceptions} discloses that when an event (hardware exception or
+interrupt) occurs, an event code is dispatched to the MSROM, which provides the
+micro-ops that handle the event.
+
+
+\cite{intel1997pmh} describes the operation of the PMH (\S~\ref{sec:tlbs}), and
+discloses that the PMH uses a microcode assist when it needs to set the dirty
+or accessed bits in a page table (\S~\ref{sec:paging}).
+
+\cite{intel1999events} discloses that the microcode has an event ROM which
+contains pointers to event handlers in the micro-ops table.
+
 \cite{hawkes2012microcode} used fault injection and timing analysis to conclude
 that each recent Intel microcode update is signed with a 2048-bit RSA key and
 a (possibly non-standard) 256-bit hash algorithm. This implies that Intel
@@ -65,11 +125,13 @@ unfortunate, as the release notes could be used to confirm guesses that certain
 features are implemented in microcode. However, some information can be
 inferred by reading through the Errata section in Intel's Specification Updates
 \cite{intel2010errata, intel2015errata, intel2015errata2}. The phrase ``it is
-possible for BIOS to contain a workaround for this erratum'' generally means
-that a microcode update was issued. For example, Errata AH in
-\cite{intel2010errata} implies that string instructions (\texttt{REP MOV}) are
-implemented in microcode, which was confirmed by Intel
-\cite{abraham2006repmov}.
+possible for BIOS\footnote{Basic Input/Output System (BIOS)
+is the predecessor of UEFI-based firmware. Most Intel documentation, including
+the SDM, still uses the term BIOS to refer to firmware.} to contain a
+workaround for this erratum'' generally means that a microcode update was
+issued. For example, Errata AH in \cite{intel2010errata} implies that string
+instructions (\texttt{REP MOV}) are implemented in microcode, which was
+confirmed by Intel \cite{abraham2006repmov}.
 
 Errata AH43 and AH91 in \cite{intel2010errata}, and AAK73 in
 \cite{intel2015errata} imply that address translation (\S~\ref{sec:paging}) is

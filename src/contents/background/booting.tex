@@ -1,0 +1,66 @@
+\subsection{The Boot Process}
+\label{sec:booting}
+
+When a computer is powered up, it undergoes a \textit{bootstrapping} process,
+also called \textit{booting}, for simplicity. Although many steps in the boot
+process depend on the motherboard and components in a computer, the process
+does follow a high-level structure that is prescribed in the SDM. This section
+provides the details needed to analyze SGX's security properties.
+\cite{intel2010booting} provides a good reference on the entire booting
+process.
+
+% Initialization Overview: SDM S 9.1
+
+Right after a computer is powered up, all the logical processors (LPs) on the
+motherboard undergo \textit{hardware initialization}, which invalidates the
+caches (\S~\ref{sec:caching}) and TLBs (\S~\ref{sec:tlbs}), performs a
+\textit{Built-In Self Test} (BIST), and sets all the registers
+(\S~\ref{sec:registers}) to pre-specified values.
+
+% Multiple-Processor Initialization: SDM S 8.4
+% BSP and AP Processors: SDM S 8.4.1
+% MP Initialization Protocol Algorithms for MP Systems: SDM S 8.4.3
+% An ivy bridge CPUID: family 06h, extended model 3, model 58, stepping 9
+
+After hardware initialization, the LPs perform the Multi-Processor (MP)
+initialization algorithm, which results in one LP being selected as the
+\textit{bootstrap processor} (BSP), and all the other LPs being classified as
+\textit{application processors} (APs).
+
+According to the SDM, the details of the MP initialization algorithm for recent
+CPUs depend on the motherboard and firmware. In principle, after completing
+hardware initialization, all LPs attempt to issue a special no-op transaction
+on the QPI bus. A single LP will suceed in issuing the no-op, thanks to
+the QPI arbitration mechanism, and to the UBox (\S~\ref{sec:cache_coherence})
+in each CPU package, which also serves as a ring arbiter. The arbitration
+priority of each LP is based on its APIC ID APIC ID (\S~\ref{sec:interrupts}),
+which is provided by the motherboard when the system powers up. The LP that
+issues the no-op becomes the BSP. Upon failing to issue the no-op, the other
+LPs become APs, and enter the \textit{wait-for-SIPI} state.
+
+% Typical BSP Initialization Sequence: SDM S 8.4.4.1
+
+The BSP sets its RIP register to point to the firmware reset code, which must
+be present at 0xFFFFFFF0 (16 bytes below the 4 GB mark). This is accomplished
+by having the initial SAD (\S~\ref{sec:cache_coherence}) and PCH
+(\S~\ref{sec:motherboard}) configurations map the 4 KB below the 4 GB mark of
+the memory address space (\S~\ref{sec:address_spaces}) to the SPI flash chip
+that stores the motherboard's firmware.
+
+\cite{intel2010booting} and \cite{coreboot2015manual} describe the
+initialization steps performed by the firmware, from an implementor's
+perspective. A few steps are interesting from the perspective of SGX and
+caching attacks.
+
+% Preventing Caching: SDM S 11.5.3
+
+When the BSP starts executing firmware code, DRAM is not available. The
+firmware places the BSP in \textit{Cache-as-RAM} (CAR) mode to be able to use a
+call stack and other high-level constructs. Ater CAR is enabled, the memory
+initialization code, which is typically Intel's \textit{Memory Reference Code}
+(MRC), is loaded into the cache. When executed, the memory initialization code
+discovers the DRAM chips connected to the motherboard and sets them up, and
+enables and configures the memory controllers.
+
+% Typical AP Initialization Sequence: SDM S 8.4.4.2
+

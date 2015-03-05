@@ -1,15 +1,22 @@
 \subsection{Address Translation}
 \label{sec:paging}
 
-Modern OS kernels rely on address translation to multiplex a computer's RAM
-among multiple processes. In turn, hypervisors use address translation to
-split up the machine's RAM among operating systems that run concurrently. The
-software running inside a SGX enclave is subject to address translation, and
-the implementation of SGX relies heavily on the translation implementation in
-Intel processors. This section summarizes the Intel-specific software-visible
-details needed to understand SGX, while \S~\ref{sec:tlbs} covers some
-architectural specifics. \cite{jacob1998virtual} describes the generic concepts
-and applications of address translation.
+Modern OS kernels rely on address translation to manage the access of
+applications to the memory address space (\S~\ref{sec:address_spaces}). This
+mechanism lets the kernel multiplex DRAM among multiple application processes,
+isolate the processes from each other, and restrict applications from accessing
+memory-mapped devices directly. The latter two are necessary to prevent an
+application's bugs from impacting other applications, or the OS kernel itself.
+Hypervisors also use address translation to split up the DRAM among
+operating systems that run concurrently, and to virtualize memory-mapped
+devices.
+
+The software running inside a SGX enclave is subject to address
+translation, and the implementation of SGX relies heavily on the translation
+implementation in Intel processors. This section summarizes the Intel-specific
+software-visible details needed to understand SGX, while \S~\ref{sec:tlbs}
+covers some architectural specifics. \cite{jacob1998virtual} describes the
+generic concepts and applications of address translation.
 
 The Intel architecture specifies many address translation modes, used to run
 legacy software dating back to 1990 natively. Most modes are not necessary for

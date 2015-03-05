@@ -42,15 +42,15 @@ virtual address, and the result is stored in the TLB.
 % Caching Translations in TLBs: SDM S 4.10.2.2
 % Caches for Paging Structures: SDM S 4.10.3.1
 
-In the Intel architecture, the PMH is implemented in hardware and/or microcode,
-and the TLB is never directly exposed to software and its implementation
-details are not documented.  The SDM does state that each TLB entry contains
-the physical address associated with a virtual address, and the metadata needed
-to resolve a memory access. For example, the processor needs to check the
-writable (W) flag on every write, and issue a General Protection fault (\#GP)
-if the write targets a read-only page.  Therefore, the TLB entry for each
-virtual address caches the logical-and of all the relevant W flags in the page
-table structures leading up to the page.
+In the Intel architecture, the PMH is implemented in hardware, so the TLB is
+never directly exposed to software and its implementation details are not
+documented.  The SDM does state that each TLB entry contains the physical
+address associated with a virtual address, and the metadata needed to resolve a
+memory access. For example, the processor needs to check the writable (W) flag
+on every write, and issue a General Protection fault (\#GP) if the write
+targets a read-only page.  Therefore, the TLB entry for each virtual address
+caches the logical-and of all the relevant W flags in the page table structures
+leading up to the page.
 
 The TLB is transparent to application software. However, kernels and
 hypervisors must make sure that the TLBs do not get out of sync with the page

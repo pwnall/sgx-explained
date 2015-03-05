@@ -21,7 +21,7 @@ perspective. The CPU's package (described in \S~\ref{sec:cpu_die}) is the only
 piece of trusted hardware in the SGX model. The \textit{Platform Controller
 Hub} (PCH) houses (relatively) low-speed I/O controllers driving the slower
 buses in the system, like SATA, used by storage devices, and USB, used by
-input peripherals. Motherboards also have a flash memory chip that hosts
+input peripherals.  Motherboards also have a flash memory chip that hosts
 firmware which implements the \textit{Unified Extensible Firmware Interface}
 (UEFI). The firmware contains the boot code and the SMM handler.
 
@@ -47,9 +47,9 @@ Intel \textit{Management Engine} (ME) \cite{ruan2014intelme}.  The ME runs
 firmware stored in the same flash memory chip as the UEFI firmware. The
 Management Engine is intended for remote system management and troubleshooting,
 and has tremendous privileges. The ME is running even when the system is in
-\textit{Soft Off} mode (ACPI G2/S5), when the CPU and RAM are unpowered. Also,
+\textit{Soft Off} mode (ACPI G2/S5), when the CPU and DRAM are unpowered. Also,
 the ME can access the network via a NIC without CPU support, can read and
-modify RAM via DMA transfers, and can override the CPU boot vector.
+modify DRAM via DMA transfers, and can override the CPU boot vector.
 
 The PCIe bus is an extended, point-to-point version of the PCI standard, which
 provides a method for any peripheral connected to the bus to perform
@@ -105,14 +105,15 @@ currently integrated on the CPU die to save power and improve latency.
 % Ring Interconnect and Last Level Cache: Optimization S 2.2.5.3
 % System Agent: Optimization S 2.2.6
 
-At a conceptual level, the uncore of modern processors includes a memory
-controller that interfaces with the DDR bus, an \textit{integrated I/O
-controller} (IIO) that can arbitrate the PCIe bus, and a growing number of
-integrated peripherals, such as a \textit{Graphics Processing Unit} (GPU), and
-potentially a NIC. The uncore structure is described in some processor family
-datasheets \cite{intel2014datasheet, intel2010datasheet}, and in the overview
-sections in Intel's uncore performance monitoring documentation
-\cite{intel2014uncore, intel2012uncore, intel2010uncore}.
+At a conceptual level, the uncore of modern processors includes an
+\textit{integrated memory controller} (iMC) that interfaces with the DDR bus,
+an \textit{integrated I/O controller} (IIO) that implements PCIe bus lanes and
+interacts with the DMI bus, and a growing number of integrated peripherals,
+such as a \textit{Graphics Processing Unit} (GPU). The uncore structure is
+described in some processor family datasheets \cite{intel2014datasheet,
+intel2010datasheet}, and in the overview sections in Intel's uncore performance
+monitoring documentation \cite{intel2014uncore, intel2012uncore,
+intel2010uncore}.
 
 The SGX design relies on the fact that the processor die includes the memory
 and I/O controller, and thus can prevent any device from accessing protected
@@ -140,20 +141,21 @@ the presence of memory stalls.
   \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
   \caption{
     CPU core with two logical processors. Each logical processor has its own
-    execution context and local APIC, and they share all the other core
-    resources.
+    execution context and LAPIC (\S~\ref{sec:interrupts}). All the other core
+    resources are shared.
   }
   \label{fig:cpu_core}
 \end{figure}
 
 A hyper-threaded core is exposed to system software as two \textit{logical
-processors}, also named \textit{hardware threads} in the Intel documentation.
-The logical processor abstraction allows the code used to distribute work
-across processors in a multi-processor system to function without any change on
-multi-core hyper-threaded processors.
+processors} (LPs), also named \textit{hardware threads} in the Intel
+documentation.  The logical processor abstraction allows the code used to
+distribute work across processors in a multi-processor system to function
+without any change on multi-core hyper-threaded processors.
 
 The high level of resource sharing introduced by hyper-threading introduces a
 security vulnerability. Software running on one logical processor can use the
-high-performance counter \cite{petters1999making} to get information about the
-instructions and memory access patterns of another piece of software that is
-executed on the other logical processor in the same core.
+high-performance counter (\texttt{RDTSCP}, \S~\ref{sec:address_spaces})
+\cite{petters1999making} to get information about the instructions and memory
+access patterns of another piece of software that is executed on the other
+logical processor in the same core.
