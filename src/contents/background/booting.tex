@@ -9,6 +9,8 @@ provides the details needed to analyze SGX's security properties.
 \cite{intel2010booting} provides a good reference on the entire booting
 process.
 
+\subsubsection{CPU Hardware Initialization}
+
 % Initialization Overview: SDM S 9.1
 
 Right after a computer is powered up, all the logical processors (LPs) on the
@@ -47,6 +49,8 @@ by having the initial SAD (\S~\ref{sec:cache_coherence}) and PCH
 the memory address space (\S~\ref{sec:address_spaces}) to the SPI flash chip
 that stores the motherboard's firmware.
 
+\subsubsection{Boot Firmware}
+
 \cite{intel2010booting} and \cite{coreboot2015manual} describe the
 initialization steps performed by the firmware, from an implementor's
 perspective. A few steps are interesting from the perspective of SGX and
@@ -62,5 +66,12 @@ initialization code, which is typically Intel's \textit{Memory Reference Code}
 discovers the DRAM chips connected to the motherboard and sets them up, and
 enables and configures the memory controllers.
 
+After DRAM becomes available, the boot firmware is copied into DRAM and the BSP
+is taken out of CAR mode. The BSP's LAPIC is initialized and used to send a
+broadcast \textit{Startup Inter-Processor Interrupt} (SIPI) to wake up the
+APs. The interrupt vector in a SIPI indicates the DRAM address of the firmware
+code for initializing APs.
+
 % Typical AP Initialization Sequence: SDM S 8.4.4.2
+
 
