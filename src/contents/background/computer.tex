@@ -63,9 +63,10 @@ The SGX trusted computing base includes the processor package, and excludes the
 other hardware in the computer. It follows that SGX must be able to fend off
 attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
 \cite{wojtczuk2011txt}, as well as passive or active bus-tapping attacks, such
-as the memory bus tap used to hack the Xbox \cite{huang2003xbox} and the
+as the memory bus tap used to hack the Xbox \cite{huang2003xbox}, the
 memory glitching attack that subverted the PlayStation 3 hypervisor
-\cite{hotz2010ps3}.
+\cite{hotz2010ps3}, and the rowhammer DRAM bit-flipping attack
+\cite{kim2014rowhammer}.
 
 The flash memory stores the SMM handler and Intel ME firmware, which run with
 high privileges. Furthermore, the contents of flash memory persists across
