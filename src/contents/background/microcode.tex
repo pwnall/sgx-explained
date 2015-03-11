@@ -15,7 +15,7 @@ other researchers' findings.
 
 
 \subsubsection{The Role of Microcode}
-\label{sec:microcode_official}
+\label{sec:microcode_role}
 
 % Intel® Microarchitecture Code Name Sandy Bridge Pipeline Overview:
 %     Optimization S 2.2.1
@@ -78,7 +78,7 @@ Unfortunately, Intel's SGX documentation does not describe its use of
 microcode, so we rely on public information about the role of microcode in the
 areas impacted by SGX, namely memory management (\S~\ref{sec:paging},
 \S~\ref{sec:tlbs}) and the handling of hardware exceptions
-(\S~\ref{sec:faults}) and interrupts (\S~\ref{sec:interru[ts}).
+(\S~\ref{sec:faults}) and interrupts (\S~\ref{sec:interrupts}).
 
 % Precise Event Based Sampling (PEBS): SDM S 18.7.1.1
 % At-Retirement Counting: SDM S 18.13.6
@@ -101,21 +101,35 @@ assists, which are performed at micro-op retirement (confirmed by
 
 % Conditional SIMD Packed Loads and Stores: Optimization S 11.9
 
-Intel's optimization manual mentions that masked loads in SIMD may take a
-multi-cycle microcode assist if any address in the range results in a page
-fault. The assist determines if the invalid addresses correspond 1 or 0 bits
-in the mask.
-
+Intel's optimization manual describes one more interesting assist, from a
+memory system perspective. SIMD masked loads (using \texttt{VMASKMOV}) read a
+series of data elements from memory into a vector register. A mask register
+decides whether elements are moved or ignored. If the memory address overlaps
+an invalid page (e.g., the P flag is 0, S~\ref{sec:paging}), a microcode assist
+is issued, even if the mask indicates that no element from the invalid page
+should be read. The microcode checks whether the elements in the invalid page
+have the corresponding mask bits set, and either performs the load or issues a
+page fault.
 
 % IA32_MCG Extended Machine Check State MSRs: SDM S 15.3.2.6
 
-PEBS description mentions the existence of page assists.
+The description of machine checks in the SDM mentions page assists and page
+faults in the same context. We assume that the page assists are issued in some
+cases when a TLB miss occurs (\S~\ref{sec:tlbs}) and the PMH has to walk the
+page table. The following sections develop this assumption and provide
+supporting evidence from Intel's published patents.
 
 
+\subsubsection{Microcode Implementation Details}
 
+% Arch feature implementation strategy
+%   US 8,447,962 - 11:39-43, 12:8-13
 
-
-\subsubsection{Organization}
+According to a 2013 patent \cite{intel2013scattergather}, the avenues
+considered for implementing new architectural features are a completely
+microcode-based implementation, using existing micro-ops, a microcode
+implementation with hardware support, which would use new micro-ops, and a
+complete hardware implementation, using finite state machines (FSMs).
 
 % Micro-ops table
 %   US 7,451,121 - 1:23-25, 1:34-35, 2:64-65
@@ -128,7 +142,8 @@ The main component of the MSROM is a table of micro-ops \cite{intel2008genetic,
 intel2012clusters}. According to an example in a 2012 Intel patent
 \cite{intel2012clusters}, the table contains on the order of 20,000 micro-ops,
 and a micro-op has about 70 bits. On embedded processors, like the Atom,
-microcode may be partially compressed \cite{intel2008genetic, intel2012clusters}.
+microcode may be partially compressed
+\cite{intel2008genetic, intel2012clusters}.
 
 % Event ROM
 %   US 5,889,982 - 16:57-63, 16:66-17:3
@@ -147,40 +162,13 @@ microcode may be partially compressed \cite{intel2008genetic, intel2012clusters}
 %                  11:60-12:1, 12:4-8, 12:10-15, 12:19-12:22, 12:25-42,
 %                  14:12-32
 
-MSROM also contains a
-
-
-\cite{intel1999events} discloses that the microcode has an event ROM which
-contains pointers to event handlers in the micro-ops table. The event ROM is
-indexed by 6-bit event codes. The first 16 events are hardware exceptions, and
-the others are microcode assists. \cite{intel1999events} explicitly mentions
-page faults (\#PF) as an example of an exception, and the PMH-issued microcode
-assist used to set accessed and dirty bits in the page tables.
-
-\cite{intel1997events, intel1999exceptions} disclose that when an event
-(hardware exception, assist, or interrupt) occurs, an event code is dispatched
-to the MSROM, which provides the micro-ops that handle the event.
-
-% Arch feature implementation strategy
-%   US 8,447,962 - 11:39-43, 12:8-13
-
-
-
-
-
-% Microcode handles memory exceptions (#PF):
-%   US 5,987,600 - 14:26-49, 14:55-61, 14:66-15:3
-%   US 5,680,565 - 11:29-37,
-%   US 5,889,982 - 14:41-43, 15:47-51,
-
-% Microcode handles DTLB and PMH exceptions:
-%   US 5,564,111 - Abstract 15-21, 1:46-59, 3:25-45, 7:47-53, 9:33-51,
-%                  10:45-54, 10:57-63
-
-% Microcode performs assisted PMH walk
-%   US 5,680,565 - Abstract 1-2 and last 3 lines, 4:9-19, 4:22-28, 12:24-25,
-%                  13:42-44, 13:48-54, 13:59-64, 14:12-21, 14:23-29, 14:61-66,
-%                  15:1-12, 15:16-39
+The MSROM also contains an event ROM, which is an array of pointers to event
+handling code in the micro-ops table \cite{intel1999events}. Microcode events
+are hardware exceptions, assists, and interrupts \cite{intel1997events,
+intel1999exceptions}. The processor described in a 1999 patent
+\cite{intel1999events} had a 64-entry event table, where the first 16 entries
+pointed to hardware exception handlers and the other entries were used by
+assists.
 
 % Microcode implementation details:
 %   US 5,987,600 - 5:39-49, 5:53-6:32, 5:35-39, 5:42-53, 11:53-60, 11:64-67,
@@ -189,6 +177,47 @@ to the MSROM, which provides the micro-ops that handle the event.
 %   US 5,889,982 - 6:49-65, 7:8-12, 10:11-14, 13:16-20,
 %   US 7,231,511 - 1:49-60, 2:1-8, 2:34-42, 3:2-5, 3:22-40, 5:26-67, 6:1-20
 %   US 5,636,374 - 2:47-52, 2:63-3:10, 4:39-45
+
+The execution units can issue an assist or signal a fault by associating an
+event code with the result of a micro-op. When the micro-op is committed, the
+event code causes the scheduler to squash all future instructions. The event
+code is forwarded to the microcode sequencer, which reads the micro-ops in the
+event handler \cite{intel1997events, intel1999exceptions}.
+
+The handling of hardware exceptions and interrupts by microcode makes it
+possible to change the Intel architecture's behavior when faced with hardware
+exceptions and interrupts. The SGX implementation takes advantage of this, as
+it modifies the handling of exceptions and interrupts that occur while
+executing code inside an enclave.
+
+
+\subsubsection{Microcode and Address Translation}
+
+% Microcode handles memory exceptions (#PF):
+%   US 5,987,600 - 14:26-49, 14:55-61, 14:66-15:3
+%   US 5,680,565 - 11:29-37,
+%   US 5,889,982 - 14:41-43, 15:47-51,
+% Microcode handles DTLB and PMH exceptions:
+%   US 5,564,111 - Abstract 15-21, 1:46-59, 3:25-45, 7:47-53, 9:33-51,
+%                  10:45-54, 10:57-63
+% Microcode performs assisted PMH walk
+%   US 5,680,565 - Abstract 1-2 and last 3 lines, 4:9-19, 4:22-28, 12:24-25,
+%                  13:42-44, 13:48-54, 13:59-64, 14:12-21, 14:23-29, 14:61-66,
+%                  15:1-12, 15:16-39
+
+When a TLB miss (\S~\ref{sec:tlbs}) occurs, the memory execution unit forwards
+the linear address to the \textit{Page Miss Handler} (PMH), which performs the
+page walk needed to obtain a physical address. The
+
+
+\cite{intel1999events} explicitly mentions
+page faults (\#PF) as an example of an exception, and the PMH-issued microcode
+assist used to set accessed and dirty bits in the page tables.
+
+Page faults (\#PF) are a kind of hardware exception, therefore they are handled
+by microcode.
+
+
 
 % PMH implementation (stuffed loads)
 %   US 5,680,565 - 2:60-3:3, 3:25-28, 3:33-52, 3:56, 3:58-4:4, 11:17-21,
@@ -238,12 +267,6 @@ to the MSROM, which provides the micro-ops that handle the event.
 % Microcode handles SIPI
 %   US 8,301,907 - 4:31-33
 
-According to a 2014 patent \cite{intel2013scattergather}, the avenues
-considered for implementing new architectural features are a completely
-microcode-based implementation, using existing micro-ops, a microcode
-implementation with hardware support, which would use new micro-ops, and a
-complete hardware implementation, using finite state machines (FSMs).
-
 \cite{intel1997pmh} describes the operation of the PMH (\S~\ref{sec:tlbs}), and
 discloses that the PMH uses a microcode assist when it needs to set the dirty
 or accessed bits in a page table (\S~\ref{sec:paging}).
@@ -287,15 +310,15 @@ flush specific sets in the TLB.
 a PMH walk, and can prevent the resulting translation from being written to the
 TLB.
 
-Microcode performs the processor's hardware initialization (\S~\ref{cpu_init}).
-The SDM states that the BIST is performed by microcode. On some systems,
-microcode also authenticates the boot firmware \cite{intel2012uefihypervisor}
-before executing it. On systems that use LaGrande Server Extensions (LT-SX,
-also known as Intel TXT for servers), the hardware initialization microcode
-checks Intel's signature on the motherboard's firmware and assures the
-motherboard that the CPU is compatible with LT-SX \cite{intel2012ltsx}. The
-microcode in the SIPI (\S~\ref{sec:firmware_boot}) handler sets up a secure
-environment matching the other CPUs.
+Microcode performs the processor's hardware initialization
+(\S~\ref{sec:cpu_init}). The SDM states that the BIST is performed by
+microcode. On some systems, microcode also authenticates the boot firmware
+\cite{intel2012uefihypervisor} before executing it. On systems that use
+LaGrande Server Extensions (LT-SX, also known as Intel TXT for servers), the
+hardware initialization microcode checks Intel's signature on the motherboard's
+firmware and assures the motherboard that the CPU is compatible with LT-SX
+\cite{intel2012ltsx}. The microcode in the SIPI (\S~\ref{sec:firmware_boot})
+handler sets up a secure environment matching the other CPUs.
 
 \cite{intel2012patching} discloses that microcode updates are encrypted, hashed
 with a cryptographic hash function like SHA-256, and signed using RSA or

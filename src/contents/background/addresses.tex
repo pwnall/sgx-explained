@@ -82,12 +82,3 @@ exposed by instructions accessible to applications. For example, applications
 can read the time-stamp counter with the \texttt{RDTSC} and \texttt{RDTSCP},
 which are very useful for benchmarking and optimizing software, but also for
 mounting timing attacks.
-
-% TODO: add this somewhere in cache timing attacks
-%
-% Modern Intel processors use register renaming to implement out of order
-% execution, so the registers making up the execution context do not address
-% fixed entries in the register file. Out of order execution, described in
-% \cite{patterson2013architecture} and \cite{hennessy2012architecture}, can be
-% ignored when understanding SGX. However, its effects must be taken into account
-% when conducting timing attacks.

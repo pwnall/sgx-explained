@@ -1,0 +1,34 @@
+\subsection{Caching and Memory-Mapped Devices}
+\label{sec:memory_io}
+
+The Intel architecture provides a few methods for specifying the cache behavior
+for various ranges of the memory address space (\S~\ref{sec:address_spaces}).
+This is used for memory mapped to devices, such as a graphics unit's
+framebuffer. Caching framebuffer memory is indesirable, because the delay
+between the time when a write is issued and the time when the corresponding
+cache lines are evicted and written back to memory could lead to corrupted
+images on the user's display. This section covers the cacheability mechanisms
+presented in the SDM, because understanding them is important for analyzing
+SGX.
+
+\subsubsection{Caching Behaviors}
+
+Recent Intel CPUs implement the following caching behaviors.
+
+\textit{Uncacheable} (UC) addresses cause reads and writes to be issued in the
+order in which instructions are executed.
+
+
+Some parts of the memory address space are used to communicate with devices
+other than DRAM (\S~\ref{sec:address_spaces}). Two good examples are the
+mapping of the SPI flash memory that holds boot firmware
+(\S~\ref{sec:motherboard}), and the mapping of a graphics unit's framebuffer.
+In the former case, caching is desirable, whereas in the latter case.
+
+To mitigate against these issues,
+
+
+This section reviews the cacheability controls
+
+is often mapped
+into DRAM.
