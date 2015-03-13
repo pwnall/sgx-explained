@@ -100,15 +100,6 @@ thread can use the processor's high-performance counter
 \cite{petters1999making} to get information about the instructions and memory
 access patterns of the thread executing enclave code.
 
-\begin{figure}[hbtp]
-  \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
-  \caption{
-    CPU core with two logical processors. Each logical processor has its own
-    APIC and execution state, and they share all the other core resources.
-  }
-  \label{fig:cpu_core}
-\end{figure}
-
 A promising approach for preventing against hyper-threading leaks is to
 effectively disable hyper-threading, by using \texttt{CPUID} to find out the
 number of logical processors in the current core, and to require the OS to

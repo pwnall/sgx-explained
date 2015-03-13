@@ -167,11 +167,50 @@ For this reason, out of order engines have a \textit{load buffer} and a
 \textit{store buffer} that keep track of in-flight memory operations and are
 used to resolve memory dependencies.
 
+Out of order execution can introduce noise in cache timing attacks. First,
+memory accesses may not be performed in program order, which can impact the
+lines selected by the cache eviction algorithms. Second, out of order execution
+may result in cache fills that do not correspond to executed instructions. For
+example, a load that follows a faulting instruction may be scheduled and
+executed before the fault is detected.
+
 
 \subsubsection{Speculative Execution}
 
 % Branch Prediction: Optimization S 2.2.2.3
 
+Branch instructions, also called \textit{branches} change the instruction
+pointer (RIP, \S~\ref{sec:registers}), if a condition is met (\textit{the
+branch is taken}). They are used to compile \texttt{if}-style conditional
+statements and in looping statements such as \texttt{while} and \texttt{for}.
+The most well-known branching instructions in the Intel architecture are in the
+\texttt{j\textit{cc}} family, such as \texttt{je} (jump if equal).
 
+Branches pose a challenge to the decode stage, because the instruction that
+should be fetched after a branch is not known until the branching condition is
+evaluated. In order to avoid stalling the decode stage, modern CPU designes
+include \textit{branch predictors} that use historical information to guess
+whether a branch will be taken or not.
+
+When a branch instruction is encountered in the decode stage, it asks the
+branch predictor for a guess as to whether the branch will be taken or not. The
+decode stage bundles the branch condition and the predictor's guess into a
+branch check micro-op, and then continues decoding on the path indicated by the
+predictor. The micro-ops following the branch check are marked as
+\textit{speculative}.
+
+When the branch check micro-op is executed, the branch unit checks whether the
+branch predictor's guess was correct. If that is the case, the branch check is
+retired successfully. The scheduler handles \textit{mis-predictions} by
+squashing all the micro-ops following the branch check, and by signaling the
+instruction decoder to flush the micro-op decode queue and start fetching the
+instructions that follow the correct branch.
+
+Speculative execution needs to be accounted for in cache timing attacks, as
+mis-predicted speculative memory accesses can still cause cache fills.
+Therefore, the attacker may observe cache fills that don't correspond to
+instructions that were actually executed by the victim software.
 
 % Data Prefetching: Optimization S 2.2.5.4
+
+
