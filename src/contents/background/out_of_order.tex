@@ -161,6 +161,8 @@ cannot be committed before \texttt{LOAD} completes. Otherwise, if the
 \textit{ADD} is committed and the \textit{LOAD} causes a page fault, software
 will observe an incorrect value for the  RSI register.
 
+% Load and Store Operation Overview: Optimization S 2.2.5
+
 The ROB is tailored for discovering register dependencies between micro-ops.
 However, micro-ops that execute out of order can also have memory dependencies.
 For this reason, out of order engines have a \textit{load buffer} and a
@@ -213,4 +215,16 @@ instructions that were actually executed by the victim software.
 
 % Data Prefetching: Optimization S 2.2.5.4
 
+Modern CPUs also attempt to predict memory read patterns, so they can
+\textit{prefetch} the memory locations that are about to be read into the
+cache. Prefetching minimizes the latency of succesfully predicted read
+operations, as their data will already be cached. This is accomplished by
+exposing circuits called prefetchers to memory accesses and cache misses. Each
+prefetcher can recognize a particular access pattern, such as squentially
+reading an array's elements. When memory accesses match the pattern that a
+prefetcher was built to recognize, the prefetcher loads the cache line
+corresponding to the next memory access in its pattern.
 
+Prefetching introduces noise in cache timing attacks, as the attacker may
+observe cache fills that don't correspond to instructions in the victim code,
+even when accounting for speculative execution.
