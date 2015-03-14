@@ -17,38 +17,30 @@ other researchers' findings.
 \subsubsection{The Role of Microcode}
 \label{sec:microcode_role}
 
-% Intel® Microarchitecture Code Name Sandy Bridge Pipeline Overview:
-%     Optimization S 2.2.1
-% The Front End: Optimization S 2.2.2
-
-The x86 architecture defines a \textit{complex instruction set} (CISC).
-However, virtually all modern CPUs are architected following \textit{reduced
-instruction set} (RISC) principles. This is accomplished by having the
-instruction decode stage (see Figure~\ref{fig:cpu_core}) break down each x86
-instruction into \textit{micro-ops} for every instruction. The other CPU stages
-work exclusively with micro-ops.
-
 % Legacy Decode Pipeline (Instruction Decode): Optimization S 2.2.2.1
 % Instruction Decode: Optimization S 2.3.2.4
 % Front End Overview: Optimization S 2.4.2
 % Understanding the Sources of the Micro-Op Queue: SDM S B.3.7.2
 
-The majority of x86 instructions are handled by the hardware decoding path,
-which can emit at most 4 micro-ops per instruction. Instructions that require
-more than 4 micro-ops use a slower decoding path that relies on a sequencer to
-read micro-ops from a \textit{microcode store ROM} (MSROM).
+The frequently used instructions in the Intel architecture are handled by the
+core's fast path, which consists of simple decoders (\S~\ref{sec:out_of_order})
+that can emit at most 4 micro-ops per instruction. Infrequently used
+instructions and instructions that require more than 4 micro-ops use a slower
+decoding path that relies on a sequencer to read micro-ops from a
+\textit{microcode store ROM} (MSROM).
 
 % Assists: Optimization S B.3.5.2
 
-Some operations handle common cases in a fast path backed by hardware. When
-an input cannot be handled by the fast path, these operations issue a
-\textit{microcode assist}, which points the microcode sequencer to a routine in
-microcode that handles the edge cases. The most common cited example is
-floating point instructions, which issue assists to handle denormal inputs.
+The core's execution units handle common cases in fast paths implemented in
+hardware. When an input cannot be handled by the fast paths, the execution
+unit issues a \textit{microcode assist}, which points the microcode sequencer
+to a routine in microcode that handles the edge cases. The most common cited
+example in Intel's documentation is floating point instructions, which issue
+assists to handle denormal inputs.
 
 The \texttt{REP MOVS} family of instructions, also known as \textit{string
-instructions} because they are often used in \texttt{strcpy}-like functions,
-operate on variable-sized arrays. These instructions can handle small arrays in
+instructions} because of their use in \texttt{strcpy}-like functions, operate
+on variable-sized arrays. These instructions can handle small arrays in
 hardware, and issue microcode assists for larger arrays.
 
 % Microcode Update Facilities: SDM S 9.11
