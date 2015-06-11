@@ -1,5 +1,17 @@
 ## Build Requirements
 
+### Mac OS
+
+The paper is guaranteed to build with [MacTeX](https://tug.org/mactex/) and
+`latexmk` from [Homebrew](http://brew.sh/). Once you have homebrew, get
+`latexmk` using the following command.
+
+```bash
+brew install latexmk
+```
+
+### Fedora
+
 This command installs everything needed (and possibly more) on Fedora.
 
 ```bash

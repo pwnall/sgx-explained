@@ -37,7 +37,7 @@ kernel} can send an SMI signal.\footnote{Any modern CPU's LAPIC
 This opens up the avenue for SMM-based software exploits.
 
 The SMM code and data are stored in a contiguous subset of RAM called
-\textit{System Management RAM} (SMRAM), which, in theory, is not readable or
+\textit{System Management RAM} (SMRAM) which, in theory, is not readable or
 writable when the processor isn't running in SMM. However, its protection
 mechanisms were bypassed multiple times \cite{duflot2006smm}
 \cite{rutkowska2008remap} \cite{wojtczuk2009smm}, and SMM-based rootkits have

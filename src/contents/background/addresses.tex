@@ -72,9 +72,9 @@ potential of application bugs.
 The \textit{Model-Specific Register} (MSR) space consists of $2^{32}$ MSRs,
 which are used to configure the CPU's operation. The MSR space was initially
 intended for the use of CPU model-specific firmware, but some MSRs have been
-promoted to ``architectural MSR'' status, making their semantics a part of the
-Intel architecture. For example, architectural MSR 0x10 holds a high-resolution
-monotonically increasing time-stamp counter.
+promoted to \textit{architectural MSR} status, making their semantics a part of
+the Intel architecture. For example, architectural MSR 0x10 holds a
+high-resolution monotonically increasing time-stamp counter.
 
 The CPU provides instructions for reading from and writing to the MSR space.
 The instructions can only be used by system software. Some MSRs are also

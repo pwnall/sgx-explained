@@ -1,6 +1,38 @@
 \section{Remote Attestation}
 \label{sec:attestation}
 
+A remote party can undergo an \textit{attestation} process to convince itself
+that it is communicating with a specific enclave running in a secure
+environment.
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=85mm]{figures/generic_attestation.pdf}}
+  \caption{
+    Software attestation proves to a remote computer that it is communicating
+    with a specific secure container hosted by a trusted platform. The proof is
+    an attestation signature produced by the platform's secret attestation key.
+    The signature covers the container's initial state, a challenge nonce
+    produced by the remote computer, and a message produced by the container.
+  }
+  \label{fig:generic_attestation}
+\end{figure}
+
+
+The remote party starts the process by generating a random
+challenge and sending it to the enclave.
+
+The enclave asks the CPU to produce an \textit{enclave report}, which contains
+the attestation challenge, the enclave's measurement value, an
+enclave-generated 256-byte message, and an HMAC
+ with a symmetric key shared between the CPU and a special
+\textit{signing enclave} produced by Intel. The untrusted system software
+executes the signing enclave, which verifies the report and produces an
+\textit{attestation signature} that covers the challenge and the enclave's
+measurement.
+
+The remote party receives the attestation signature and the CPU's attestation
+certificate, and
+
 \subsection{Enclave Measurement}
 \label{sec:measurement}
 

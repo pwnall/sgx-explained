@@ -2,13 +2,13 @@
 \label{sec:privilege_switches}
 
 Applications software needs a method to invoke the kernel, because it cannot
-perform privileged operations, such as network or disk I/O. At the same time,
-ring 3 software cannot be offered the ability to jump arbitrarily into kernel
-code, because that would compromise the kernel's ability to isolate
+directly perform privileged operations, such as network or disk I/O. At the
+same time, ring 3 software cannot be offered the ability to jump arbitrarily
+into kernel code, as that would compromise the kernel's ability to isolate
 applications and enforce security invariants.\footnote{For example, when an
 application wishes to write a file to the disk, the kernel must check if the
-application's user has access to that file. If the ring 3 code could perform an
-arbitrary jump in kernel space, it would be able to skip the access check.}
+application's user has access to that file. If the ring 3 code could perform
+an arbitrary jump in kernel space, it would be able to skip the access check.}
 Therefore, the processor has designated methods for switching privilege levels,
 which protect the integrity of the privileged software.
 
@@ -36,15 +36,14 @@ invariants, just like an OS kernel.
 On modern processors, application software uses the SYSCALL instruction to
 invoke ring 0 code, and the kernel uses SYSRET to switch the privilege level
 back to ring 3. SYSCALL jumps into a predefined kernel location, which is
-specified by writing to \textit{architectural\footnote{Despite the
-``model-specific'' in MSR, \textit{architectural} MSRs are a part of the Intel
-architecture, and their semantics are stable across processor generations.}
-Model Specific Registers (MSRs)}. MSRs can only be read or written by ring 0
-code, therefore application softeware cannot execute arbitrary kernel code.
-The SYSRET instruction switches back to ring 3 and jumps to the address in RCX,
-which is set by the SYSCALL instruction. The SYSCALL / SYSRET pair is optimized
-for speed by avoiding any memory references. The design can get away without a
-stack because kernel calls are not recursive.
+specified by writing to a pair of architectural MSRs
+(\S~\ref{sec:address_spaces}).  MSRs can only be read or written by ring 0
+code, so application software cannot modify SYSCALL's MSRs and abuse the
+SYSCALL instruction to execute arbitrary kernel code. The SYSRET instruction
+switches back to ring 3 and jumps to the address in RCX, which is set by the
+SYSCALL instruction. The SYSCALL / SYSRET pair is optimized for speed by
+avoiding memory accesses. The design can get away without referencing a stack
+because kernel calls are not recursive.
 
 
 \subsubsection{Faults}

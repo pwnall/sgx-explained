@@ -6,10 +6,11 @@ for various ranges of the memory address space (\S~\ref{sec:address_spaces}).
 This is used for memory mapped to devices, such as a graphics unit's
 framebuffer. Caching framebuffer memory is indesirable, because the delay
 between the time when a write is issued and the time when the corresponding
-cache lines are evicted and written back to memory could lead to corrupted
-images on the user's display. This section covers the cacheability mechanisms
-presented in the SDM, because understanding them is important for analyzing
-SGX.
+cache lines are evicted and written back to memory could lead to visual
+artifacts on the user's display. This section covers the cacheability
+mechanisms presented in the SDM, because understanding them is important for
+analyzing SGX.
+
 
 \subsubsection{Caching Behaviors}
 

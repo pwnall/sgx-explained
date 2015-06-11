@@ -1,15 +1,15 @@
 \subsection{Caches and Address Translation}
 \label{sec:tlbs}
 
-Modern system software relies on address translation, as described in
-\S~\ref{sec:paging}). This means that all the memory accesses issued by a CPU
-core use virtual addresses, which must undergo translation. Caches must know
-the physical address for a memory access, to handle aliasing (multiple virtual
-addresses pointing to the same physical address) correctly. However, address
-translation requires up to 20 memory accesses (see
-Figure~\ref{fig:vmx_paging}), so it is impractical to perform a full address
-translation for every cache access. Instead, address translation results are
-cached in the \textit{translation look-aside buffer} (TLB).
+Modern system software relies on address translation (\S~\ref{sec:paging}).
+This means that all the memory accesses issued by a CPU core use virtual
+addresses, which must undergo translation. Caches must know the physical
+address for a memory access, to handle aliasing (multiple virtual addresses
+pointing to the same physical address) correctly. However, address translation
+requires up to 20 memory accesses (see Figure~\ref{fig:vmx_paging}), so it is
+impractical to perform a full address translation for every cache access.
+Instead, address translation results are cached in the \textit{translation
+look-aside buffer} (TLB).
 
 Table~\ref{fig:tlb_timings} shows the levels of the TLB hierarchy. Recent
 processors have separate L1 TLBs for instructions and data, and a shared L2

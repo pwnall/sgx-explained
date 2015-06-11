@@ -7,9 +7,8 @@ mechanism lets the kernel multiplex DRAM among multiple application processes,
 isolate the processes from each other, and restrict applications from accessing
 memory-mapped devices directly. The latter two are necessary to prevent an
 application's bugs from impacting other applications, or the OS kernel itself.
-Hypervisors also use address translation to split up the DRAM among
-operating systems that run concurrently, and to virtualize memory-mapped
-devices.
+Hypervisors also use address translation to divide the DRAM among operating
+systems that run concurrently, and to virtualize memory-mapped devices.
 
 The software running inside a SGX enclave is subject to address
 translation, and the implementation of SGX relies heavily on the translation
@@ -18,10 +17,11 @@ software-visible details needed to understand SGX, while \S~\ref{sec:tlbs}
 covers some architectural specifics. \cite{jacob1998virtual} describes the
 generic concepts and applications of address translation.
 
-The Intel architecture specifies many address translation modes, used to run
-legacy software dating back to 1990 natively. Most modes are not necessary for
-understanding SGX, so we only cover the translation modes used in modern 64-bit
-operating systems and 64-bit cloud environments.
+The Intel architecture specifies many address translation modes, used to
+execute legacy software dating back to 1990 directly on the CPU, without the
+overhead of software interpretation. Most modes can be ignored while analyzing
+SGX, abd we only cover the translation modes used in modern 64-bit operating
+systems and 64-bit cloud environments.
 
 % Canonical Addressing: SDM vol1 S 3.3.7.1
 % IA-32e Paging: SDM S 4.5

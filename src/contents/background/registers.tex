@@ -26,12 +26,14 @@ logical processor starts or stops executing code that belongs to an enclave.
 \end{figure}
 
 Integers and memory addresses are stored in 16 \textit{general-purpose
-registers} (GPRs). RAX, RBX, RCX, RDX, RSI, RDI, RSP, and RBP are extended
-versions of the GPRs available to 32-bit programs, and R9-R16 are new
-registers. RSP is reserved for pointing to the top of the \textit{stack}, which
-is automatically read and modified by the CPU instructions for procedure calls,
-such as \texttt{CALL} and \texttt{RET} (return), and by explicit stack handling
-instructions such as PUSH and POP.
+registers} (GPRs). The first 8 GPRs have historical names: RAX, RBX, RCX,
+RDX, RSI, RDI, RSP, and RBP, because they are extended versions of the 32-bit
+Intel architecture's GPRs. The other 8 GPRs are simply known as R9-R16. RSP is
+designated for pointing to the top of the procedure call stack, which is simply
+referred to as \textit{the stack}. RSP and the stack that it refers to are
+automatically read and modified by the CPU instructions that implement
+procedure calls, such as \texttt{CALL} and \texttt{RET} (return), and by
+specialized stack handling instructions such as PUSH and POP.
 
 All applications also use the RIP register, which contains the address of the
 currently executing instruction, and the RFLAGS register, whose bits (e.g.,
@@ -42,8 +44,8 @@ control various instructions.
 % Enabling the XSAVE Feature Set and XSAVE-Enabled Features: SDM vol1 S13.3
 % XSAVE-managed State: SDM vol1 S 13.5
 
-Software might use other registers to interact with specific features, some of
-which are shown in Table~\ref{fig:xsave_state}.
+Software might use other registers to interact with specific processor
+features, some of which are shown in Table~\ref{fig:xsave_state}.
 
 \begin{table}[hbt]
   \center{\begin{tabularx}{\columnwidth}{| l | X | l |}

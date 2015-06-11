@@ -61,8 +61,8 @@ the micro-ops executed sequentially in the order in which they come from the
 decode stages.
 
 For example, consider the sequence of pseudo micro-ops\footnote{The set of
-micro-ops used by Intel CPUs is not publicly documented. The ficticious
-examples in this section suffice for illustration purposes.} in
+micro-ops used by Intel CPUs is not publicly documented. The fictional examples
+in this section suffice for illustration purposes.} in
 Table~\ref{fig:out_of_order_micro_ops} below. The \texttt{OR} uses the result
 oh the \texttt{LOAD}, but the \texttt{ADD} does not. Therefore, a good
 scheduler can assign the \texttt{LOAD} to the load store unit and the
@@ -95,7 +95,7 @@ Micro-ops received from the decode queue are written into a \textit{reorder
 buffer} (ROB) while they are \textit{in-flight} in the execution unit. The
 \textit{register allocation table} (RAT) matches each register with the last
 reorder buffer entry that updates it. The \textit{renamer} uses the RAT to
-rewrite the source and destination fields of micro-ops as they are written in
+rewrite the source and destination fields of micro-ops when they are written in
 the ROB, as illustrated in Tables \ref{fig:out_of_order_rob} and
 \ref{fig:out_of_order_rat}. Note that the ROB representation makes it easy to
 determine the dependencies between micro-ops.
@@ -103,7 +103,8 @@ determine the dependencies between micro-ops.
 \begin{table}[hbt]
   \center{\begin{tabular}{| l | l | l | l | l |}
   \hline
-  \textbf{\#} & \textbf{Op} & \textbf{Source 1} & \textbf{Source 2} & \textbf{Destination}\\
+  \textbf{\#} & \textbf{Op} & \textbf{Source 1} & \textbf{Source 2} &
+  \textbf{Destination}\\
   \hline
   1 & LOAD & RSI & $\emptyset$ & RAX \\
   \hline
@@ -151,7 +152,7 @@ The ROB stores the results of completed micro-ops until they are
 \textit{retired}, meaning that the results are \textit{committed} to the
 register file and the micro-ops are removed from the ROB. Although micro-ops
 can be executed out of order, they must be retired in program order, in order
-to handle exceptions correctly. If micro-op causes a hardware exception
+to handle exceptions correctly. When a micro-op causes a hardware exception
 (\S~\ref{sec:faults}), all the following micro-ops in the ROB are
 \textit{squashed}, and their results are discarded.
 
@@ -190,12 +191,12 @@ The most well-known branching instructions in the Intel architecture are in the
 
 Branches pose a challenge to the decode stage, because the instruction that
 should be fetched after a branch is not known until the branching condition is
-evaluated. In order to avoid stalling the decode stage, modern CPU designes
+evaluated. In order to avoid stalling the decode stage, modern CPU designs
 include \textit{branch predictors} that use historical information to guess
 whether a branch will be taken or not.
 
-When a branch instruction is encountered in the decode stage, it asks the
-branch predictor for a guess as to whether the branch will be taken or not. The
+When the decode stage encounters a branch instruction, it asks the branch
+predictor for a guess as to whether the branch will be taken or not. The
 decode stage bundles the branch condition and the predictor's guess into a
 branch check micro-op, and then continues decoding on the path indicated by the
 predictor. The micro-ops following the branch check are marked as
@@ -203,15 +204,15 @@ predictor. The micro-ops following the branch check are marked as
 
 When the branch check micro-op is executed, the branch unit checks whether the
 branch predictor's guess was correct. If that is the case, the branch check is
-retired successfully. The scheduler handles \textit{mis-predictions} by
+retired successfully. The scheduler handles \textit{mispredictions} by
 squashing all the micro-ops following the branch check, and by signaling the
 instruction decoder to flush the micro-op decode queue and start fetching the
 instructions that follow the correct branch.
 
-Speculative execution needs to be accounted for in cache timing attacks, as
-mis-predicted speculative memory accesses can still cause cache fills.
-Therefore, the attacker may observe cache fills that don't correspond to
-instructions that were actually executed by the victim software.
+Cache timing attacks must account for speculative execution, as mispredicted
+memory accesses can still cause cache fills. Therefore, the attacker may
+observe cache fills that don't correspond to instructions that were actually
+executed by the victim software.
 
 % Data Prefetching: Optimization S 2.2.5.4
 

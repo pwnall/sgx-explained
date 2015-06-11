@@ -26,10 +26,10 @@ segments covering \textit{thread-local storage} (TLS).
 % Segment Selectors: SDM S 3.4.2
 % Segment Registers: SDM S 3.4.3
 
-Due to a previous migration from 16 bits to 32 bits, segment registers are
-exposed as 16-bit values, called \textit{segment selectors}. The top 13 bits in
-a selector are an index in a \textit{descriptor table}, and the bottom 2 bits
-are the selector's ring number, which is also called requested privilege level
+Due to the Intel architecture's 16-bit origins, segment registers are exposed
+as 16-bit values, called \textit{segment selectors}. The top 13 bits in a
+selector are an index in a \textit{descriptor table}, and the bottom 2 bits are
+the selector's ring number, which is also called requested privilege level
 (RPL) in the Intel documentation. Also, modern system software only uses rings
 0 and 3 (see \S~\ref{sec:rings}).
 
@@ -134,7 +134,7 @@ the other segment registers described above.
 
 Task switching was removed from the 64-bit architecture, but the TR segment
 register was preserved, and it points to a repurposed TSS data structure. The
-64-bit TSS contains a \textit{I/O map}, which indicates what parts of the I/O
+64-bit TSS contains an \textit{I/O map}, which indicates what parts of the I/O
 address space can be accessed directly from ring 3, and the
 \textit{Interrupt Stack Table} (IST), which is used for privilege level
 switching (\S~\ref{sec:faults}).
