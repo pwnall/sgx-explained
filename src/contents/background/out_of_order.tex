@@ -5,9 +5,9 @@ CPU cores can execute instructions orders of magnitude faster than DRAM can
 read data. CPU architects attempt to bridge this gap by using hyper-threading
 (\S~\ref{sec:cpu_die}), caching (\S~\ref{sec:caching}), and out of order and
 speculative execution. Out of order execution can safely be ignored when
-developing a general understanding of SGX, but becomes necessary when
-understanding implementation details. Out of order and speculative execution
-can also introduce noise in the data obtained from cache timing attacks. This
+developing a general understanding of SGX, but shows up behind the decision
+decisions in SGX's implementation. Out of order and speculative execution can
+also introduce noise in the data obtained from cache timing attacks. This
 section provides an overview of out of order and speculative execution that is
 sufficient for reasoning about SGX and cache timing attacks.
 \cite{patterson2013architecture} and \cite{hennessy2012architecture} cover the
@@ -54,7 +54,7 @@ performs arithmetic operations, is completely different from the load store
 unit, which peforms memory operations. Different circuits can be used at the
 same time, so each CPU core can execute multiple micro-ops in parallel.
 
-The core's out of order engine receives decoded micro-ops, and identifies the
+The core's out of order engine receives decoded micro-ops, identifies the
 micro-ops that can execute in parallel, assigns them to functional units, and
 combines the outputs of the units so that the results are equivalent to having
 the micro-ops executed sequentially in the order in which they come from the
@@ -64,9 +64,9 @@ For example, consider the sequence of pseudo micro-ops\footnote{The set of
 micro-ops used by Intel CPUs is not publicly documented. The fictional examples
 in this section suffice for illustration purposes.} in
 Table~\ref{fig:out_of_order_micro_ops} below. The \texttt{OR} uses the result
-oh the \texttt{LOAD}, but the \texttt{ADD} does not. Therefore, a good
-scheduler can assign the \texttt{LOAD} to the load store unit and the
-\texttt{ADD} to the ALU, in the same cycle.
+of the \texttt{LOAD}, but the \texttt{ADD} does not. Therefore, a good
+scheduler can have the load store unit execute the \texttt{LOAD} and the ALU
+execute the \texttt{ADD}, all in the same clock cycle.
 
 \begin{table}[hbt]
   \center{\begin{tabular}{| l | l | l |}
@@ -182,11 +182,11 @@ executed before the fault is detected.
 
 % Branch Prediction: Optimization S 2.2.2.3
 
-Branch instructions, also called \textit{branches} change the instruction
+Branch instructions, also called \textit{branches}, change the instruction
 pointer (RIP, \S~\ref{sec:registers}), if a condition is met (\textit{the
-branch is taken}). They are used to compile \texttt{if}-style conditional
-statements and in looping statements such as \texttt{while} and \texttt{for}.
-The most well-known branching instructions in the Intel architecture are in the
+branch is taken}). They implement conditional statements (\texttt{if}) and
+looping statements, such as \texttt{while} and \texttt{for}. The most
+well-known branching instructions in the Intel architecture are in the
 \texttt{j\textit{cc}} family, such as \texttt{je} (jump if equal).
 
 Branches pose a challenge to the decode stage, because the instruction that

@@ -36,10 +36,10 @@ hardware initialization, all LPs attempt to issue a special no-op transaction
 on the QPI bus. A single LP will suceed in issuing the no-op, thanks to
 the QPI arbitration mechanism, and to the UBox (\S~\ref{sec:cache_coherence})
 in each CPU package, which also serves as a ring arbiter. The arbitration
-priority of each LP is based on its APIC ID APIC ID (\S~\ref{sec:interrupts}),
-which is provided by the motherboard when the system powers up. The LP that
-issues the no-op becomes the BSP. Upon failing to issue the no-op, the other
-LPs become APs, and enter the \textit{wait-for-SIPI} state.
+priority of each LP is based on its APIC ID (\S~\ref{sec:interrupts}), which is
+provided by the motherboard when the system powers up. The LP that issues the
+no-op becomes the BSP. Upon failing to issue the no-op, the other LPs become
+APs, and enter the \textit{wait-for-SIPI} state.
 
 % Typical BSP Initialization Sequence: SDM S 8.4.4.1
 

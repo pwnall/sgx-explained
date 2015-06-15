@@ -140,5 +140,6 @@ address space can be accessed directly from ring 3, and the
 switching (\S~\ref{sec:faults}).
 
 Modern operating systems do not allow application software any direct access to
-the I/O address space, so the kernel sets up a single TSS and loads it into TR
-during early initialization.
+the I/O address space, so the kernel sets up a single TSS that is loaded into
+TR during early initialization, and used to represent all applications running
+under the OS.

@@ -55,16 +55,17 @@ virtualization features to make each operating system believe it is running in
 its own computer, called a \textit{virtual machine} (VM). Hypervisor code
 generally runs at ring 0 in VMX root mode.
 
-The popular Xen hypervisor uses VMX root mode for improved peformance and a
-smaller codebase \cite{zhang2008xen}. \cite{mccune2010trustvisor} proposes
-using a hypervisor together with Intel TXT's dynamic root of trust for
-measurement (DRTM) to implement trusted execution.
-\cite{vasudevan2010requirements} argues that a dynamic root of trust mechanism,
-like Intel TXT, is necessary to ensure a hypervisor's integrity. Unfortunately,
-the TXT design requires an implementation complex enough that security
-vulnerabilities have been found \cite{wojtczuk2009txt2} \cite{wojtczuk2011txt}.
-Furthermore, any SMM attack can be used to compromise TXT
-\cite{wojtczuk2009txt}.
+The popular Xen hypervisor uses VMX root mode to obtain better peformance and a
+smaller codebase \cite{zhang2008xen} than traditional virtualization based on
+binary translation \cite{rosenblum2005virtualization}.
+\cite{mccune2010trustvisor} proposes using a hypervisor together with Intel
+TXT's dynamic root of trust for measurement (DRTM) to implement trusted
+execution. \cite{vasudevan2010requirements} argues that a dynamic root of
+trust mechanism, like Intel TXT, is necessary to ensure a hypervisor's
+integrity. Unfortunately, the TXT design requires an implementation complex
+enough that security vulnerabilities have been found \cite{wojtczuk2009txt2}
+\cite{wojtczuk2011txt}.  Furthermore, any SMM attack can be used to compromise
+TXT \cite{wojtczuk2009txt}.
 
 The systems research literature recommends breaking up an operating system into
 a small \textit{kernel}, which runs at a high privilege level, known as the

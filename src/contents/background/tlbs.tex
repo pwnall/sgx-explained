@@ -13,7 +13,7 @@ look-aside buffer} (TLB).
 
 Table~\ref{fig:tlb_timings} shows the levels of the TLB hierarchy. Recent
 processors have separate L1 TLBs for instructions and data, and a shared L2
-TLB. Each core has its own TLB (see Figure~\ref{fig:cpu_core}). When a virtual
+TLB. Each core has its own TLBs (see Figure~\ref{fig:cpu_core}). When a virtual
 address is not contained in a core's TLB, the \textit{Page Miss Handler} (PMH)
 performs a \textit{page walk} (page table / EPT traversal) to translate the
 virtual address, and the result is stored in the TLB.

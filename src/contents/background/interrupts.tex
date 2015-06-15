@@ -53,9 +53,10 @@ over the execution environment of the application being interrupted. This is
 used to implement pre-emptive multi-threading, which relies on a clock device
 that generates interrupts periodically, and on an interrupt handler that
 performs context switches. While useful for multi-threading, this aspect of the
-architecture also implies SGX design must include changes to the interrupt
-handling process, in order to protect an enclave's execution state from an
-interrupt handler that is invoked while an enclave's code is executing.
+architecture also implies that the SGX design must include changes to the
+interrupt handling process, in order to protect an enclave's execution state
+from an interrupt handler that is invoked while the enclave's code is
+executing.
 
 System software can cause an interrupt on any logical processor by writing the
 target processor's APIC ID into the \textit{Interrupt Command Register} (ICR)
