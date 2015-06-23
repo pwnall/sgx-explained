@@ -59,6 +59,14 @@ use the INVLPG instruction to invalidate any TLB entries for the virtual
 address whose translation changed. Some instructions \textit{flush the TLBs},
 meaning that they invalidate all the TLB entries, as a side-effect.
 
+% Large Page Size Considerations: SDM S 11.11.9
+
+TLB entries also cache the desired caching behavior (\S~\ref{sec:memory_io})
+for their pages. This requires system software to flush the corresponding TLB
+entries when changing MTRRs or page table entries. In return, the processor
+only needs to compute the desired caching behavior during a TLB miss, as
+opposed to computing the caching behavior on every memory access.
+
 % Propagation of Paging-Structure Changes to Multiple Processors: SDM S 4.10.5
 
 The TLB is not covered by the cache coherence mechanism described in

@@ -54,6 +54,8 @@ kernel relies on address translation, described in \S~\ref{sec:paging}, to
 control the applications' access to the memory space. The hypervisor relies on
 the same mechanism to control the guest OSes.
 
+% I/O Address Space: SDM vol1 S 16.3
+
 The \textit{input/output} (I/O) space consists of $2^{16}$ I/O addresses,
 usually called \textit{ports}. The I/O ports are used exclusively to
 communicate with devices. The CPU provides specific instructions for reading
