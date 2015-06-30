@@ -36,7 +36,7 @@ hardware. When an input cannot be handled by the fast paths, the execution
 unit issues a \textit{microcode assist}, which points the microcode sequencer
 to a routine in microcode that handles the edge cases. The most common cited
 example in Intel's documentation is floating point instructions, which issue
-assists to handle denormal inputs.
+assists to handle denormalized inputs.
 
 The \texttt{REP MOVS} family of instructions, also known as \textit{string
 instructions} because of their use in \texttt{strcpy}-like functions, operate
@@ -117,7 +117,7 @@ supporting evidence from Intel's published patents.
 % Arch feature implementation strategy
 %   US 8,447,962 - 11:39-43, 12:8-13
 
-According to a 2013 patent \cite{intel2013scattergather}, the avenues
+According to a 2013 Intel patent \cite{intel2013scattergather}, the avenues
 considered for implementing new architectural features are a completely
 microcode-based implementation, using existing micro-ops, a microcode
 implementation with hardware support, which would use new micro-ops, and a
@@ -157,10 +157,10 @@ microcode may be partially compressed
 The MSROM also contains an event ROM, which is an array of pointers to event
 handling code in the micro-ops table \cite{intel1999events}. Microcode events
 are hardware exceptions, assists, and interrupts \cite{intel1997events,
-intel1999exceptions}. The processor described in a 1999 patent
-\cite{intel1999events} had a 64-entry event table, where the first 16 entries
-pointed to hardware exception handlers and the other entries were used by
-assists.
+intel1999exceptions, intel2007microstack}. The processor described in a 1999
+patent \cite{intel1999events} had a 64-entry event table, where the first 16
+entries pointed to hardware exception handlers and the other entries were used
+by assists.
 
 % Microcode implementation details:
 %   US 5,987,600 - 5:39-49, 5:53-6:32, 5:35-39, 5:42-53, 11:53-60, 11:64-67,
@@ -171,24 +171,62 @@ assists.
 %   US 5,636,374 - 2:47-52, 2:63-3:10, 4:39-45
 
 The execution units can issue an assist or signal a fault by associating an
-event code with the result of a micro-op. When the micro-op is committed, the
-event code causes the scheduler to squash all future instructions. The event
-code is forwarded to the microcode sequencer, which reads the micro-ops in the
-event handler \cite{intel1997events, intel1999exceptions}.
+event code with the result of a micro-op. When the micro-op is committed
+(\S~\ref{sec:out_of_order}), the event code causes the out-of-order scheduler
+to squash all the micro-ops that are in-flight in the ROB. The event code is
+forwarded to the microcode sequencer, which reads the micro-ops in the
+corresponding event handler \cite{intel1997events, intel1999exceptions}.
 
-The handling of hardware exceptions and interrupts by microcode makes it
-possible to change the Intel architecture's behavior when faced with hardware
-exceptions and interrupts. The SGX implementation takes advantage of this, as
-it modifies the handling of exceptions and interrupts that occur while
-executing code inside an enclave.
+The hardware exception handling logic (\S~\ref{sec:faults}) and interrupt
+handling logic (\S~\ref{sec:interrupts}) is implemented entirely in microcode
+\cite{intel1999exceptions}. Therefore, changes to this logic are relatively
+inexpensive to implement on Intel processors. The SGX design takes this into
+consideration, as it relies on modifying the handling of exceptions and
+interrupts that occur while executing code inside an enclave.
 
 
 \subsubsection{Microcode and Address Translation}
+
+% Microcode gets executed on CR3 write.
+%   US 7,552,255 - 8:43-46
+
+Address translation (\S~\ref{sec:paging}) is configured by CR3, which stores
+the physical address of the top-level page table, and by various bits in CR0
+and CR4. Writes to these control registers are implemented in microcode, which
+stores extra information in microcode-visible registers
+\cite{intel2009pipeline}.
+
+% DLB misses -> PMH, PMH uses a FSM.
+%   US 13/730,563 - 0065, 0066, 0067
+%   US 13/730,411 - 0064
+%   US 5,564,111 - 1:26-29, 1:36-38, 3:7-21, 3:58-60, 5:36-41, 5:48-57,
+%                  6:51-52, 6:55-7:7, 7:16-18, 7:23-24, 8:3-8, 8:39-40,
+%                  9:66-10:4, 10:16-23
+% PMH implementation (stuffed loads)
+%   US 5,680,565 - 2:60-3:3, 3:25-28, 3:33-52, 3:56, 3:58-4:4, 11:17-21,
+%                  11:45-48, 11:50-52, 12:30-34, 12:20-22, 12:40-43, 13:20-22,
+%                  14:42-58, 15:54-57
+%   US 5,636,374 - 5:59-64, 6:5-8
+%   US 13/730,563 - 0072, 0073, 0074, Fig. 10
+
+When a TLB miss (\S~\ref{sec:tlbs}) occurs, the memory execution unit forwards
+the linear address to the \textit{Page Miss Handler} (PMH), which performs the
+page walk needed to obtain a physical address. In order to minimize the latency
+of a page walk, the PMH is implemented as a finite-state machine (FSM)
+\cite{hildesheim2014ptm, raikin2014tlb}. Furthermore, the PMH fetches the
+page table entries from memory by issuing ``stuffed loads'', which are special
+micro-ops that bypass the reorder buffer (ROB) and go straight to the memory
+execution units (\S~\ref{sec:out_of_order}), thus avoiding the overhead
+associated with out-of-order scheduling
+\cite{intel1997pmh, intel1997microspace, hildesheim2014ptm}.
 
 % Microcode handles memory exceptions (#PF):
 %   US 5,987,600 - 14:26-49, 14:55-61, 14:66-15:3
 %   US 5,680,565 - 11:29-37,
 %   US 5,889,982 - 14:41-43, 15:47-51,
+%   US 5,564,111 - 3:7-21, 3:58-60, 5:36-41, 5:48-57,
+%                  6:51-52, 6:55-7:7, 7:16-18, 7:23-24, 8:3-8, 8:39-40,
+%                  9:66-10:4, 10:16-23
 % Microcode handles DTLB and PMH exceptions:
 %   US 5,564,111 - Abstract 15-21, 1:46-59, 3:25-45, 7:47-53, 9:33-51,
 %                  10:45-54, 10:57-63
@@ -197,30 +235,36 @@ executing code inside an enclave.
 %                  13:42-44, 13:48-54, 13:59-64, 14:12-21, 14:23-29, 14:61-66,
 %                  15:1-12, 15:16-39
 
-When a TLB miss (\S~\ref{sec:tlbs}) occurs, the memory execution unit forwards
-the linear address to the \textit{Page Miss Handler} (PMH), which performs the
-page walk needed to obtain a physical address. The
+The FSM in the PMH handles the fast path of the entire address translation
+process, which assumes no address translation fault (\S~\ref{sec:faults})
+occurs
+\cite{intel1997pmh, intel1999exceptions, intel1999events, intel1996dtlb}, and
+no page table entry needs to be modified \cite{intel1997pmh}.
+
+When the PMH FSM detects the conditions that trigger a Page Fault or a General
+Protection Fault, it communicates a microcode event code, corresponding to the
+detected fault condition, to the execution unit (\S~\ref{sec:out_of_order})
+responsible for memory operations \cite{intel1996dtlb, intel1997pmh,
+intel1999exceptions, intel1999events}. In turn, the execution unit triggers the
+fault by associating the event code with the micro-op that caused the address
+translation, as described in the previous section.
+
+The PMH FSM does not set the accessed or dirty bits in page table entries. When
+it detects that a page table entry must be modified, the FSM issues a microcode
+event code for a page walk assist \cite{intel1997pmh}. The microcode handler
+performs the page walk again, setting accessed and dirty bits on page table
+entries when necessary \cite{intel1997pmh}.
+
+% Microcode can prevent PMH writes
+%   US 7,552,255 - 7:52-55
+
+\cite{intel2009pipeline} explains that microcode is invoked after a PMH walk,
+and can prevent the resulting translation from being written to the TLB.
 
 
-\cite{intel1999events} explicitly mentions
-page faults (\#PF) as an example of an exception, and the PMH-issued microcode
-assist used to set accessed and dirty bits in the page tables.
-
-Page faults (\#PF) are a kind of hardware exception, therefore they are handled
-by microcode.
 
 
 
-% PMH implementation (stuffed loads)
-%   US 5,680,565 - 2:60-3:3, 3:25-28, 3:33-52, 3:56, 3:58-4:4, 11:17-21,
-%                  11:45-48, 11:50-52, 12:30-34, 12:20-22, 12:40-43, 13:20-22,
-%                  14:42-58, 15:54-57
-%   US 5,636,374 - 5:59-64, 6:5-8
-
-% DTLB implementation
-%   US 5,564,111 - 1:26-29, 1:36-38, 3:7-21, 3:58-60, 5:36-41, 5:48-57,
-%                  6:51-52, 6:55-7:7, 7:16-18, 7:23-24, 8:3-8, 8:39-40,
-%                  9:66-10:4, 10:16-23
 
 % Microcode initializes the CPU
 %   US 8,806,104 - 4:36-41
@@ -245,12 +289,6 @@ by microcode.
 % Microcode uses special loads / stores
 %   US 5,636,374 - 2:31-36, 2:39-46, 6:10-19, 6:22-25, 6:53-57, 6:62-67,
 %                  7:59-60, 8:13-24, 10:61-62, 10:65-12:64
-
-% Microcode can prevent PMH writes
-%   US 7,552,255 - 7:52-55
-
-% Microcode gets executed on CR3
-%   US 7,552,255 - 8:43-46
 
 % Microcode runs at CPU reset and hashes an ACM in the firmware
 %   US 8,321,931 - 6:47-52, 11:39-43, 11:45-47, 11:52-57, 12:6-11
@@ -296,11 +334,6 @@ instructions, which turn into special bus cycles, to issue commands to other
 functional units. The linear addresses of the loads and stores encode commands
 and some input parameters. For example, stores to a certain range of addresses
 flush specific sets in the TLB.
-
-\cite{intel2009pipeline} discloses that microcode is used when the CR3 register
-(\S~\ref{sec:paging}) is set. It also explains that microcode is invoked after
-a PMH walk, and can prevent the resulting translation from being written to the
-TLB.
 
 Microcode performs the processor's hardware initialization
 (\S~\ref{sec:cpu_init}). The SDM states that the BIST is performed by
