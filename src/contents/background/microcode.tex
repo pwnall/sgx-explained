@@ -29,6 +29,13 @@ instructions and instructions that require more than 4 micro-ops use a slower
 decoding path that relies on a sequencer to read micro-ops from a
 \textit{microcode store ROM} (MSROM).
 
+The 4 micro-ops limitation can be used to guess intelligently whether an
+architectural feature is implemented in microcode. For example, it is safe to
+assume that \texttt{XSAVE} (\S~\ref{sec:registers}), which was takes over 200
+micro-ops on recent CPUs \cite{fog2014microops}, is most likely performed in
+microcode, whereas simple arithmetic and memory access is handled directly by
+hardware.
+
 % Assists: Optimization S B.3.5.2
 
 The core's execution units handle common cases in fast paths implemented in
@@ -109,7 +116,8 @@ The description of machine checks in the SDM mentions page assists and page
 faults in the same context. We assume that the page assists are issued in some
 cases when a TLB miss occurs (\S~\ref{sec:tlbs}) and the PMH has to walk the
 page table. The following sections develop this assumption and provide
-supporting evidence from Intel's published patents.
+supporting evidence from Intel's assigned patents and published patent
+applications.
 
 
 \subsubsection{Microcode Implementation Details}
@@ -192,9 +200,9 @@ interrupts that occur while executing code inside an enclave.
 
 Address translation (\S~\ref{sec:paging}) is configured by CR3, which stores
 the physical address of the top-level page table, and by various bits in CR0
-and CR4. Writes to these control registers are implemented in microcode, which
-stores extra information in microcode-visible registers
-\cite{intel2009pipeline}.
+and CR4, all of which are described in the SDM. Writes to these control
+registers are implemented in microcode, which stores extra information in
+microcode-visible registers \cite{intel2009pipeline}.
 
 % DLB misses -> PMH, PMH uses a FSM.
 %   US 13/730,563 - 0065, 0066, 0067
@@ -238,7 +246,7 @@ associated with out-of-order scheduling
 The FSM in the PMH handles the fast path of the entire address translation
 process, which assumes no address translation fault (\S~\ref{sec:faults})
 occurs
-\cite{intel1997pmh, intel1999exceptions, intel1999events, intel1996dtlb}, and
+\cite{intel1996dtlb, intel1997pmh, intel1999exceptions, intel1999events}, and
 no page table entry needs to be modified \cite{intel1997pmh}.
 
 When the PMH FSM detects the conditions that trigger a Page Fault or a General
@@ -255,40 +263,68 @@ event code for a page walk assist \cite{intel1997pmh}. The microcode handler
 performs the page walk again, setting accessed and dirty bits on page table
 entries when necessary \cite{intel1997pmh}.
 
+The patents at the core of our descriptions above \cite{intel1996dtlb,
+intel1997events, intel1997pmh, intel1999exceptions, intel1999events} were all
+issued between 1996 and 1999, which raises the concern of obsolescence. As
+Intel would not be able to file new patents for the same specifications, we
+cannot present newer patents with the information above. Fortunately, we were
+able to find newer patents that mention the techniques described above,
+allowing us to assume that the information above is still relevant to newer
+CPU models.
+
 % Microcode can prevent PMH writes
 %   US 7,552,255 - 7:52-55
 
-\cite{intel2009pipeline} explains that microcode is invoked after a PMH walk,
-and can prevent the resulting translation from being written to the TLB.
+Two 2014 patents \cite{hildesheim2014ptm, raikin2014tlb} mention that the PMH
+is executing a FSM which issues stuffing loads to obtain page table entries.
+A 2009 patent \cite{intel2009pipeline} mentions that microcode is invoked after
+a PMH walk, and that the microcode can prevent the translation result produced
+by the PMH from being written to the TLB.
 
+% VGATHER* / VSCATTER* - SDM instruction reference
+% Microcode assists used for difficult cases in gather
+%   US 8,688,962 - 5:26-30
+% Scatter / gather implemented in microcode and hardware
+%   US 8,447,962 - 11:28-30, 12:15-17, 12:20-23, 12:25-28
 
-
-
-
-
-% Microcode initializes the CPU
-%   US 8,806,104 - 4:36-41
+A 2013 patent \cite{intel2013scattergather} and a 2014 patent
+\cite{intel2014gather} on scatter / gather instructions disclose that the newly
+introduced instructions use a combination of hardware in the execution units
+that perform memory operations, which include the PMH. The hardware issues
+microcode assists for slow paths, such as gathering vector elements stored in
+un-cacheable memory (\S~\ref{sec:cacheability_options}), and operations that
+cause Page Faults.
 
 % Microcode used when vAPIC memory checks fail
 %   US 8,806,104 - 2:38-55, 3:12-17, 3:21-35, 3:39-43, 4:6-10, 4:29-42,
 %                  4:55-57, 5:6-7, 5:10-17, 5:37-53, 5:58-60, 6:16-19,
 %                  7:45-47, 8:30-36, 9:12-15
 
-% Microcode used for VMX instructions
-%   US 8,806,104 - 2:61-66
+A 2014 patent on APIC (\S~\ref{sec:interrupts}) virtualization
+\cite{intel2014vapic} describes a memory execution unit modification that
+invokes a microcode assist for certain memory accesses, based on the contents
+of some range registers. The patent also mentions that the range registers are
+checked when the TLB miss occurs and the PMH is invoked, in order to decide
+whether a fast hardware path can be used for APIC virtualization, or a
+microcode assist must be issued.
 
-% Microcode encryption
-%   US 8,296,528 - 5:12-19
+The recent patents mentioned above allow us to conclude that the PMH in recent
+processors still relies on an FSM and stuffed loads, and still uses microcode
+assists to handle infrequent and complex operations. This assumption plays a
+key role in our derivation of the implementation details of SGX's memory
+protection mechanisms.
+
+
+\subsubsection{Microcode and Booting}
+
+
+% Microcode initializes the CPU
+%   US 8,806,104 - 4:36-41
+
+\cite{intel2014vapic} also mentions that microcode initializes the CPU.
 
 % Microcode sequesters cache ways
 %   US 8,296,528 - 6:28-46, 7:9-347:48-51, 7:61-8:10, 8:12-57
-
-% Microcode has microinstruction pointer stack
-%   US 7,231,511 - Abstract 1-6, 2:44-45, 2:53-55, 3:9-16, 6:1-3, 12:2-9
-
-% Microcode uses special loads / stores
-%   US 5,636,374 - 2:31-36, 2:39-46, 6:10-19, 6:22-25, 6:53-57, 6:62-67,
-%                  7:59-60, 8:13-24, 10:61-62, 10:65-12:64
 
 % Microcode runs at CPU reset and hashes an ACM in the firmware
 %   US 8,321,931 - 6:47-52, 11:39-43, 11:45-47, 11:52-57, 12:6-11
@@ -297,33 +333,26 @@ and can prevent the resulting translation from being written to the TLB.
 % Microcode handles SIPI
 %   US 8,301,907 - 4:31-33
 
-\cite{intel1997pmh} describes the operation of the PMH (\S~\ref{sec:tlbs}), and
-discloses that the PMH uses a microcode assist when it needs to set the dirty
-or accessed bits in a page table (\S~\ref{sec:paging}).
+Microcode performs the processor's hardware initialization
+(\S~\ref{sec:cpu_init}). The SDM states that the BIST is performed by
+microcode. On some systems, microcode also authenticates the boot firmware
+\cite{intel2012uefihypervisor} before executing it. On systems that use
+LaGrande Server Extensions (LT-SX, also known as Intel TXT for servers), the
+hardware initialization microcode checks Intel's signature on the motherboard's
+firmware and assures the motherboard that the CPU is compatible with LT-SX
+\cite{intel2012ltsx}. The microcode in the SIPI (\S~\ref{sec:firmware_boot})
+handler sets up a secure environment matching the other CPUs.
 
-\cite{intel1996dtlb} confirms that microcode is used to handle faults and
-assists generated by the TLB (\S~\ref{sec:tlbs}) and PMH.
-
-At the time of this writing, \cite{intel1997events, intel1999exceptions,
-intel1997pmh, intel1999events, intel1996dtlb} are 7-8 years old, so there is a
-chance that their information is outdated. Fortunately, a recent patent on APIC
-virtualization \cite{intel2014vapic} describes a memory execution unit
-modification that checks memory accesses against a set of range registers, and
-invokes a microcode assist when the accesses don't match.
-\cite{intel2014vapic} also mentions that microcode initializes the CPU.
-
-% VGATHER* / VSCATTER* - SDM instruction reference
-% Microcode assists used for difficult cases in gather
-%   US 8,688,962 - 5:26-30
-% Scatter / gather implemented in microcode and hardware
-%   US 8,447,962 - 11:28-30, 12:15-17, 12:20-23, 12:25-28
+\subsubsection{Microcode Implementation}
 
 
-Recently introduced scatter / gather instructions use dedicated hardware in the
-\textit{Memory Execution Unit} (MEU) \cite{intel2013scattergather,
-intel2014gather}. The MEU, which includes the PMH, triggers a microcode assist
-when encountering a complex operation, such as a read from un-cacheable memory
-or a page fault \cite{intel2014gather}.
+% Microcode has microinstruction pointer stack
+%   US 7,231,511 - Abstract 1-6, 2:44-45, 2:53-55, 3:9-16, 6:1-3, 12:2-9
+
+% Microcode uses special loads / stores
+%   US 5,636,374 - 2:31-36, 2:39-46, 6:10-19, 6:22-25, 6:53-57, 6:62-67,
+%                  7:59-60, 8:13-24, 10:61-62, 10:65-12:64
+
 
 \cite{intel2007microstack} discloses that microcode uses dedicated call and
 return micro-ops that manage a hardware stack structure compatible with out of
@@ -335,15 +364,16 @@ functional units. The linear addresses of the loads and stores encode commands
 and some input parameters. For example, stores to a certain range of addresses
 flush specific sets in the TLB.
 
-Microcode performs the processor's hardware initialization
-(\S~\ref{sec:cpu_init}). The SDM states that the BIST is performed by
-microcode. On some systems, microcode also authenticates the boot firmware
-\cite{intel2012uefihypervisor} before executing it. On systems that use
-LaGrande Server Extensions (LT-SX, also known as Intel TXT for servers), the
-hardware initialization microcode checks Intel's signature on the motherboard's
-firmware and assures the motherboard that the CPU is compatible with LT-SX
-\cite{intel2012ltsx}. The microcode in the SIPI (\S~\ref{sec:firmware_boot})
-handler sets up a secure environment matching the other CPUs.
+\cite{chen2014microcode} sets out to analyze the structure of microcode used in
+all x86 processors, but is unable to obtain any details about Intel's
+microcode. Fortunately, even though the microcode structure is undocumented,
+
+
+
+\subsubsection{Microcode Updates}
+
+% Microcode encryption
+%   US 8,296,528 - 5:12-19
 
 \cite{intel2012patching} discloses that microcode updates are encrypted, hashed
 with a cryptographic hash function like SHA-256, and signed using RSA or
@@ -360,20 +390,12 @@ implies that Intel already has a microcode implementation of RSA-2048 signature
 checking, which may explain why SGX uses RSA signatures in its enclave
 structures.
 
-\cite{chen2014microcode} sets out to analyze the structure of microcode used in
-all x86 processors, but is unable to obtain any details about Intel's
-microcode. Fortunately, even though the microcode structure is undocumented,
-the 4 micro-ops limitation can be used to guess intelligently whether an
-architectural feature is implemented in microcode. For example, it is safe to
-assume that \texttt{XSAVE} (\S~\ref{sec:registers}), which was takes over 200
-micro-ops on recent CPUs \cite{fog2014microops}, is most likely performed in
-microcode, whereas simple arithmetic and memory access is handled directly by
-hardware.
-
 While Intel publishes the latest microcode versions for its CPUs, the release
 notes associated with the updates are not publicly available. This is
 unfortunate, as the release notes could be used to confirm guesses that certain
-features are implemented in microcode. However, some information can be
+features are implemented in microcode.
+
+However, some information can be
 inferred by reading through the Errata section in Intel's Specification Updates
 \cite{intel2010errata, intel2015errata, intel2015errata2}. The phrase ``it is
 possible for BIOS\footnote{Basic Input/Output System (BIOS)
@@ -384,9 +406,13 @@ issued. For example, Errata AH in \cite{intel2010errata} implies that string
 instructions (\texttt{REP MOV}) are implemented in microcode, which was
 confirmed by Intel \cite{abraham2006repmov}.
 
+% Microcode used for VMX instructions
+%   US 8,806,104 - 2:61-66
+
 Errata AH43 and AH91 in \cite{intel2010errata}, and AAK73 in
 \cite{intel2015errata} imply that address translation (\S~\ref{sec:paging}) is
 at least partially implemented in microcode. Errata AAK53, AAK63, and AAK70,
 AAK178 in \cite{intel2015errata}, and BT138, BT210,  in \cite{intel2015errata2}
 imply that VM entries and exits (\S~\ref{sec:faults}) are implemented in
-microcode.
+microcode, which is confirmed by the APIC virtualization patent
+\cite{intel2014vapic}.
