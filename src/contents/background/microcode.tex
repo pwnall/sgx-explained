@@ -317,6 +317,24 @@ protection mechanisms.
 
 \subsubsection{Microcode and Booting}
 
+% Microcode in ROM reads an ACM that measures firmware
+%   US 8,429,418 - 2:14-28, 3:52-61, 4:2-8, Fig 1, Fig 2
+% Microcode loads the ACM in Cache-as-Ram, authenticates using microcode crypto
+%   US 8,429,418 - 4:13-20, 4:22-28
+
+% ACM is signed with a key in the CPU, verified by microcode.
+%   US 7,752,428 - 5:1-21
+% EFI SEC and PEI core run in Cache-as-Ram mode, SEC loaded by microcode.
+%   US 7,752,428 - 5:22-28, 5:41-49, 5:56-5:67, 6:1-3, 6:9-13 6:44-6:58,
+%                  7:11-45, Fig 4
+
+
+
+Microcode plays a big role in the processor's hardware initialization
+(\S~\ref{sec:cpu_init}). The SDM states that microcode performs the Built-In
+Self Test (BIST).
+
+
 
 % Microcode initializes the CPU
 %   US 8,806,104 - 4:36-41
@@ -333,9 +351,7 @@ protection mechanisms.
 % Microcode handles SIPI
 %   US 8,301,907 - 4:31-33
 
-Microcode performs the processor's hardware initialization
-(\S~\ref{sec:cpu_init}). The SDM states that the BIST is performed by
-microcode. On some systems, microcode also authenticates the boot firmware
+On some systems, microcode also authenticates the boot firmware
 \cite{intel2012uefihypervisor} before executing it. On systems that use
 LaGrande Server Extensions (LT-SX, also known as Intel TXT for servers), the
 hardware initialization microcode checks Intel's signature on the motherboard's
