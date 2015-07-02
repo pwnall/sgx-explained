@@ -4,15 +4,15 @@
 When a computer is powered up, it undergoes a \textit{bootstrapping} process,
 also called \textit{booting}, for simplicity. Although many steps in the boot
 process depend on the motherboard and components in a computer, the process
-does follow a high-level structure that is prescribed in the SDM. This section
-provides the details needed to analyze SGX's security properties.
-\cite{intel2010booting} provides a good reference on the entire booting
-process.
+does follow a high-level structure that is mostly prescribed in the SDM. This
+section provides the details needed to analyze SGX's security properties.
+\cite{intel2010booting} provides a good reference on the low-level details of
+the entire booting process.
 
 \subsubsection{UEFI Platform Initialiaztion}
 \label{sec:efi}
 
-The firmware in modern computers using the Intel architecture implements the
+The firmware in recent computers with Intel processors implements the
 \textit{Platform Initialization} (PI) process in the \textit{Unified
 Extensible Firmware Interface} (UEFI) specification \cite{forum2015uefi}. The
 platform initialization follows the steps shown in Figure~\ref{fig:uefi} and
@@ -21,10 +21,10 @@ described below.
 \begin{figure}[hbt]
   \center{\includegraphics[width=75mm]{figures/uefi.pdf}}
   \caption{
-    The stops on the ring interconnect used for inter-core and core-uncore
-    communication.
+    The phases of the Platform Initialization process in the UEFI
+    specification.
   }
-  \label{fig:cpu_uncore}
+  \label{fig:uefi}
 \end{figure}
 
 The computer powers up, reboots, or resumes from sleep in the
@@ -62,21 +62,22 @@ the OS is booted, the hash in measurement register accounts for all the
 firmware that was used to boot the computer.
 
 
-\subsubsection{CPU Hardware Initialization}
-\label{sec:cpu_init}
+\subsubsection{SEC on Intel Platforms}
+\label{sec:uefi_sec_details}
 
 % Initialization Overview: SDM S 9.1
 
-Right after a computer is powered up, all the logical processors (LPs) on the
-motherboard undergo \textit{hardware initialization}, which invalidates the
-caches (\S~\ref{sec:caching}) and TLBs (\S~\ref{sec:tlbs}), performs a
+The SEC phase starts in the CPU's circuitry. Right after a computer is powered
+up, all the logical processors (LPs) on the motherboard undergo
+\textit{hardware initialization}, which invalidates the caches
+(\S~\ref{sec:caching}) and TLBs (\S~\ref{sec:tlbs}), performs a
 \textit{Built-In Self Test} (BIST), and sets all the registers
 (\S~\ref{sec:registers}) to pre-specified values.
 
 % Multiple-Processor Initialization: SDM S 8.4
 % BSP and AP Processors: SDM S 8.4.1
 % MP Initialization Protocol Algorithms for MP Systems: SDM S 8.4.3
-% An ivy bridge CPUID: family 06h, extended model 3, model 58, stepping 9
+% An Ivy Bridge CPUID: family 06h, extended model 3, model 58, stepping 9
 
 After hardware initialization, the LPs perform the Multi-Processor (MP)
 initialization algorithm, which results in one LP being selected as the
@@ -96,54 +97,79 @@ APs, and enter the \textit{wait-for-SIPI} state.
 
 % Typical BSP Initialization Sequence: SDM S 8.4.4.1
 
-The SDM describes a legacy boot sequence, where BSP sets its RIP register to
-0xFFFFFFF0 (16 bytes below 4GB), where the firmware is expected to place a
-instruction that jumps into the PEI implementation. This is unfortunate, as
-recent processors dropped support for this approach
-\cite{reinauer2013fitpatch}.
+Understanding the PEI firmware loading process is unnecessarily complicated by
+the fact that the SDM describes a legacy process consisting of having the BSP
+set its RIP register to 0xFFFFFFF0 (16 bytes below 4GB), where the firmware is
+expected to place a instruction that jumps into the PEI implementation.
 
-Modern firmware implementations instead contain a Firmware Interface Table
-(FIT), which was introduced by an Intel patent \cite{qureshi2006fit} in the
-context of Intel's Itanium architecture. The FIT use in Intel's current 64-bit
-architecture is described in a patent \cite{datta2013acm} and briefly
-documented in a TXT lab note \cite{intel2010txtlab}.
+% FIT pointer is at 4GB - 0x18.
+%   US 8,429,418 - 3:52-55, Fig 4
+%   US 8,321,931 - Fig 5, 12:34-39
 
-The use of TXT requires firmware that contains a FIT and Intel-supplied ACMs
-\cite[p. 92]{futral2013servertxt}.
+Recent processors do not support the legacy approach at all
+\cite{reinauer2013fitpatch}. Instead, the BSP reads a word from address
+0xFFFFFFE8 (24 bytes below 4GB) \cite{intel2012uefihypervisor, datta2013acm},
+and expects to find the address of a \textit{Firmware Interface Table} (FIT)
+in the memory address space (\S~\ref{sec:address_spaces}). The BSP is able to
+read firmware contents from non-volatile memory before the computer is
+initialized, because the initial SAD (\S~\ref{sec:cache_coherence}) and PCH
+(\S~\ref{sec:motherboard}) configurations maps a region in the memory address
+space to the SPI flash chip (\S~\ref{sec:motherboard}) that stores the
+computer's firmware.
+
+The FIT \cite{qureshi2006fit} was introduced in the context of Intel's Itanium
+architecture, and its use in Intel's current 64-bit architecture is described
+in an Intel patent \cite{datta2013acm} and briefly documented in an obscure
+piece of TXT-related documentation \cite{intel2010txtlab}. The FIT contains
+\textit{Authenticated Code Modules} (ACMs) that make up the firmware, and
+other platform-specific information, such as the TPM and TXT configuration
+\cite{intel2010txtlab}.
+
+The PEI implementation is stored in an ACM listed in the FIT. The processor
+loads the PEI ACM, verifies the trustworthiness of the ACM's public key, and
+ensures that the ACM's contents matches its signature. If the PEI passes the
+security checks, it is executed. Processors that support Intel TXT only accept
+Intel-signed ACMs \cite[p. 92]{futral2013servertxt}.
 
 
-BIOS
-The BSP sets its RIP register to point to the firmware reset code, which must
-be present at 0xFFFFFFF0 (16 bytes below the 4 GB mark). This is accomplished
-by having the initial SAD (\S~\ref{sec:cache_coherence}) and PCH
-(\S~\ref{sec:motherboard}) configurations map the 4 KB below the 4 GB mark of
-the memory address space (\S~\ref{sec:address_spaces}) to the SPI flash chip
-that stores the motherboard's firmware.
-
-\subsubsection{Boot Firmware}
-\label{sec:firmware_boot}
+\subsubsection{PEI on Intel Platforms}
+\label{sec:uefi_pei_details}
 
 \cite{intel2010booting} and \cite{coreboot2015manual} describe the
-initialization steps performed by the firmware, from an implementor's
-perspective. A few steps are interesting from the perspective of SGX and
-caching attacks.
+initialization steps performed by Intel platforms during the PEI phase, from
+the perspective of a firmware programmer. A few steps provide useful context
+for understanding SGX's hardware underpinnings.
 
 % Preventing Caching: SDM S 11.5.3
 
-When the BSP starts executing firmware code, DRAM is not available. The
-firmware places the BSP in \textit{Cache-as-RAM} (CAR) mode to be able to use a
-call stack and other high-level constructs. Ater CAR is enabled, the memory
-initialization code, which is typically Intel's \textit{Memory Reference Code}
-(MRC), is loaded into the cache. When executed, the memory initialization code
-discovers the DRAM chips connected to the motherboard and sets them up, and
-enables and configures the memory controllers.
+When the BSP starts executing PEI firmware, DRAM is not yet initialized.
+Therefore the PEI code starts executing in a \textit{Cache-as-RAM} (CAR) mode,
+which only relies on the BSP's internal caches, at the expense of imposing
+severe constraints on the size of the PEI's working set.
 
-After DRAM becomes available, the boot firmware is copied into DRAM and the BSP
-is taken out of CAR mode. The BSP's LAPIC is initialized and used to send a
+One of the first tasks performed by the PEI implementation is enabling DRAM,
+which requires discovering and initializing the DRAM chips connected to the
+motherboard, and then configuring the BSP's memory controllers
+(\S~\ref{sec:cache_coherence}) and MTRRs (\S~\ref{sec:memory_io}). Most
+firmware implementations use Intel's \textit{Memory Reference Code} (MRC) for
+this task.
+
+After DRAM becomes available, the PEI code is copied into DRAM and the BSP is
+taken out of CAR mode. The BSP's LAPIC is initialized and used to send a
 broadcast \textit{Startup Inter-Processor Interrupt} (SIPI) to wake up the
-APs. The interrupt vector in a SIPI indicates the DRAM address of the firmware
-code for initializing APs.
+APs. The interrupt vector in a SIPI indicates the memory address of the AP
+initialization code in the PEI implementation.
 
 % Typical AP Initialization Sequence: SDM S 8.4.4.2
 
+The PEI code responsible for initializing APs is executed when the APs receive
+the SIPI wake-up. The AP PEI code sets up the AP's configuration registers,
+such as the MTRRs, to match the BSP's configuration. Next, each AP registers
+itself in a system-wide table, using a memory synchronization primitive, such
+as a semaphore, to avoid having two APs access the table at the same time.
+After the AP initialization completes, each AP is suspended again,
+and waits to receive an INIT Inter-Processor Interrupt from the OS kernel.
 
+The BSP initialization code waits for all APs to register themselves into the
+system-wide table, and then proceeds to locate, load and execute the firmware
+module that implements DXE.

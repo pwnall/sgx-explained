@@ -331,8 +331,8 @@ protection mechanisms.
 
 
 Microcode plays a big role in the processor's hardware initialization
-(\S~\ref{sec:cpu_init}). The SDM states that microcode performs the Built-In
-Self Test (BIST).
+(\S~\ref{sec:uefi_sec_details}). The SDM states that microcode performs the
+Built-In Self Test (BIST).
 
 
 
@@ -356,7 +356,7 @@ On some systems, microcode also authenticates the boot firmware
 LaGrande Server Extensions (LT-SX, also known as Intel TXT for servers), the
 hardware initialization microcode checks Intel's signature on the motherboard's
 firmware and assures the motherboard that the CPU is compatible with LT-SX
-\cite{intel2012ltsx}. The microcode in the SIPI (\S~\ref{sec:firmware_boot})
+\cite{intel2012ltsx}. The microcode in the SIPI (\S~\ref{sec:uefi_pei_details})
 handler sets up a secure environment matching the other CPUs.
 
 \subsubsection{Microcode Implementation}
