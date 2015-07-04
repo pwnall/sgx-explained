@@ -71,13 +71,14 @@ The SGX enclave measurements produced by the processor include the microcode
 version, hinting that SGX uses microcode in its implementation, and that its
 designers anticipated a need to use microcode updates.
 
-In order to be able to evaluate the feasibility our proposed SGX modifications,
-we aim to understand the role of microcode in SGX's implementation.
+A thorough understanding of the role of microcode in SGX's implementation is
+a prerequisite to evaluating the feasibility of any proposed SGX modifications.
 Unfortunately, Intel's SGX documentation does not describe its use of
 microcode, so we rely on public information about the role of microcode in the
 areas impacted by SGX, namely memory management (\S~\ref{sec:paging},
-\S~\ref{sec:tlbs}) and the handling of hardware exceptions
-(\S~\ref{sec:faults}) and interrupts (\S~\ref{sec:interrupts}).
+\S~\ref{sec:tlbs}), the handling of hardware exceptions
+(\S~\ref{sec:faults}) and interrupts (\S~\ref{sec:interrupts}), and
+platform initialization (\S~\ref{sec:booting}).
 
 % Precise Event Based Sampling (PEBS): SDM S 18.7.1.1
 % At-Retirement Counting: SDM S 18.13.6
@@ -104,18 +105,18 @@ Intel's optimization manual describes one more interesting assist, from a
 memory system perspective. SIMD masked loads (using \texttt{VMASKMOV}) read a
 series of data elements from memory into a vector register. A mask register
 decides whether elements are moved or ignored. If the memory address overlaps
-an invalid page (e.g., the P flag is 0, S~\ref{sec:paging}), a microcode assist
-is issued, even if the mask indicates that no element from the invalid page
-should be read. The microcode checks whether the elements in the invalid page
-have the corresponding mask bits set, and either performs the load or issues a
-page fault.
+an invalid page (e.g., the P flag is 0, \S~\ref{sec:paging}), a microcode
+assist is issued, even if the mask indicates that no element from the invalid
+page should be read. The microcode checks whether the elements in the invalid
+page have the corresponding mask bits set, and either performs the load or
+issues a page fault.
 
 % IA32_MCG Extended Machine Check State MSRs: SDM S 15.3.2.6
 
 The description of machine checks in the SDM mentions page assists and page
 faults in the same context. We assume that the page assists are issued in some
 cases when a TLB miss occurs (\S~\ref{sec:tlbs}) and the PMH has to walk the
-page table. The following sections develop this assumption and provide
+page table. The following section develops this assumption and provides
 supporting evidence from Intel's assigned patents and published patent
 applications.
 
@@ -167,9 +168,9 @@ The MSROM also contains an event ROM, which is an array of pointers to event
 handling code in the micro-ops table \cite{intel1999events}. Microcode events
 are hardware exceptions, assists, and interrupts \cite{intel1997events,
 intel1999exceptions, intel2007microstack}. The processor described in a 1999
-patent \cite{intel1999events} had a 64-entry event table, where the first 16
-entries pointed to hardware exception handlers and the other entries were used
-by assists.
+patent \cite{intel1999events} has a 64-entry event table, where the first 16
+entries point to hardware exception handlers and the other entries are used by
+assists.
 
 % Microcode implementation details:
 %   US 5,987,600 - 5:39-49, 5:53-6:32, 5:35-39, 5:42-53, 11:53-60, 11:64-67,
@@ -214,6 +215,7 @@ stores to a certain range of addresses flush specific TLB sets.
 
 
 \subsubsection{Microcode and Address Translation}
+\label{sec:microcode_pmh}
 
 % Microcode gets executed on CR3 write.
 %   US 7,552,255 - 8:43-46
@@ -289,8 +291,7 @@ issued between 1996 and 1999, which raises the concern of obsolescence. As
 Intel would not be able to file new patents for the same specifications, we
 cannot present newer patents with the information above. Fortunately, we were
 able to find newer patents that mention the techniques described above,
-allowing us to assume that the information above is still relevant to newer
-CPU models.
+proving their relevance to newer CPU models.
 
 % Microcode can prevent PMH writes
 %   US 7,552,255 - 7:52-55
@@ -336,6 +337,7 @@ protection mechanisms.
 
 
 \subsubsection{Microcode and Booting}
+\label{microcode:sec}
 
 The SDM states that microcode performs the Built-In Self Test (BIST,
 \S~\ref{sec:uefi_sec_details}), but does not provide any details on the
@@ -349,6 +351,7 @@ rest of the CPU's hardware initialization.
 % EFI SEC and PEI core run in Cache-as-Ram mode, SEC loaded by microcode
 %   US 7,752,428 - 5:22-28, 5:41-49, 5:56-5:67, 6:1-3, 6:9-13 6:44-6:58,
 %                  7:11-45, Fig 4
+%   US 8,296,528 - 7:39-50
 
 % Microcode in ROM reads an ACM that measures firmware
 %   US 8,429,418 - 2:14-28, 3:52-61, 4:2-8, Fig 1, Fig 2
@@ -370,74 +373,81 @@ The microcode that implements SEC performs MP initialization
 places the BSP into Cache-as-Ram (CAR) mode, looks up the PEI Authenticated
 Code Module (ACM) in the Firmware Interface Table (FIT), loads the PEI ACM into
 the cache, and verifies its signature (\S~\ref{sec:uefi_sec_details})
-\cite{datta2010trustedboot, intel2012uefihypervisor, intel2012ltsx,
-datta2013acm}. Therefore, Intel's microcode contains implementations of
-RSA decryption and of a variant of SHA hashing.
+\cite{datta2010trustedboot, intel2012patching, intel2012uefihypervisor,
+intel2012ltsx, datta2013acm}. Given the structure of ACM signatures, we can
+conclude that Intel's microcode contains implementations of RSA decryption and
+of a variant of SHA hashing.
 
 The PEI ACM is executed from the CPU's cache, after it is loaded by the
-microcode. This removes the possibility for an attacker with physical access
-to the SPI flash chip to change the firmware's contents after the microcode
-computes its cryptograhpic hash, but before it is executed.
+microcode \cite{datta2010trustedboot, intel2012patching, datta2013acm}. This
+removes the possibility for an attacker with physical access to the SPI flash
+chip to change the firmware's contents after the microcode computes its
+cryptograhpic hash, but before it is executed.
 
 % Microcode handles SIPI
-%   US 8,301,907 - 4:31-33
+%   US 8,301,907 - 4:31-33, Fig 2
 
 On motherboards compatible with LaGrande Server Extensions (LT-SX, also known
 as Intel TXT for servers), the firmware implementing PEI verifies that each CPU
 connected to motherboard supports LT-SX, and powers off the CPU sockets that
-don't have processors with LT-SX in them.
-
-
-hardware initialization microcode checks Intel's signature on the motherboard's
-firmware and assures the motherboard that the CPU is compatible with LT-SX
-\cite{intel2012ltsx}. The microcode in the SIPI (\S~\ref{sec:uefi_pei_details})
-handler sets up a secure environment matching the other CPUs.
+don't have processors with LT-SX in them \cite{intel2012ltsx}. This prevents an
+attacker from tampering with a TXT-protected VM by hot-plugging a CPU in a
+running computer that is inside TXT mode. When a hot-plugged CPU is passes
+security tests, a hypervisor is notified that a new CPU is available. The
+hypervisor updates its internal state, and sends the new CPU a SIPI. The new
+CPU executes a SIPI handler, inside microcode, that configures the CPU's state
+to match the state expected by the TXT hypervisor \cite{intel2012ltsx}. This
+implies that AP initialization described in \S~\ref{sec:uefi_sec_details} is
+implemented in microcode.
 
 
 \subsubsection{Microcode Updates}
+\label{microcode:updates}
+
+The SDM explains that the microcode on Intel CPUs can be updated, and describes
+the process for applying an update. However, no detail about the contents of an
+update is provided. Analyzing Intel's microcode updates seems like a promising
+avenue towards discovering the microcode's structure. Unfortunately, the
+updates have so far proven to be inscrutable \cite{chen2014microcode}.
 
 % Microcode encryption
 %   US 8,296,528 - 5:12-19
 
-% Microcode sequesters cache ways
-%   US 8,296,528 - 6:28-46, 7:9-347:48-51, 7:61-8:10, 8:12-57
-
-
-\cite{intel2012patching} discloses that microcode updates are encrypted, hashed
-with a cryptographic hash function like SHA-256, and signed using RSA or
-ellipic curve cryptography. It also states that the decryption and signature
-verification are implemented in microcode.
+The microcode updates cannot be easily analyzed because they are encrypted,
+hashed with a cryptographic hash function like SHA-256, and signed using RSA or
+ellipic curve cryptography \cite{intel2012patching}. The update facility is
+implemented entirely in microcode, including the decryption and signature
+verification \cite{intel2012patching}.
 
 \cite{hawkes2012microcode} independently used fault injection and timing
 analysis to conclude that each recent Intel microcode update is signed with a
 2048-bit RSA key and a (possibly non-standard) 256-bit hash algorithm, which
 agrees with the findings above.
 
-\cite{chen2014microcode} sets out to analyze the structure of microcode used in
-all x86 processors, but is unable to obtain any details about Intel's
-microcode. Fortunately, even though the microcode structure is undocumented,
+% Microcode sequesters cache ways
+%   US 8,296,528 - 6:28-46, 7:9-34 7:48-51, 7:61-8:10, 8:12-57
 
+The microcode update implementation places the core's cache into No-Evict Mode
+(NEM, documented by the SDM) and copies the microcode update into the cache
+before verifying its signature \cite{intel2012patching}. The update facility
+also sets up an MTRR entry to protect the update's contents from modifications
+via DMA transfers \cite{intel2012patching} as it is verified and applied.
 
-This
-implies that Intel already has a microcode implementation of RSA-2048 signature
-checking, which may explain why SGX uses RSA signatures in its enclave
-structures.
+While Intel publishes the most recent microcode updates for each of its CPU
+models, the release notes associated with the updates are not publicly
+available. This is unfortunate, as the release notes could be used to confirm
+guesses that certain features are implemented in microcode.
 
-While Intel publishes the latest microcode versions for its CPUs, the release
-notes associated with the updates are not publicly available. This is
-unfortunate, as the release notes could be used to confirm guesses that certain
-features are implemented in microcode.
-
-However, some information can be
-inferred by reading through the Errata section in Intel's Specification Updates
+However, some information can be inferred by reading through the Errata section
+in Intel's Specification Updates
 \cite{intel2010errata, intel2015errata, intel2015errata2}. The phrase ``it is
-possible for BIOS\footnote{Basic Input/Output System (BIOS)
-is the predecessor of UEFI-based firmware. Most Intel documentation, including
-the SDM, still uses the term BIOS to refer to firmware.} to contain a
-workaround for this erratum'' generally means that a microcode update was
-issued. For example, Errata AH in \cite{intel2010errata} implies that string
-instructions (\texttt{REP MOV}) are implemented in microcode, which was
-confirmed by Intel \cite{abraham2006repmov}.
+possible for BIOS\footnote{Basic Input/Output System (BIOS) is the predecessor
+of UEFI-based firmware. Most Intel documentation, including the SDM, still uses
+the term BIOS to refer to firmware.} to contain a workaround for this erratum''
+generally means that a microcode update was issued. For example, Errata AH in
+\cite{intel2010errata} implies that string instructions (\texttt{REP MOV}) are
+implemented in microcode, which was confirmed by Intel
+\cite{abraham2006repmov}.
 
 % Microcode used for VMX instructions
 %   US 8,806,104 - 2:61-66
