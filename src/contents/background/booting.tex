@@ -19,7 +19,7 @@ platform initialization follows the steps shown in Figure~\ref{fig:uefi} and
 described below.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=75mm]{figures/uefi.pdf}}
+  \center{\includegraphics[width=85mm]{figures/uefi.pdf}}
   \caption{
     The phases of the Platform Initialization process in the UEFI
     specification.
@@ -110,12 +110,21 @@ Recent processors do not support the legacy approach at all
 \cite{reinauer2013fitpatch}. Instead, the BSP reads a word from address
 0xFFFFFFE8 (24 bytes below 4GB) \cite{intel2012uefihypervisor, datta2013acm},
 and expects to find the address of a \textit{Firmware Interface Table} (FIT)
-in the memory address space (\S~\ref{sec:address_spaces}). The BSP is able to
-read firmware contents from non-volatile memory before the computer is
-initialized, because the initial SAD (\S~\ref{sec:cache_coherence}) and PCH
-(\S~\ref{sec:motherboard}) configurations maps a region in the memory address
-space to the SPI flash chip (\S~\ref{sec:motherboard}) that stores the
-computer's firmware.
+in the memory address space (\S~\ref{sec:address_spaces}), as shown in
+Figure~\ref{fig:firmware_fit}. The BSP is able to read firmware contents from
+non-volatile memory before the computer is initialized, because the initial SAD
+(\S~\ref{sec:cache_coherence}) and PCH (\S~\ref{sec:motherboard})
+configurations maps a region in the memory address space to the SPI flash chip
+(\S~\ref{sec:motherboard}) that stores the computer's firmware.
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=55mm]{figures/firmware_fit.pdf}}
+  \caption{
+    The Firmware Interface Table (FIT) in relation to the firmware's memory
+    map.
+  }
+  \label{fig:firmware_fit}
+\end{figure}
 
 The FIT \cite{qureshi2006fit} was introduced in the context of Intel's Itanium
 architecture, and its use in Intel's current 64-bit architecture is described
