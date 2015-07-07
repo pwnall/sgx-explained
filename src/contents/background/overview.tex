@@ -1,0 +1,69 @@
+\subsection{Overview}
+\label{sec:background_overview}
+
+A computer's main resources are processing power and storage, which is also
+known as \textit{memory}. On Intel computers, processing power is offered by
+logical processors (\S~\ref{sec:cpu_core}) inside CPUs, and memory is
+implemented by DRAM chips (\S~\ref{sec:motherboard}). The software that manages
+these resources is called \textit{system software}.
+
+A typical Intel computer runs multiple application software instances, called
+\textit{processes}. A piece of system software, called an
+\textit{operating system} (\S~\ref{sec:rings}), assigns the computer's
+resources to the running processes. Server computers, especially in cloud
+environments, may run multiple operating system instances at the same time.
+These computers rely on a piece of system software, called \textit{hypervisor}
+(\S~\ref{sec:rings}), to partition the computer's resources between the running
+operating system instances.
+
+System software uses virtualization techniques to isolate each piece of
+software that it manages (process or operating system) from the rest of the
+software running on the computer. This isolation is a key tool for keeping
+software complexity at manageable levels, as it allows application and OS
+developers to focus on their software, and ignore the interactions with other
+software that may run on thecomputer.
+
+A key component of virtualization is address translation (\S~\ref{sec:paging}),
+which gives software the impression that it owns all the memory on the
+computer. The other key component is software privilege levels
+(\S~\ref{sec:rings}) enforced by the CPU. Hardware privilege separation ensures
+that buggy or malicios software cannot damage other software directly or
+indirectly, by interfering with the system software managing it.
+
+Processes expresses their computing power requirements by creating execution
+\textit{threads}, which are assigned by the operating system to the computer's
+logical processors. A thread contains an execution context
+(\S~\ref{sec:registers}), which is the information necessary to perform a
+computation, such as the address of the next instruction to be executed.
+
+The operating system gives each process the illusion that it has an
+infinite amount of logical processors at its disposal, and multiplexes the
+available logical processors between the threads created by each process.
+Modern operating systems implement \textit{preemptive multithreading}, where
+the logical processors are rotated between all the threads on a system every
+few milliseconds. Changing the thread assigned to a logical processor is
+accomplished by an execution context switch (\S~\ref{sec:registers}).
+
+Hypervisors expose a fixed number of virtual processors (vCPUs) to each
+operating system, and also use context switching to multiplex between the
+logical CPUs on a computer and the vCPUs presented to the guest operating
+systems.
+
+The execution core in a logical processor can execute instructions and consume
+data at a much faster rate than DRAM can supply them. The gap is covered by
+many levels of intermediate memories that are faster but smaller than DRAM. The
+fastest intermediate memory is the logical processor's register file
+(\S~\ref{sec:address_spaces}, \S~\ref{sec:registers}). The other intermediate
+memories are called caches (\S~\ref{sec:caching}).
+
+Intel computers have multiple logical processors. As a consequence, they also
+have multiple caches distributed across the CPU chip, and even across multiple
+CPU chips. Therefore, Intel systems a cache coherence mechanism
+(\S~\ref{sec:cache_coherence}) that ensures that all the caches maintain the
+same view of DRAM. Thanks to cache coherence, programmers can build software
+that is unaware of caching, and still runs correctly in the presence of
+distributed caches. However, cache coherence does not cover the dedicated
+caches used by address translation (\S~\ref{sec:tlbs}), and system software
+must take special measures to keep these caches consistent.
+
+

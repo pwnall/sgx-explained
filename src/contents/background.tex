@@ -1,18 +1,38 @@
 \section{Background}
 \label{sec:background}
 
-Arguing about the security of an application running on an mainstream computer
-using the Intel architecture requires understanding the interactions between
-all the parts of an x86 execution environment. This section provides an
-overview of the features referenced by the rest of the paper. Unless specified
-otherwise, the information in this section can be found in Intel's
-\textit{Software Development Manual} \cite{intel2015sdm} (SDM).
+This section attempts to present the architectural context around Intel's SGX,
+because analyzing the security of SGX requires understanding the interactions
+between all the parts of an enclave's execution environment. Unless specified
+otherwise, the information here is summarized from Intel's
+\textit{Software Development Manual} (SDM) \cite{intel2015sdm}.
 
 Each of the sub-sections below explains how its information is relevant to
-to SGX, but does not introduce any SGX concepts. Experienced readers can safely
-skip this section and refer back if necessary.
+to SGX, but does not introduce any SGX concepts. Readers familiar with x86's
+intricacies can safely skip this section and refer back when necessary.
+
+We use the term \textit{Intel processor} and \textit{Intel CPU} to refer to the
+server and desktop versions of Intel's Core line-up, as we focus on the SGX
+design's most likely targets. This writing is not interested in Intel's other
+processors, such as the embedded line of Atom CPUs, or the failed Itanium line.
+Consequently, the terms \textit{Intel computers} and \textit{Intel systems}
+refers to computer systems built around Intel's Core processors.
+
+In this paper, the term \textit{Intel architecture} refers to the x86
+architecture described in Intel's SDM. The x86 architecture is overly complex,
+mostly due to the need to support execute legacy software dating back to 1990
+directly on the CPU, without the overhead of software interpretation. In the
+interest of space and mental sanity, we only cover the parts of the
+architecture visible to modern 64-bit software.
+
+The 64-bit version of the x86 archicture, covered in this section, was actually
+invented by Advanced Micro Devices (AMD), and is also known as AMD64,
+\texttt{x86\_64}, and x64. The term ``Intel architecture'' highlights our
+interest in the architecture's implementation in Intel's chips, and our desire
+to understand the mindsets of Intel SGX's designers.
 
 
+\input{contents/background/overview.tex}
 \input{contents/background/rings.tex}
 \input{contents/background/addresses.tex}
 \input{contents/background/paging.tex}
