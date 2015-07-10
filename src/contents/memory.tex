@@ -12,21 +12,21 @@ This section provides an overview of the data structures used by an enclave.
 
 Enclaves use RAM to store their code and data, and need logical processors to
 execute their code in order to perform the computation they were designed to
-do. These computer resources are traditionally managed by privileged software,
+do. These computer resources are traditionally managed by system software,
 such as hypervisors and operating system kernels.
 
 In order for SGX to fit into this design, the code inside SGX enclaves is
 subjected to the same address translation mechanism (\S~\ref{sec:paging}) as
 the applications that enclose the enclaves. Enclave code runs at ring 3
 (\S~\ref{sec:rings}), just like application code, so that it cannot
-interfere with the privileged software that manages resources.
+interfere with the system software that manages resources.
 
 % Interactions with VMX: SGX/SGX2 S 6.5, 6.5.{1,2,3,4,5}
 
-The rest of the paper will use the term \textit{system software} to refer to
-the privileged software that manages resources. On most computers, this is an
-operating system kernel. When VMX is in use, SGX resources are allocated by
-the hypervisor to guest operating systems running in virtual machines.
+On most computers, the system software that manages SGX resources is an
+operating system kernel. When VMX is in use, the hypervisor is responsible for
+multiplexing SGX resources across the guest operating systems running in
+virtual machines.
 
 
 \subsection{Enclaves in RAM}
@@ -38,10 +38,10 @@ the hypervisor to guest operating systems running in virtual machines.
 
 The enclaves' code and data is stored in \textit{Processor Reserved Memory}
 (PRM), a contiguous range of RAM that cannot be directly accessed by other
-software, including privileged software such as the SMM code, the hypervisor,
-and the OS kernel. The memory controller is integrated on the CPU die (see
-Figure~\ref{fig:cpu_die}), so it can be trusted to prevent devices attached to
-the system bus from performing DMA transfers to/from the PRM.
+software, including system software and SMM code. The memory controller is
+integrated on the CPU die (see Figure~\ref{fig:cpu_die}), so it can be trusted
+to prevent devices attached to the system bus from performing DMA transfers
+to/from the PRM.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/sgx_epc.pdf}}

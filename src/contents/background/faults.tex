@@ -10,7 +10,7 @@ application wishes to write a file to the disk, the kernel must check if the
 application's user has access to that file. If the ring 3 code could perform
 an arbitrary jump in kernel space, it would be able to skip the access check.}
 Therefore, the processor has designated methods for switching privilege levels,
-which protect the integrity of the privileged software.
+which protect the integrity of the more privileged software.
 
 This section describes the privilege switching mechanisms that impact the SGX
 design, summarized in Figure~\ref{fig:cpu_ring_switch}. Also, understanding the

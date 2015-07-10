@@ -96,7 +96,7 @@ threads share the other core resources, such as the fetch and decode units,
 execution units and L1 and L2 caches. SGX does not prevent hyper-threading, so
 a malicious OS kernel or hypervisor can schedule a thread executing enclave
 code and a snooping thread on logical processors on same core. The snooping
-thread can use the processor's high-performance counter
+thread can use the processor's high-resolution performance counter
 \cite{petters1999making} to get information about the instructions and memory
 access patterns of the thread executing enclave code.
 

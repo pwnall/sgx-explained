@@ -18,7 +18,7 @@ caches can be used to satisfy 90\%-99\% of an application's memory accesses.
 In an Intel processor, the \textit{first-level} (L1) cache consists of a
 separate data cache (D-cache) and an instruction cache (I-cache). The
 instruction fetch and decode stage is directly connected to the L1 I-cache, and
-uses it to read the streams of instructions for the core's hardware threads.
+uses it to read the streams of instructions for the core's logical processors.
 Micro-ops that read from or write to memory are executed by the memory unit
 (MEM in Figure~\ref{fig:cpu_core}), which is connected to the L1 D-cache and
 forwards memory accesses to it.
@@ -92,8 +92,8 @@ package.
 \end{table}
 
 A cache timing attack that aims at the L2 cache would have to rely on the
-hypervisor or kernel to schedule a hardware thread on a logical processor in
-the same core as the target software, whereas an attack on the L3 cache can be
+system software to schedule a software thread on a logical processor in the
+same core as the target software, whereas an attack on the L3 cache can be
 performed using any logical processor on the same CPU. This implies that L3
 cache attacks are feasible in an IaaS environment, whereas L2 cache attacks
 become a possibility when running sensitive software on a user's desktop.

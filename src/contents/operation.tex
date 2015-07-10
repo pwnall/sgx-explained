@@ -12,20 +12,19 @@ inside it.
 
 An enclave's lifecycle is deeply intertwined with resource management,
 specifically the allocation of EPC pages. Therefore, the instructions that
-transition between different lifecycle states can only be executed by
-privileged software, such as an OS kernel or hypervisor. Enclaves go through
-the following phases.
+transition between different lifecycle states can only be executed by the
+system software. Enclaves go through the following phases.
 
 % ECREATE, EADD, EREMOVE: SGX/SGX2 S 5.3
 
-\textbf{Creation.} An enclave is born when privileged software issues the
+\textbf{Creation.} An enclave is born when the system software issues the
 ECREATE instruction to create a SECS page (\S~\ref{sec:secs}). Most
 importantly, ECREATE establishes the enclave's identity, represented by a
 64-bit enclave ID, which is used to keep track of the enclave's pages in the
 EPCM.
 
 \textbf{Setup.} ECREATE marks the newly created SECS as \textit{uninitialized}.
-In this state, privileged software issues EADD instructions that build up the
+In this state, the system software issues EADD instructions that build up the
 enclave's initial state. This includes creating TCS pages (\S~\ref{sec:tcs})
 and regular pages that hold the SSA sequences referenced by TCS pages, as well
 as the enclave's code and data. EADD requires a reference to the SECS of the
@@ -33,7 +32,7 @@ enclave that will own the newly allocated EPC page, and
 refuses\footnote{results in a General Protection fault (\#GP)} to operate if
 the SECS is in the initialized state.
 
-\textbf{Launch.} After building up the enclave's initial state, privileged
+\textbf{Launch.} After building up the enclave's initial state, the system
 software follows a largely undocumented process that ends with the execution of
 an EINIT instruction, which marks the enclave's SECS as \textit{initialized}.
 The undocumented process revolves around obtaining permission to launch the
@@ -46,8 +45,8 @@ executing an enclave's code, a logical processor is in \textit{enclave mode},
 which is explained in detail in \S~\ref{sec:enclave_mode} below.
 
 \textbf{Teardown.} After the enclave has done the computation it was designed
-to perform, privileged code executes the EREMOVE instructions to deallocate its
-EPC pages.
+to perform, the system software executes the EREMOVE instructions to deallocate
+the enclave's EPC pages.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/enclave_lifecycle.pdf}}
@@ -73,20 +72,18 @@ accesses to EPC pages that belong to the currently executing enclave.
 
 Assuming no interrupts or faults, a logical processor transitions into enclave
 mode by executes the EENTER instruction. EENTER can only be executed by
-unprivileged software (running at ring 3), because SGX was designed to be used
-by user-level programs. EENTER can only be used to jump into pre-defined
-locations inside an enclave, for the same reasons that system calls only jump
-at specific locations in an OS kernel. When all the preconditions (described
-below) are met, EENTER causes the logical processor to enter enclave mode, and
-keeps it at ring 3.
+application software (running at ring 3), because SGX was designed to be used
+by applications. EENTER can only be used to jump into pre-defined locations
+inside an enclave, for the same reasons that system calls only jump at specific
+locations in an OS kernel. When all the preconditions (described below) are
+met, EENTER causes the logical processor to enter enclave mode, and keeps it at
+ring 3.
 
-SGX restricts enclaves to ring 3, maintaining the roles of the OS kernel and
-hypervisor as resource managers. This makes it possible for an infrastructure
+SGX restricts enclaves to ring 3, preserving the role of system software as
+the computer's resource manager. This makes it possible for an infrastructure
 owner to allow user-supplied software to create and use enclaves, while having
 the assurance that the OS kernel and hypervisor can still protect the
 infrastructure from buggy or malicious software.
-
-
 
 
 \subsubsection{Interrupt / Fault Handling}

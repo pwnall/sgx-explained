@@ -4,13 +4,14 @@
 The Intel architecture was designed to support application software that was
 not written with caches in mind. One aspect of this support is the
 \textit{Total Store Order} (TSO) \cite{owens2009tso} memory model, which
-promises that all the hardware threads in a computer see the same order of DRAM
-writes. The same memory location might be simultaneously cached by different
-cores' caches, or even by caches on separate chips, so providing the TSO
-guarantees requires a \textit{cache coherence protocol} that keeps the cached
-copies in sync. This section covers some cache coherence implementation details
-that are necessary for understanding SGX. \cite{hennessy2012architecture}
-provides a good introduction to cache coherence principles.
+promises that all the logical processors in a computer see the same order of
+DRAM writes. The same memory location might be simultaneously cached by
+different cores' caches, or even by caches on separate chips, so providing the
+TSO guarantees requires a \textit{cache coherence protocol} that keeps the
+cached copies in sync. This section covers some cache coherence implementation
+details that are necessary for understanding SGX.
+\cite{hennessy2012architecture} provides a good introduction to cache coherence
+principles.
 
 The cache coherence mechanism is not visible to software, so it is only briefly
 mentioned in the SDM. Fortunately, Intel's optimization reference
@@ -105,5 +106,5 @@ ring traffic, and reports it to an external debugger. While GDXC is very useful
 for debugging the CPU as well as the systems embedding it, it may compromise
 the security of SGX enclaves. Due to the insufficient documentation on this
 topic, this paper ignores the possibility of GDXC-based attacks. Fortunately,
-a recent Intel patent \cite{shanbhogue2015gdxcsgx} indicates that GDXC attacks
-have been considered.
+a recent Intel patent \cite{shanbhogue2015gdxcsgx} indicates that Intel
+engineers are tackling at least some classes of debugging bus attacks.

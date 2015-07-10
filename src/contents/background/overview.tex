@@ -12,20 +12,20 @@ A typical Intel computer runs multiple application software instances, called
 \textit{operating system} (\S~\ref{sec:rings}), assigns the computer's
 resources to the running processes. Server computers, especially in cloud
 environments, may run multiple operating system instances at the same time.
-These computers rely on a piece of system software, called \textit{hypervisor}
-(\S~\ref{sec:rings}), to partition the computer's resources between the running
-operating system instances.
+These computers rely on a piece of system software, called a
+\textit{hypervisor} (\S~\ref{sec:rings}), to partition the computer's resources
+between the operating system instances running on the computer.
 
 System software uses virtualization techniques to isolate each piece of
 software that it manages (process or operating system) from the rest of the
 software running on the computer. This isolation is a key tool for keeping
 software complexity at manageable levels, as it allows application and OS
 developers to focus on their software, and ignore the interactions with other
-software that may run on thecomputer.
+software that may run on the computer.
 
 A key component of virtualization is address translation (\S~\ref{sec:paging}),
 which gives software the impression that it owns all the memory on the
-computer. The other key component is software privilege levels
+computer. The other key component is the software privilege levels
 (\S~\ref{sec:rings}) enforced by the CPU. Hardware privilege separation ensures
 that buggy or malicios software cannot damage other software directly or
 indirectly, by interfering with the system software managing it.
@@ -45,25 +45,57 @@ few milliseconds. Changing the thread assigned to a logical processor is
 accomplished by an execution context switch (\S~\ref{sec:registers}).
 
 Hypervisors expose a fixed number of virtual processors (vCPUs) to each
-operating system, and also use context switching to multiplex between the
-logical CPUs on a computer and the vCPUs presented to the guest operating
-systems.
+operating system, and also use context switching to multiplex the logical CPUs
+on a computer between the vCPUs presented to the guest operating systems.
 
 The execution core in a logical processor can execute instructions and consume
-data at a much faster rate than DRAM can supply them. The gap is covered by
-many levels of intermediate memories that are faster but smaller than DRAM. The
-fastest intermediate memory is the logical processor's register file
+data at a much faster rate than DRAM can supply them. Many of the complexities
+in modern computer architectures stem from the need to cover this speed gap.
+Recent Intel CPUs rely on out-of-order execution (\S~\ref{sec:out_of_order})
+and caching (\S~\ref{sec:caching}), both of which have security implications.
+
+An Intel processor contains many levels of intermediate memories that are much
+faster than DRAM, but also orders of magnitude smaller.  The fastest
+intermediate memory is the logical processor's register file
 (\S~\ref{sec:address_spaces}, \S~\ref{sec:registers}). The other intermediate
-memories are called caches (\S~\ref{sec:caching}).
+memories are called caches (\S~\ref{sec:caching}). The Intel architecture
+requires application software to explicitly manage the register file, which
+serves as a high-speed scratch space. At the same time, caches transparently
+accelerate DRAM requests, and are mostly invisible to software.
 
 Intel computers have multiple logical processors. As a consequence, they also
-have multiple caches distributed across the CPU chip, and even across multiple
-CPU chips. Therefore, Intel systems a cache coherence mechanism
-(\S~\ref{sec:cache_coherence}) that ensures that all the caches maintain the
-same view of DRAM. Thanks to cache coherence, programmers can build software
-that is unaware of caching, and still runs correctly in the presence of
-distributed caches. However, cache coherence does not cover the dedicated
-caches used by address translation (\S~\ref{sec:tlbs}), and system software
-must take special measures to keep these caches consistent.
+have multiple caches distributed across the CPU chip. On multi-socket systems,
+the caches are distributed across multiple CPU chips. Therefore, Intel systems
+use a cache coherence mechanism (\S~\ref{sec:cache_coherence}), ensuring that
+all the caches have the same view of DRAM. Thanks to cache coherence,
+programmers can build software that is unaware of caching, and still runs
+correctly in the presence of distributed caches. However, cache coherence does
+not cover the dedicated caches used by address translation (\S~\ref{sec:tlbs}),
+and system software must take special measures to keep these caches consistent.
 
+CPUs communicate with the outside world via I/O devices (also known as
+peripherals), such as network interface cards and display adapters
+(\S~\ref{sec:computer_map}). Software targeting the Intel architecture
+communicates with I/O devices via the I/O address space
+(\S~\ref{sec:address_spaces}) and via the memory address space, which is also
+used to access DRAM. System software must configure the CPU's caches
+(\S~\ref{sec:memory_io}) to recognize the memory address ranges used by I/O
+devices. Devices can notify the CPU of the occurrence of events by dispatching
+interrupts (\S~\ref{sec:interrupts}), which cause a logical processor to stop
+executing its current thread, and invoke a special handler in the system
+software (\S~\ref{sec:faults}).
 
+Intel computer have a highly complex computer initialization sequence
+(\S~\ref{sec:booting}), due to the need to support a large variety of
+peripherals, as well as a multitude of operating systems targeting different
+versions of the architecture. The initialization sequence is a challenge to any
+attempt to secure an Intel computer, and has facilitated many security
+compromises (\S~\ref{sec:rings}).
+
+Intel's engineers use the processor's microcode facility
+(\S~\ref{sec:microcode}) to implement the more complicated aspects of the Intel
+architecture, which greatly helps manage the hardware's complexity. The
+microcode is completely invisible to software developers, and its design is
+mostly undocumented. However, in order to evaluate the feasibility of any SGX
+change proposals, one must be able to distinguish changes that can be achieved
+with microcode from changes that require hardware changes.
