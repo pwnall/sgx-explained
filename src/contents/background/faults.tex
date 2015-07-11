@@ -154,13 +154,35 @@ Therefore, SGX cannot use the current fault handling process, and must modify
 it.
 
 
-\subsubsection{VM Exits}
-\label{sec:vm_exits}
+\subsubsection{VMX Privilege Level Switching}
+\label{sec:vmx}
 
-If an EPT entry has the P flag set to 0, the CPU performs a VM exit, and the
-hypervisor has an opportunity to bring the page into RAM.
+% Life Cycle of VMM Software: SDM S 23.4
+% Virtual-Machine Control Structure: SDM S 23.5
 
+Intel systems that take advantage of the hardware virtualization support to run
+multiple operating systems at the same time use a hypervisor that manages the
+VMs. The hypervisor creates a \textit{Virtual Machine Control Structure} (VMCS)
+for each operating system instance that it wishes to run, and assigns a VM to a
+logical processor by executing the VMENTER instruction.
 
+% VM Exists: SDM S 27
+% EP{T_Induced VM Exits: SDM S 28.2.3
 
+When a logical processor encounters a fault that must be handled by the
+hypervisor, the logical processor performs a VM exit. For example, if the
+address translation process encounters an EPT entry with the P flag set to 0,
+the CPU performs a VM exit, and the hypervisor has an opportunity to bring the
+page into RAM.
 
+The VMCS shows a great application of the encapsulation principle
+\cite{liskov1974adt}, which is generally used in high-level software, to
+computer architecture. The Intel architecture specifies that each VMCS resides
+in DRAM and is 4KB in size. However, the architecture does not specify the VMCS
+format, and instead requires the hypervisor to interact with the VMCS via CPU
+instructions such as VMREAD and VMWRITE.
 
+This approach allows Intel to add VMX features that require VMCS format
+changes, without the burden of having to maintain backwards compatibility.
+This is no small feat, given that huge amounts of complexity in the Intel
+architecture were introduced due to compatibility requirements.

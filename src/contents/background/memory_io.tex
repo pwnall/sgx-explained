@@ -81,10 +81,23 @@ principles behind it are also used by SGX.
 Each MTRR range is specified using a \textit{range base} and a
 \textit{range mask}. A memory address belongs to the range if computing a
 bitwise AND between the address and the range mask results in the range base.
-This verification has a low-cost hardware implementation, and can be used to
-express any range whose size is a power of two, and whose starting address is
-a multiple of its size. A range's starting address is its base, and the range's
-size is one plus its mask.
+This verification has a low-cost hardware implementation, shown in
+Figure~\ref{fig:mtrr_match}, and can be used to express any range whose size is
+a power of two, and whose starting address is a multiple of its size. A range's
+starting address is its base, and the range's size is one plus its mask.
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=85mm]{figures/mtrr_match.pdf}}
+  \caption{
+    The circuit for computing whether a physical address matches an MTRR range.
+    Assuming a CPU with 48-bit physical addresses, the circuit uses 36 AND
+    gates and a binary tree of 35 XNOR (equality test) gates. The circuit
+    outputs 1 if the address belongs to the MTRR range. The bottom 12 address
+    bits are ignored, because MTRR ranges must be aligned to 4kb page
+    boundaries.
+  }
+  \label{fig:cpu_ring_switch}
+\end{figure}
 
 The PAT is intended to allow the operating system or hypervisor to tweak the
 caching behaviors specified in the MTRRs by the computer's firmware. The PAT
