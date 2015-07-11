@@ -102,18 +102,3 @@ indexing.
   }
   \label{fig:caching_and_paging}
 \end{figure}
-
-
-\begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cache_partitions.pdf}}
-  \caption{
-    Cache partitioning between two applications. Each application has some
-    cache sets allocated to it, and only uses RAM regions that map to its cache
-    sets. When partitioning the L1 cache, applications have to follow this
-    constraint themselves. When the L2 cache is partitioned, the OS can map the
-    pages in an application's virtual address space to the RAM regions that the
-    application can use, so applications are oblivious to the cache
-    partitioning.
-  }
-  \label{fig:cache_partitions}
-\end{figure}
