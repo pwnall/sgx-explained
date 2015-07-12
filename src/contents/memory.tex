@@ -37,11 +37,10 @@ virtual machines.
 % Interactions with Memory Configuration: SGX/SGX2 S 6.11
 
 The enclaves' code and data is stored in \textit{Processor Reserved Memory}
-(PRM), a contiguous range of RAM that cannot be directly accessed by other
-software, including system software and SMM code. The memory controller is
-integrated on the CPU die (see Figure~\ref{fig:cpu_die}), so it can be trusted
-to prevent devices attached to the system bus from performing DMA transfers
-to/from the PRM.
+(PRM), which cannot be directly accessed by other software, including system
+software and SMM code. The CPU's integrated memory controllers
+(\S~\ref{sec:cpu_die}) also reject DMA transfers targeting the PRM, thus
+protecting it from access by other peripherals.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/sgx_epc.pdf}}
@@ -53,14 +52,12 @@ to/from the PRM.
   \label{fig:sgx_epc}
 \end{figure}
 
-Rejecting improper accesses to PRM is central to the SGX security model. The
-designers were aware of that, and took clear steps to reduce the complexity of
-the PRM checks, which in turn reduces the probability of bugs in the
-implementation. The PRM must be set up to use SGX features and, once
-configured, the PRM range cannot be changed. Furthermore, the PRM's size must
-be an integer power of two, and its start address must be aligned to the same
-power of two. The range restrictions reduce the complexity of checking if a RAM
-address is in the PRM to a bitwise AND and an equality comparison.
+The PRM range is configured using a base and a mask register with the same
+semantics as a memory type range (\S~\ref{sec:cacheability_config}), which
+implies that the PRM's size must be an integer power of two, and its start
+address must be aligned to the same power of two. These restrictions make it
+cheap to check if an address belongs to the PRM in hardware, as described in
+\S~\ref{sec:cacheability_config}.
 
 
 \subsection{The Enclave Page Cache (EPC)}
@@ -74,29 +71,20 @@ The contents of enclaves and the associated data structures are stored in the
 
 The SGX design handles multiple enclaves active at the same time, which is
 necesssary in multi-tasking environments. This is achieved by having the EPC
-split into 4kb pages, which can be associated to different enclaves. The system
+split into 4KB pages that can be associated to different enclaves. The system
 software uses SGX instructions to allocate unused pages to enclaves, and to
-free previously allocated EPC pages. SGX also offers a method for system
-software to evict EPC pages into non-EPC memory, which allows the EPC to be
-over-committed, just like evicting pages to disk (swapping) allows the main
-memory to be over-committed.
-
-Normally, system software manages physical memory by directly modifying the
-contents of page tables, and is responsible for ensuring that the state not
-covered by cache coherency is synchronized across logical processors, by
-performing TLB shootdowns (\S~\ref{sec:tlbs}, \S~\ref{sec:cache_coherence}). If
-the system software does not perform a TLB shootdown correctly, application
-software can experience race conditions. In the context of SGX, one such race
-condition is having an EPC page simultaneously accessible by two different
-enclaves, which would compromise the SGX security guarantees. Therefore, the
-SGX instructions used for EPC management ensure that TLBs are invalidated
-properly.
+free previously allocated EPC pages.
 
 The SGX instructions that allocate a page to an enclave also copy data from a
 page outside PRM to the EPC page. Non-enclave software is not permitted to
 access the PRM, so the page allocation instructions provide the only
 opportunity for system software to load the initial code and data into an
 enclave.
+
+SGX also offers a method for system software to evict EPC pages into non-PRM
+memory, which allows the EPC to be over-committed, just like evicting DRAM
+pages to disk (swapping) allows the main memory to be over-committed.
+
 
 \subsubsection{The Enclave Page Cache Map (EPCM)}
 \label{sec:epcm}
@@ -336,3 +324,25 @@ SGX threat model, so EWB (illustrated in Figure~\ref{fig:sgx_ewb}) encrypts and
 MACs the contents of the EPC page before storing it in untrusted memory. The
 nonces stored in VA pages prevent replay attacks where malicious system
 software would attempt to bring back an old version of an evicted EPC page.
+
+
+\subsection {The Implementation of EPC Protection}
+
+The memory controller is
+integrated on the CPU die (see Figure~\ref{fig:cpu_die}), so it can be trusted
+to prevent devices attached to the system bus from performing DMA transfers
+to/from the PRM.
+
+System software manages physical memory by directly modifying the contents of
+page tables and EPTs (\S~\ref{sec:paging}), and is responsible for performing
+TLB shootdowns (\S~\ref{sec:tlbs}) to ensure that the state not covered by
+cache coherence \S~\ref{sec:cache_coherence} is synchronized across logical
+processors. If the system software does not perform TLB shootdowns correctly,
+application software can experience inconsistent views of memory.
+
+In the context of SGX, an incorrect TLB shutdown can can result in having an
+EPC page simultaneously accessible by two different enclaves, which would
+compromise the SGX security guarantees. Therefore, the SGX instructions used
+for EPC management ensure that the system software performs TLB shootdowns for
+the entries that represent EPC pages.
+

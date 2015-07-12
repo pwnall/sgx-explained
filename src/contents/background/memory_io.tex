@@ -78,26 +78,33 @@ principles behind it are also used by SGX.
 % Variable Range MTRRs: SDM S 11.11.2.3
 % Range Size and Alignment Requirement: SDM S 11.11.4
 
-Each MTRR range is specified using a \textit{range base} and a
+Each variable memory type range is specified using a \textit{range base} and a
 \textit{range mask}. A memory address belongs to the range if computing a
 bitwise AND between the address and the range mask results in the range base.
 This verification has a low-cost hardware implementation, shown in
-Figure~\ref{fig:mtrr_match}, and can be used to express any range whose size is
-a power of two, and whose starting address is a multiple of its size. A range's
-starting address is its base, and the range's size is one plus its mask.
+Figure~\ref{fig:mtrr_match}.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/mtrr_match.pdf}}
   \caption{
-    The circuit for computing whether a physical address matches an MTRR range.
-    Assuming a CPU with 48-bit physical addresses, the circuit uses 36 AND
-    gates and a binary tree of 35 XNOR (equality test) gates. The circuit
-    outputs 1 if the address belongs to the MTRR range. The bottom 12 address
-    bits are ignored, because MTRR ranges must be aligned to 4kb page
+    The circuit for computing whether a physical address matches a memory type
+    range.  Assuming a CPU with 48-bit physical addresses, the circuit uses 36
+    AND gates and a binary tree of 35 XNOR (equality test) gates. The circuit
+    outputs 1 if the address belongs to the range. The bottom 12 address
+    bits are ignored, because memory type ranges must be aligned to 4KB page
     boundaries.
   }
   \label{fig:mtrr_match}
 \end{figure}
+
+Each variable memory type range must have a size that is an integral power of
+two, and a starting address that is a multiple of its size, so it can be
+described using the base / mask representation described above. A range's
+starting address is its base, and the range's size is one plus its mask. No
+memory type range can partially cover a 4KB page, which implies that the range
+base must be a multiple of 4KB, and the bottom 12 bits of range mask must be
+set. This simplifies the interactions between memory type ranges and address
+translation, described in \S~\ref{sec:tlbs}.
 
 The PAT is intended to allow the operating system or hypervisor to tweak the
 caching behaviors specified in the MTRRs by the computer's firmware. The PAT

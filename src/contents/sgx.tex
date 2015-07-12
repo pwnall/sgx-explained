@@ -156,7 +156,7 @@ granularity, by extending the method described above with the steps below.
 The tracing kernel controls the mapping between virtual addresses and physical
 addresses, so it can make sure that its own code and data use different sets
 in the L2 cache from the enclave's code and data. For example, in a typical
-256kb (per-core) L2 cache organized as 512 8-way sets of 64-byte lines, the
+256KB (per-core) L2 cache organized as 512 8-way sets of 64-byte lines, the
 tracing kernel could allocate lines 0-63 for the enclave's code page, lines
 64-127 for the enclave's data page, and use lines 128-511 for its own pages.
 
