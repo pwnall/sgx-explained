@@ -69,11 +69,11 @@ cheap to check if an address belongs to the PRM in hardware, as described in
 The contents of enclaves and the associated data structures are stored in the
 \textit{Enclave Page Cache} (EPC), which is a subset of the PRM.
 
-The SGX design handles multiple enclaves active at the same time, which is
-necesssary in multi-tasking environments. This is achieved by having the EPC
-split into 4KB pages that can be associated to different enclaves. The system
-software uses SGX instructions to allocate unused pages to enclaves, and to
-free previously allocated EPC pages.
+The SGX design supports having multiple enclaves on a system at the same time,
+which is a  necessity in multi-process environments. This is achieved by having
+the EPC split into 4KB pages that can be associated to different enclaves. The
+system software uses SGX instructions to allocate unused pages to enclaves, and
+to free previously allocated EPC pages.
 
 The SGX instructions that allocate a page to an enclave also copy data from a
 page outside PRM to the EPC page. Non-enclave software is not permitted to
@@ -137,21 +137,23 @@ When the result of a memory address translation is a physical address of an EPC
 page, the CPU ensures\footnote{A mismatch triggers a General Protection Fault.}
 that the linear address used in the address translation matches the expected
 linear address recorded in the page's EPCM entry. This prevents the system
-software, which manages the page tables and EPT, from mapping pages to
-unexpected addresses inside an enclave's address space.
+software, which manages the page tables and EPT, from setting up an enclave's
+virtual address space in a manner that is inconsistent with the enclave
+author's expectations.
 
 The EPCM entry for a page has three access protection bits that must be set to
 1 to allow a page to be read (R), written to (W) and executed (X) by enclave
 code. When an address translation result points to an EPC page, the access
 protection bits in the page's EPCM entry influence the related bits in the
-page's TLB entry. For example, if X is 0, the page's NX bit is enabled.
+page's TLB entry. For example, if X is 0, the XD bit (\S~\ref{sec:paging}) is
+set in the page's TLB entry.
 
-A page's EPCM entry also records a \textit{type} (PT) for each page.
+A page's EPCM entry also records a \textit{page type} (PT) for each page.
 Table~\ref{fig:pt_values} shows currently defined types. The EPC pages that
 store an enclave's code or data have their type set to \textit{regular}
 (PT\_REG in the Intel documentation). Each page that is dedicated to an SGX key
 data structure has its EPCM entry's type set to the kind of data structure
-stored in the page.  An EPC page's type is set when the page is allocated, and
+stored in the page. An EPC page's type is set when the page is allocated, and
 is immutable throughout the page's lifetime.
 
 \begin{table}[hbt]
@@ -195,7 +197,9 @@ The type-based access restrictions have the desirable side-effect of hiding the
 contents of the EPC pages holding key SGX structures from software, so the
 internal layout of any key data structure can change across new CPU revisions.
 Software cannot access the key structures in EPC, so it cannot become dependent
-on a specific processor's implementation details.
+on a specific processor's implementation details. This is a stronger version of
+the encapsulation used in the Virtual Machine Constrol Structure
+(VMCS, \S~\ref{sec:vmx}).
 
 The SGX documentation does specify a software-visible layout for each key data
 structure. This layout is used by the non-EPC page used to initialize the key

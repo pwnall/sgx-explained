@@ -33,17 +33,18 @@ invariants, just like an OS kernel.
   \label{fig:cpu_ring_switch}
 \end{figure}
 
-On modern processors, application software uses the SYSCALL instruction to
-invoke ring 0 code, and the kernel uses SYSRET to switch the privilege level
-back to ring 3. SYSCALL jumps into a predefined kernel location, which is
-specified by writing to a pair of architectural MSRs
-(\S~\ref{sec:address_spaces}).  MSRs can only be read or written by ring 0
-code, so application software cannot modify SYSCALL's MSRs and abuse the
-SYSCALL instruction to execute arbitrary kernel code. The SYSRET instruction
-switches back to ring 3 and jumps to the address in RCX, which is set by the
-SYSCALL instruction. The SYSCALL / SYSRET pair is optimized for speed by
-avoiding memory accesses. The design can get away without referencing a stack
-because kernel calls are not recursive.
+On modern processors, application software uses the \texttt{SYSCALL}
+instruction to invoke ring 0 code, and the kernel uses \texttt{SYSRET} to
+switch the privilege level back to ring 3. \texttt{SYSCALL} jumps into a
+predefined kernel location, which is specified by writing to a pair of
+architectural MSRs (\S~\ref{sec:address_spaces}).  MSRs can only be read or
+written by ring 0 code, so application software cannot modify
+\texttt{SYSCALL}'s MSRs and abuse the \texttt{SYSCALL} instruction to execute
+arbitrary kernel code. The \texttt{SYSRET} instruction switches back to ring 3
+and jumps to the address in RCX, which is set by the \texttt{SYSCALL}
+instruction. The \texttt{SYSCALL} / \texttt{SYSRET} pair is optimized for speed
+by avoiding memory accesses. The design can get away without referencing a
+stack because kernel calls are not recursive.
 
 
 \subsubsection{Faults}
@@ -164,7 +165,7 @@ Intel systems that take advantage of the hardware virtualization support to run
 multiple operating systems at the same time use a hypervisor that manages the
 VMs. The hypervisor creates a \textit{Virtual Machine Control Structure} (VMCS)
 for each operating system instance that it wishes to run, and assigns a VM to a
-logical processor by executing the VMENTER instruction.
+logical processor by executing the \texttt{VMENTER} instruction.
 
 % VM Exists: SDM S 27
 % EP{T_Induced VM Exits: SDM S 28.2.3
@@ -180,7 +181,7 @@ The VMCS shows a great application of the encapsulation principle
 computer architecture. The Intel architecture specifies that each VMCS resides
 in DRAM and is 4KB in size. However, the architecture does not specify the VMCS
 format, and instead requires the hypervisor to interact with the VMCS via CPU
-instructions such as VMREAD and VMWRITE.
+instructions such as \texttt{VMREAD} and \texttt{VMWRITE}.
 
 This approach allows Intel to add VMX features that require VMCS format
 changes, without the burden of having to maintain backwards compatibility.
