@@ -5,9 +5,9 @@ When a computer is powered up, it undergoes a \textit{bootstrapping} process,
 also called \textit{booting}, for simplicity. Although many steps in the boot
 process depend on the motherboard and components in a computer, the process
 does follow a high-level structure that is mostly prescribed in the SDM. This
-section provides the details needed to analyze SGX's security properties.
-\cite{intel2010booting} provides a good reference on the low-level details of
-the entire booting process.
+section provides the details of the booting process needed to analyze SGX's
+security properties. \cite{intel2010booting} provides a good reference on the
+low-level details of the entire booting process.
 
 \subsubsection{The UEFI Standard}
 \label{sec:efi}
@@ -40,7 +40,7 @@ initializes the computer's DRAM, copies itself from the temporary memory
 store into DRAM, and tears down the temporary storage. When the computer is
 powering up or rebooting, the PEI implementation is also responsible for
 initializing all the non-volatile storage units that contain UEFI firmware and
-loading the next stage of the firmware into DRAM. When recovering from sleep
+loading the next stage of the firmware into DRAM.
 
 PEI hands off control to the \textit{Driver eXecution Environment phase} (DXE).
 In DXE, a loader locates and starts firmware drivers for the various components
@@ -49,16 +49,24 @@ is followed by a Transient System Load (TSL) phase, where an EFI application
 loads the operating system selected in BDS. Last, the OS loader passes control
 to the operating system's kernel, entering the Run Time (RT) phase.
 
+When waking up from sleep, the PEI implementation first initializes the
+non-volatile storage containing the system snapshot saved while entering the
+sleep state. The rest of the PEI implementation may use optimized
+re-initialization processes, based on the snapshot contents. The DXE
+implementation also uses the snapshot to restore the computer's state, such as
+the DRAM contents, and then directly executes the operating system's wake-up
+handler.
+
 On a system that uses secure boot or attestation, the SEC implementation is the
 system's root of trust. Each platform initialization phase is responsible for
-verifying or measuring the firmware that implements next phase. For example, in
-a TPM / TXT system, SEC firmware initializes the TPM registers that hold the
-system's measurement, which are the Platform Configuration Registers (PCRs) for
-the Static Root of Trust Measurement (SRTM). The SEC implementation then stores
-the PEI's measurement (cryptographic hash) into a measurement register. In
-turn, the PEI implementation measures the DXE firmware and updates the
-measurement register that stores the PEI hash to account for the DXE hash. When
-the OS is booted, the hash in measurement register accounts for all the
+verifying or measuring the firmware that implements the next phase. For
+example, in a TPM / TXT system, SEC firmware initializes the TPM registers that
+hold the system's measurement, which are the Platform Configuration Registers
+(PCRs) for the Static Root of Trust Measurement (SRTM). The SEC implementation
+then stores the PEI's measurement (cryptographic hash) into a measurement
+register. In turn, the PEI implementation measures the DXE firmware and updates
+the measurement register that stores the PEI hash to account for the DXE hash.
+When the OS is booted, the hash in measurement register accounts for all the
 firmware that was used to boot the computer.
 
 
@@ -99,16 +107,16 @@ APs, and enter the \textit{wait-for-SIPI} state.
 
 Understanding the PEI firmware loading process is unnecessarily complicated by
 the fact that the SDM describes a legacy process consisting of having the BSP
-set its RIP register to 0xFFFFFFF0 (16 bytes below 4GB), where the firmware is
+set its RIP register to 0xFFFFFFF0 (16 bytes below 4~GB), where the firmware is
 expected to place a instruction that jumps into the PEI implementation.
 
-% FIT pointer is at 4GB - 0x18.
+% FIT pointer is at 4~GB - 0x18.
 %   US 8,429,418 - 3:52-55, Fig 4
 %   US 8,321,931 - Fig 5, 12:34-39
 
 Recent processors do not support the legacy approach at all
 \cite{reinauer2013fitpatch}. Instead, the BSP reads a word from address
-0xFFFFFFE8 (24 bytes below 4GB) \cite{intel2012uefihypervisor, datta2013acm},
+0xFFFFFFE8 (24 bytes below 4~GB) \cite{intel2012uefihypervisor, datta2013acm},
 and expects to find the address of a \textit{Firmware Interface Table} (FIT)
 in the memory address space (\S~\ref{sec:address_spaces}), as shown in
 Figure~\ref{fig:firmware_fit}. The BSP is able to read firmware contents from

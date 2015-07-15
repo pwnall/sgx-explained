@@ -28,22 +28,22 @@ roles in configuring the CPU's operation. For example, CR3 plays a central role
 in address translation (\S~\ref{sec:paging}). These registers can only be
 accessed by system software. The rest of the registers make up an application's
 \textit{execution context} (\S~\ref{sec:registers}), which is essentially a
-high-speed scratch space. These registers can by accessed at all privilege
+high-speed scratch space. These registers can be accessed at all privilege
 levels, and their allocation is managed by the software's compiler. Many CPU
 instructions only operate on data in registers, and only place their results in
 registers.
 
-The \textit{memory} space, generally referred to as \textit{the address space}
-\textit{the physical address space}, consists of $2^{36}$ (64 GB) - $2^{40}$
-(1 TB) addresses. The memory space is primarily used to access
-\textit{Dynamic Random-Access Memory} (DRAM), the computer's main memory, but
-it is also used to communicate with \textit{memory-mapped devices} that read
-memory requests off a system bus and write replies for the CPU. Some CPU
-instructions can read their inputs from the memory space, or store the results
-using the memory space.
+The \textit{memory} space, generally referred to as \textit{the address space},
+or \textit{the physical address space}, consists of $2^{36}$ (64~GB) - $2^{40}$
+(1~TB) addresses. The memory space is primarily used to access \textit{Dynamic
+Random-Access Memory} (DRAM), the computer's main memory, but it is also used
+to communicate with \textit{memory-mapped devices} that read memory requests
+off a system bus and write replies for the CPU. Some CPU instructions can read
+their inputs from the memory space, or store the results using the memory
+space.
 
 A better-known example of memory mapping is that at computer startup, memory
-addresses 0xFFFFF000 - 0xFFFFFFFF (the 64 KB of memory right below the 4 GB
+addresses 0xFFFFF000 - 0xFFFFFFFF (the 64~KB of memory right below the 4~GB
 mark) are mapped to a flash memory device that holds the code for booting the
 computer.
 

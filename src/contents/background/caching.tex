@@ -1,12 +1,12 @@
 \subsection{Cache Memories}
 \label{sec:caching}
 
-At the time of this writing, CPU cores can process data ~200x faster than DRAM
-can supply it. This gap is bridged by an hierarchy of cache memories, which are
-orders of magnitude smaller and orders of magnitude faster than DRAM. This
-section reviews the key concepts needed to understand \textit{cache timing
-attacks} \cite{banescu2011cache}, which can be used to learn about an
-application's memory access patterns. \cite{smith1982cache},
+At the time of this writing, CPU cores can process data $\approx 200\times$
+faster than DRAM can supply it. This gap is bridged by an hierarchy of cache
+memories, which are orders of magnitude smaller and an order of magnitude
+faster than DRAM. This section reviews the key concepts needed to understand
+\textit{cache timing attacks} \cite{banescu2011cache}, which can be used to
+learn about an application's memory access patterns. \cite{smith1982cache},
 \cite{patterson2013architecture} and \cite{hennessy2012architecture} all
 provide good backgrounds on low-level cache implementation concepts.
 
@@ -41,8 +41,9 @@ hierarchy.
   \center{\includegraphics[width=80mm]{figures/cache_lookup.pdf}}
   \caption{
     The steps taken by a cache memory to resolve an access to a memory address
-    A. An access always triggers a cache lookup. If the access misses the
-    cache, a fill is required, and a write-back might be required.
+    A. A normal memory access (to cacheable DRAM) always triggers a cache
+    lookup. If the access misses the cache, a fill is required, and a
+    write-back might be required.
   }
   \label{fig:cache_lookup}
 \end{figure}
@@ -71,15 +72,15 @@ package.
   \hline
   \textbf{Memory} & \textbf{Size} & \textbf{Access Time}\\
   \hline
-  Core Registers & 1 KB & no latency \\
+  Core Registers & 1~KB & no latency \\
   \hline
-  L1 D-Cache & 32 KB & 4 cycles \\
+  L1 D-Cache & 32~KB & 4 cycles \\
   \hline
-  L2 Cache & 256 KB & 10 cycles \\
+  L2 Cache & 256~KB & 10 cycles \\
   \hline
-  L3 Cache & 8 MB & 40-75 cycles \\
+  L3 Cache & 8~MB & 40-75 cycles \\
   \hline
-  DRAM & 16 GB & 60 ns \\
+  DRAM & 16~GB & 60 ns \\
   \hline
   \end{tabular}}
   \caption{

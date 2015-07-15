@@ -179,9 +179,9 @@ page into RAM.
 The VMCS shows a great application of the encapsulation principle
 \cite{liskov1974adt}, which is generally used in high-level software, to
 computer architecture. The Intel architecture specifies that each VMCS resides
-in DRAM and is 4KB in size. However, the architecture does not specify the VMCS
-format, and instead requires the hypervisor to interact with the VMCS via CPU
-instructions such as \texttt{VMREAD} and \texttt{VMWRITE}.
+in DRAM and is 4~KB in size. However, the architecture does not specify the
+VMCS format, and instead requires the hypervisor to interact with the VMCS via
+CPU instructions such as \texttt{VMREAD} and \texttt{VMWRITE}.
 
 This approach allows Intel to add VMX features that require VMCS format
 changes, without the burden of having to maintain backwards compatibility.

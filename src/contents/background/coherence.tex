@@ -52,12 +52,12 @@ Figure \ref{fig:cpu_uncore} shows that the CPU uncore has a bidirectional ring
 interconnect, which is used for communication between execution cores and the
 other uncore components. The execution cores are connected to the ring by
 \textit{CBoxes}, which route their LLC accesses. The routing is static, as the
-LLC is divided into same-size slices (common slice sizes are 1.5Mb and 2.5Mb),
-and an undocumented hashing scheme maps each possible physical address to
-exactly one LLC slice. Intel's documentation states that the hashing scheme was
-designed to avoid having a slice become a hotspot. The hashing scheme is the
-reason why the L3 cache is documented as having a ``complex'' indexing scheme,
-as opposed to the direct indexing used in the L1 and L2 caches.
+LLC is divided into same-size slices (common slice sizes are 1.5~MB and
+2.5~MB), and an undocumented hashing scheme maps each possible physical address
+to exactly one LLC slice. Intel's documentation states that the hashing scheme
+was designed to avoid having a slice become a hotspot. The hashing scheme is
+the reason why the L3 cache is documented as having a ``complex'' indexing
+scheme, as opposed to the direct indexing used in the L1 and L2 caches.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=90mm]{figures/cpu_uncore.pdf}}

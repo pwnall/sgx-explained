@@ -3,12 +3,12 @@
 
 Application software targeting the 64-bit Intel architecture uses a variety of
 CPU registers to interact with the processor's features. The values in these
-registers make up an application's state, or context. Kernels multiplex a
-each logical processor (\S~\ref{sec:cpu_core}) between multiple software
-threads by \textit{context switching}, namely saving a thread's context, and
-replacing it with another thread's previously saved context. This section
-covers the context switching features used by SGX when a logical processor
-starts or stops executing code that belongs to an enclave.
+registers make up an application's state, or context. Operating system kernels
+multiplex each logical processor (\S~\ref{sec:cpu_core}) between multiple
+software threads by \textit{context switching}, namely saving a thread's
+context, and replacing it with another thread's previously saved context. This
+section covers the context switching features used by SGX when a logical
+processor starts or stops executing code that belongs to an enclave.
 
 % 64-Bit Mode Execution Environment: SDM vol1 S 3.2.1
 % Basic Program Execution Registers: SDM vol1 S 3.4

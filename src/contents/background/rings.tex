@@ -38,13 +38,13 @@ exploits.
 The SMM code and data are stored in a contiguous subset of DRAM called
 \textit{System Management RAM} (SMRAM) which, in theory, is not readable or
 writable when the processor isn't running in SMM. However, its protection
-mechanisms were bypassed multiple times \cite{duflot2006smm}
-\cite{rutkowska2008remap} \cite{wojtczuk2009smm}, and SMM-based rootkits have
-been demonstrated \cite{wecherowski2009smm} \cite{embleton2010smm}.
+mechanisms were bypassed multiple times~\cite{duflot2006smm,
+rutkowska2008remap, wojtczuk2009smm}, and SMM-based
+rootkits~\cite{wecherowski2009smm, embleton2010smm} have been demonstrated.
 
 IaaS cloud providers allow their customers to run their operating system of
 choice in a virtualized environment. Hardware
-virtualization\cite{uhlig2005vmx}, called \textit{Virtual Machine Extensions}
+virtualization~\cite{uhlig2005vmx}, called \textit{Virtual Machine Extensions}
 (VMX) by Intel, adds support for a \textit{hypervisor}, also called a
 Virtual Machine Monitor (VMM) in the Intel documentation. The hypervisor runs
 at a higher privilege level (VMX root mode) than the operating system, and is

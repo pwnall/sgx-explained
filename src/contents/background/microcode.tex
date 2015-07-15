@@ -10,7 +10,7 @@ SGX.
 
 The first sub-section below presents the relevant facts pertaining to microcode
 in Intel's optimization reference \cite{intel2014optimization} and SDM. The
-following subsections summarize information gleamed from Intel's patents and
+following subsections summarize information gleaned from Intel's patents and
 other researchers' findings.
 
 
@@ -56,7 +56,7 @@ hardware, and issue microcode assists for larger arrays.
 Modern Intel processors implement a microcode update facility. The SDM
 describes microcode updates from the perspective of an OS kernel and
 hypervisor. Each core can be updated independently, and the updates must be
-re-applied on each boot cycle. A core can be updated multiple times, but each
+reapplied on each boot cycle. A core can be updated multiple times, but each
 update must have a bigger version than the core's current version. The latest
 SDM at the time of this writing states that a microcode update is up to 16 kB
 in size.
@@ -200,7 +200,7 @@ interrupts that occur while executing code inside an enclave.
 The execution units in modern Intel processors support microcode procedures,
 via dedicated microcode call and return micro-ops \cite{intel2007microstack}.
 The micro-ops manage a hardware data structure that conceptually stores a stack
-of microcode instruction pointers, and is integrated with out of order
+of microcode instruction pointers, and is integrated with out-of-order
 execution and hardware exceptions, interrupts and assists.
 
 % Microcode uses special loads / stores
@@ -348,14 +348,14 @@ rest of the CPU's hardware initialization.
 
 % ACM is signed with a key in the CPU, verified by microcode
 %   US 7,752,428 - 5:1-21
-% EFI SEC and PEI core run in Cache-as-Ram mode, SEC loaded by microcode
+% EFI SEC and PEI core run in Cache-as-RAM mode, SEC loaded by microcode
 %   US 7,752,428 - 5:22-28, 5:41-49, 5:56-5:67, 6:1-3, 6:9-13 6:44-6:58,
 %                  7:11-45, Fig 4
 %   US 8,296,528 - 7:39-50
 
 % Microcode in ROM reads an ACM that measures firmware
 %   US 8,429,418 - 2:14-28, 3:52-61, 4:2-8, Fig 1, Fig 2
-% Microcode loads the ACM in Cache-as-Ram, authenticates using microcode crypto
+% Microcode loads the ACM in Cache-as-RAM, authenticates using microcode crypto
 %   US 8,429,418 - 4:13-20, 4:22-28
 % Microcode runs at CPU reset and hashes an ACM in the firmware
 %   US 8,321,931 - 6:47-52, 11:39-43, 11:45-47, 11:52-57, 12:6-11
@@ -363,14 +363,14 @@ rest of the CPU's hardware initialization.
 
 In fact, the entire SEC implementation on Intel platforms is contained in the
 processor microcode \cite{datta2010trustedboot, datta2013acm, intel2014vapic}.
-This is a security measure, because  it is significantly more expensive for
+This is a security measure, because  it is significantly more expensive for an
 attacker to tamper with the MSROM circuitry (\S~\ref{sec:microcode_structure})
 than it is to modify the contents of the flash memory chip that stores the
 firmware (\S~\ref{sec:motherboard}).
 
 The microcode that implements SEC performs MP initialization
 (\S~\ref{sec:uefi_sec_details}), as suggested in the SDM. The microcode then
-places the BSP into Cache-as-Ram (CAR) mode, looks up the PEI Authenticated
+places the BSP into Cache-as-RAM (CAR) mode, looks up the PEI Authenticated
 Code Module (ACM) in the Firmware Interface Table (FIT), loads the PEI ACM into
 the cache, and verifies its signature (\S~\ref{sec:uefi_sec_details})
 \cite{datta2010trustedboot, intel2012patching, intel2012uefihypervisor,
@@ -382,7 +382,7 @@ The PEI ACM is executed from the CPU's cache, after it is loaded by the
 microcode \cite{datta2010trustedboot, intel2012patching, datta2013acm}. This
 removes the possibility for an attacker with physical access to the SPI flash
 chip to change the firmware's contents after the microcode computes its
-cryptograhpic hash, but before it is executed.
+cryptographic hash, but before it is executed.
 
 % Microcode handles SIPI
 %   US 8,301,907 - 4:31-33, Fig 2
@@ -392,7 +392,7 @@ as Intel TXT for servers), the firmware implementing PEI verifies that each CPU
 connected to motherboard supports LT-SX, and powers off the CPU sockets that
 don't have processors with LT-SX in them \cite{intel2012ltsx}. This prevents an
 attacker from tampering with a TXT-protected VM by hot-plugging a CPU in a
-running computer that is inside TXT mode. When a hot-plugged CPU is passes
+running computer that is inside TXT mode. When a hot-plugged CPU passes
 security tests, a hypervisor is notified that a new CPU is available. The
 hypervisor updates its internal state, and sends the new CPU a SIPI. The new
 CPU executes a SIPI handler, inside microcode, that configures the CPU's state
@@ -415,7 +415,7 @@ updates have so far proven to be inscrutable \cite{chen2014microcode}.
 
 The microcode updates cannot be easily analyzed because they are encrypted,
 hashed with a cryptographic hash function like SHA-256, and signed using RSA or
-ellipic curve cryptography \cite{intel2012patching}. The update facility is
+elliptic curve cryptography \cite{intel2012patching}. The update facility is
 implemented entirely in microcode, including the decryption and signature
 verification \cite{intel2012patching}.
 

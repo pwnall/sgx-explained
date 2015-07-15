@@ -23,12 +23,12 @@ analyzing SGX.
 (\S~\ref{sec:address_spaces}). UC memory is useful when a device's behavior is
 dependent on the order of memory reads and writes, such as in the case of
 memory-mapped command and data registers for a PCIe NIC
-(\S~\ref{sec:motherboard}). The out of order execution engine
+(\S~\ref{sec:motherboard}). The out-of-order execution engine
 (\S~\ref{sec:out_of_order}) does not reorder UC memory accesses, and does not
 issue speculative reads to UC memory.
 
 \textit{Write Combining} (WC) memory addresses the specific needs of
-framebuffers. WC memory is similar to UC memory, but the out of order engine
+framebuffers. WC memory is similar to UC memory, but the out-of-order engine
 may reorder memory accesses, and may perform speculative reads. The processor
 stores writes to WC memory in a write combining buffer, and attempts to group
 multiple writes into a (more efficient) line write bus transaction.
@@ -91,7 +91,7 @@ Figure~\ref{fig:mtrr_match}.
     range.  Assuming a CPU with 48-bit physical addresses, the circuit uses 36
     AND gates and a binary tree of 35 XNOR (equality test) gates. The circuit
     outputs 1 if the address belongs to the range. The bottom 12 address
-    bits are ignored, because memory type ranges must be aligned to 4KB page
+    bits are ignored, because memory type ranges must be aligned to 4~KB page
     boundaries.
   }
   \label{fig:mtrr_match}
@@ -101,8 +101,8 @@ Each variable memory type range must have a size that is an integral power of
 two, and a starting address that is a multiple of its size, so it can be
 described using the base / mask representation described above. A range's
 starting address is its base, and the range's size is one plus its mask. No
-memory type range can partially cover a 4KB page, which implies that the range
-base must be a multiple of 4KB, and the bottom 12 bits of range mask must be
+memory type range can partially cover a 4~KB page, which implies that the range
+base must be a multiple of 4~KB, and the bottom 12 bits of range mask must be
 set. This simplifies the interactions between memory type ranges and address
 translation, described in \S~\ref{sec:tlbs}.
 

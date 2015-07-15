@@ -1,14 +1,14 @@
-\subsection{Out of Order and Speculative Execution}
+\subsection{Out-of-Order and Speculative Execution}
 \label{sec:out_of_order}
 
 CPU cores can execute instructions orders of magnitude faster than DRAM can
 read data. CPU architects attempt to bridge this gap by using hyper-threading
-(\S~\ref{sec:cpu_die}), caching (\S~\ref{sec:caching}), and out of order and
-speculative execution. Out of order execution can safely be ignored when
+(\S~\ref{sec:cpu_die}), caching (\S~\ref{sec:caching}), and out-of-order and
+speculative execution. Out-of-order execution can safely be ignored when
 developing a general understanding of SGX, but shows up behind the decision
-decisions in SGX's implementation. Out of order and speculative execution can
+decisions in SGX's implementation. Out-of-order and speculative execution can
 also introduce noise in the data obtained from cache timing attacks. This
-section provides an overview of out of order and speculative execution that is
+section provides an overview of out-of-order and speculative execution that is
 sufficient for reasoning about SGX and cache timing attacks.
 \cite{patterson2013architecture} and \cite{hennessy2012architecture} cover the
 concepts in great depth, while Intel's optimization manual
@@ -17,13 +17,13 @@ concepts in great depth, while Intel's optimization manual
 % The Haswell Microarchitecture: Optimization S 2.1
 
 Figure~\ref{fig:cpu_out_of_order} provides a more detailed view of the CPU core
-components involved in out of order execution, and omits some less relevant
+components involved in out-of-order execution, and omits some less relevant
 details from Figure~\ref{fig:cpu_core}.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/cpu_out_of_order.pdf}}
   \caption{
-    The structures in a CPU core that are relevant to out of order and
+    The structures in a CPU core that are relevant to out-of-order and
     speculative execution. Instructions are decoded into micro-ops, which are
     scheduled on one of the execution unit's ports. The branch predictor
     enables speculative execution when a branch is encountered.
@@ -43,7 +43,7 @@ which resemble RISC instructions. The other stages of the execution pipeline
 work exclusively with micro-ops.
 
 
-\subsubsection{Out of Order Execution}
+\subsubsection{Out-of-Order Execution}
 
 % Out of Order Engine: Optimization S 2.2.23
 % The Execution Core: S 2.2.4
@@ -54,7 +54,7 @@ performs arithmetic operations, is completely different from the load store
 unit, which peforms memory operations. Different circuits can be used at the
 same time, so each CPU core can execute multiple micro-ops in parallel.
 
-The core's out of order engine receives decoded micro-ops, identifies the
+The core's out-of-order engine receives decoded micro-ops, identifies the
 micro-ops that can execute in parallel, assigns them to functional units, and
 combines the outputs of the units so that the results are equivalent to having
 the micro-ops executed sequentially in the order in which they come from the
@@ -83,14 +83,14 @@ execute the \texttt{ADD}, all in the same clock cycle.
   \hline
   \end{tabular}}
   \caption{
-    Pseudo micro-ops for the out of order execution example.
+    Pseudo micro-ops for the out-of-order execution example.
   }
   \label{fig:out_of_order_micro_ops}
 \end{table}
 
 % Renamer: Optimization S 2.2.3.1
 
-The out of order engine in recent Intel CPUs works roughly as follows.
+The out-of-order engine in recent Intel CPUs works roughly as follows.
 Micro-ops received from the decode queue are written into a \textit{reorder
 buffer} (ROB) while they are \textit{in-flight} in the execution unit. The
 \textit{register allocation table} (RAT) matches each register with the last
@@ -151,7 +151,7 @@ forwarded to any other reservation station port that depends on it.
 The ROB stores the results of completed micro-ops until they are
 \textit{retired}, meaning that the results are \textit{committed} to the
 register file and the micro-ops are removed from the ROB. Although micro-ops
-can be executed out of order, they must be retired in program order, in order
+can be executed out-of-order, they must be retired in program order, in order
 to handle exceptions correctly. When a micro-op causes a hardware exception
 (\S~\ref{sec:faults}), all the following micro-ops in the ROB are
 \textit{squashed}, and their results are discarded.
@@ -165,14 +165,14 @@ will observe an incorrect value for the  RSI register.
 % Load and Store Operation Overview: Optimization S 2.2.5
 
 The ROB is tailored for discovering register dependencies between micro-ops.
-However, micro-ops that execute out of order can also have memory dependencies.
-For this reason, out of order engines have a \textit{load buffer} and a
+However, micro-ops that execute out-of-order can also have memory dependencies.
+For this reason, out-of-order engines have a \textit{load buffer} and a
 \textit{store buffer} that keep track of in-flight memory operations and are
 used to resolve memory dependencies.
 
-Out of order execution can introduce noise in cache timing attacks. First,
+Out-of-order execution can introduce noise in cache timing attacks. First,
 memory accesses may not be performed in program order, which can impact the
-lines selected by the cache eviction algorithms. Second, out of order execution
+lines selected by the cache eviction algorithms. Second, out-of-order execution
 may result in cache fills that do not correspond to executed instructions. For
 example, a load that follows a faulting instruction may be scheduled and
 executed before the fault is detected.
@@ -218,7 +218,7 @@ executed by the victim software.
 
 Modern CPUs also attempt to predict memory read patterns, so they can
 \textit{prefetch} the memory locations that are about to be read into the
-cache. Prefetching minimizes the latency of succesfully predicted read
+cache. Prefetching minimizes the latency of successfully predicted read
 operations, as their data will already be cached. This is accomplished by
 exposing circuits called prefetchers to memory accesses and cache misses. Each
 prefetcher can recognize a particular access pattern, such as squentially

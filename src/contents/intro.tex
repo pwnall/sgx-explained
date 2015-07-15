@@ -6,7 +6,7 @@ of executing software on a remote computer \textbf{owned and maintained by an
 untrusted party}, with some integrity and privacy guarantees. In the general
 setting, secure remote computation is an unsolved problem. Fully Homomorphic
 Encryption \cite{gentry2009fhe} solves the problem for a limited family of
-computations, but has an unpractical performance overhead
+computations, but has an impractical performance overhead
 \cite{naehrig2011can}.
 
 \begin{figure}[hbt]
@@ -45,7 +45,7 @@ hosted by the trusted hardware. The proof is a cryptographic signature that
 certifies the hash of the secure container's contents. It follows that the
 remote computer's owner can load any software in a secure container, but the
 remote computation service user will refuse to load her data into a secure
-container whose contents hash that does not match the expected value.
+container whose contents' hash does not match the expected value.
 
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/generic_attestation.pdf}}
@@ -97,7 +97,7 @@ accesses, including kernel, hypervisor and SMM (\S~\ref{sec:rings}) accesses,
 and DMA accesses (\S~\ref{sec:motherboard}) from peripherals.
 
 The PRM holds the \textit{Enclave Page Cache} (EPC, \S~\ref{sec:epc}), which
-consists of 4KB pages that store enclave code and data. The system software,
+consists of 4~KB pages that store enclave code and data. The system software,
 which is untrusted, is in charge of assigning EPC pages to enclaves. The CPU
 tracks each EPC page's state in the \textit{Enclave Page Cache Metadata} (EPCM,
 \S~\ref{sec:epcm}), to ensure that each EPC page belongs to exactly one
@@ -106,8 +106,8 @@ enclave.
 The initial code and data in an enclave is loaded by untrusted system software.
 During the setup stage (\S~\ref{sec:lifecycle}), the system software asks the
 CPU to copy data from unprotected memory (outside PRM) into EPC pages, and
-assigns the pages to the enclave being setup (\S~\ref{sec:epcm}). This
-means that the initial enclave state is known to the system software.
+assigns the pages to the enclave being setup (\S~\ref{sec:epcm}). It follows
+that the initial enclave state is known to the system software.
 
 After all the enclave's pages are loaded into EPC, the system software asks the
 CPU to mark the enclave as initialized, at which point application software can

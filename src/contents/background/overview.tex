@@ -27,10 +27,10 @@ A key component of virtualization is address translation (\S~\ref{sec:paging}),
 which gives software the impression that it owns all the memory on the
 computer. The other key component is the software privilege levels
 (\S~\ref{sec:rings}) enforced by the CPU. Hardware privilege separation ensures
-that buggy or malicios software cannot damage other software directly or
+that buggy or malicious software cannot damage other software directly or
 indirectly, by interfering with the system software managing it.
 
-Processes expresses their computing power requirements by creating execution
+Processes express their computing power requirements by creating execution
 \textit{threads}, which are assigned by the operating system to the computer's
 logical processors. A thread contains an execution context
 (\S~\ref{sec:registers}), which is the information necessary to perform a
@@ -75,7 +75,7 @@ and system software must take special measures to keep these caches consistent.
 
 CPUs communicate with the outside world via I/O devices (also known as
 peripherals), such as network interface cards and display adapters
-(\S~\ref{sec:computer_map}). Software targeting the Intel architecture
+(\S~\ref{sec:computer_map}). Software written for the Intel architecture
 communicates with I/O devices via the I/O address space
 (\S~\ref{sec:address_spaces}) and via the memory address space, which is also
 used to access DRAM. System software must configure the CPU's caches
@@ -85,7 +85,7 @@ interrupts (\S~\ref{sec:interrupts}), which cause a logical processor to stop
 executing its current thread, and invoke a special handler in the system
 software (\S~\ref{sec:faults}).
 
-Intel computer have a highly complex computer initialization sequence
+Intel systems have a highly complex computer initialization sequence
 (\S~\ref{sec:booting}), due to the need to support a large variety of
 peripherals, as well as a multitude of operating systems targeting different
 versions of the architecture. The initialization sequence is a challenge to any

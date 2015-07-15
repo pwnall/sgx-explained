@@ -1,4 +1,4 @@
-\section{Memory Organization}
+\section{SGX Memory Organization}
 \label{sec:memory}
 
 The central concept of SGX is the \textit{enclave}, a protected environment
@@ -6,30 +6,7 @@ that contains the code and data pertaining to a security-sensitive computation.
 This section provides an overview of the data structures used by an enclave.
 
 
-\subsection{Memory Ownership vs Management}
-
-% Access Control Requirements: SGX/SGX2 S 2.3
-
-Enclaves use DRAM to store their code and data, and need logical processors to
-execute their code in order to perform the computation they were designed to
-do. These computer resources are traditionally managed by system software,
-such as hypervisors and operating system kernels.
-
-In order for SGX to fit into this design, the code inside SGX enclaves is
-subjected to the same address translation mechanism (\S~\ref{sec:paging}) as
-the applications that enclose the enclaves. Enclave code runs at ring 3
-(\S~\ref{sec:rings}), just like application code, so that it cannot
-interfere with the system software that manages resources.
-
-% Interactions with VMX: SGX/SGX2 S 6.5, 6.5.{1,2,3,4,5}
-
-On most computers, the system software that manages SGX resources is an
-operating system kernel. When VMX is in use, the hypervisor is responsible for
-multiplexing SGX resources across the guest operating systems running in
-virtual machines.
-
-
-\subsection{Enclaves in RAM}
+\subsection{Enclaves in DRAM}
 \label{sec:prm}
 
 % PRM: SGX/SGX2 S 3.5
@@ -60,7 +37,7 @@ cheap to check if an address belongs to the PRM in hardware, as described in
 \S~\ref{sec:cacheability_config}.
 
 
-\subsection{The Enclave Page Cache (EPC)}
+\subsubsection{The Enclave Page Cache (EPC)}
 \label{sec:epc}
 
 % EPC and EPCM: SGX/SGX2 S 1.5, S 1.5.1, S 3.5, S 3.5.1
@@ -71,13 +48,13 @@ The contents of enclaves and the associated data structures are stored in the
 
 The SGX design supports having multiple enclaves on a system at the same time,
 which is a  necessity in multi-process environments. This is achieved by having
-the EPC split into 4KB pages that can be associated to different enclaves. The
+the EPC split into 4~KB pages that can be associated to different enclaves. The
 system software uses SGX instructions to allocate unused pages to enclaves, and
 to free previously allocated EPC pages.
 
-The SGX instructions that allocate a page to an enclave also copy data from a
-page outside PRM to the EPC page. Non-enclave software is not permitted to
-access the PRM, so the page allocation instructions provide the only
+The SGX instructions that allocate an EPC page to an enclave also copy data
+from a page outside PRM to the EPC page. Non-enclave software is not permitted
+to access the PRM, so the page allocation instructions provide the only
 opportunity for system software to load the initial code and data into an
 enclave.
 
@@ -86,16 +63,69 @@ memory, which allows the EPC to be over-committed, just like evicting DRAM
 pages to disk (swapping) allows the main memory to be over-committed.
 
 
+\subsubsection{Memory Mapping Attacks}
+\label{sec:mapping_attacks}
+
+% Access Control Requirements: SGX/SGX2 S 2.3
+
+One of SGX's design goals is to make it easy to migrate the sensitive pieces of
+an application into an enclave. To this end, enclave code uses the same address
+translation process (\S~\ref{sec:paging}) as the application hosting the
+enclave. It follows that enclave code can access the application's non-EPC
+memory using the same virtual addresses as the rest of the application, which
+facilitates moving application code that uses pointers into SGX enclaves.
+
+% Interactions with VMX: SGX/SGX2 S 6.5, 6.5.{1,2,3,4,5}
+
+Under SGX, the operating system and hypervisor are still in full control of the
+page tables and EPTs. This minimizes the amount of changes required to add SGX
+support to existing system software. However, it also gives system software the
+ability to attack an enclave by setting up its virtual address space in a way
+that was not intended by the enclave's author.
+
+Figure~\ref{fig:sgx_mapping_attack} shows a hypothetical memory mapping attack
+that is prevented by SGX's security measures. Understanding this type of attack
+greatly increases one's ability to reason about SGX's security.
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=85mm]{figures/sgx_mapping_attack.pdf}}
+  \caption{
+    Enclave data is stored into the EPC, which is a subset of the PRM. The
+    PRM is a contiguous range of DRAM that cannot be accessed by system
+    software or peripherals.
+  }
+  \label{fig:sgx_mapping_attack}
+\end{figure}
+
+For simplicity, we assume an enclave that performs a security check to decide
+whether to disclose some sensitive information. Depending on the security
+check's outcome, the enclave code either calls a \texttt{errorOut} procedure,
+or a \texttt{disclose} procedure. We furthermore assume that each procedure's
+code starts at a 4KB boundary, and takes up less than 4KB, so each procedure
+fits in an EPC page. These requirements seem unrealistic, but the underlying
+attack remains an issue in real applications.
+
+In a memory mapping attack, malicious system software would set up the page
+tables or EPC in such a way that the virtual address intended to store the
+\texttt{errorOut} procedure is actually mapped to an EPC page that contains the
+\texttt{disclose} procedure. Without any security measures in place, the
+enclave would execute the \texttt{disclose} code, and reveal sensitive
+information, even though the security check fails.
+
+The SGX security mechanisms, explained throughout the rest of this paper,
+prevent enclave code execution if a memory mapping attack occurs. Therefore,
+SGX prevents malicious system software from directly obtaining sensitive
+information via memory mapping attacks.
+
+
 \subsubsection{The Enclave Page Cache Map (EPCM)}
 \label{sec:epcm}
 
-The CPU maintains some metadata for each EPC page into the \textit{Enclave Page
-Cache Map} (EPCM). The metadata tracks the enclave that each page was allocated
-to, so the processor can prevent the code inside an enclave from accessing EPC
-pages that belong to other enclaves. Table~\ref{fig:epcm_entry} shows the
-contents of an EPCM entry.
-
 % EPCM table: SGX/SGX2 S 2.6.13
+
+SGX is able to prevent memory mapping attacks thanks to the \textit{Enclave
+Page Cache Map} (EPCM), which contains security metadata for each EPC page,
+summarized in Table~\ref{fig:epcm_entry}.
 
 \begin{table}[hbt]
   \center{\begin{tabularx}{\columnwidth}{| l | r | X |}
@@ -125,13 +155,11 @@ contents of an EPCM entry.
   \label{fig:epcm_entry}
 \end{table}
 
-
 % Access Control Requirements: SGX/SGX2 S 2.3
 
-The EPCM metadata for a page includes the expected linear address used to
-access the page (ENCLAVEADDRESS in Intel's documentation). This address must be
-specified when a page is allocated, and cannot be changed until the page is
-freed.
+The metadata for a page includes the expected linear address used to access the
+page (ENCLAVEADDRESS in Intel's documentation). This address must be specified
+when a page is allocated, and cannot be changed until the page is freed.
 
 When the result of a memory address translation is a physical address of an EPC
 page, the CPU ensures\footnote{A mismatch triggers a General Protection Fault.}
@@ -147,6 +175,10 @@ code. When an address translation result points to an EPC page, the access
 protection bits in the page's EPCM entry influence the related bits in the
 page's TLB entry. For example, if X is 0, the XD bit (\S~\ref{sec:paging}) is
 set in the page's TLB entry.
+
+The EPCM metadata also tracks the enclave that owns each page, so the processor
+can prevent the code inside an enclave from accessing EPC pages belonging to
+other enclaves.
 
 A page's EPCM entry also records a \textit{page type} (PT) for each page.
 Table~\ref{fig:pt_values} shows currently defined types. The EPC pages that
@@ -180,6 +212,7 @@ that the EPCM is ``trusted memory''. The documentation also does not describe
 the EPCM layout.
 
 % SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}, SGX2 S 2.11, S 2.11.{1,2}
+
 
 
 \subsection{Key SGX Structures}
@@ -344,7 +377,7 @@ cache coherence \S~\ref{sec:cache_coherence} is synchronized across logical
 processors. If the system software does not perform TLB shootdowns correctly,
 application software can experience inconsistent views of memory.
 
-In the context of SGX, an incorrect TLB shutdown can can result in having an
+In the context of SGX, an incorrect TLB shootdown can can result in having an
 EPC page simultaneously accessible by two different enclaves, which would
 compromise the SGX security guarantees. Therefore, the SGX instructions used
 for EPC management ensure that the system software performs TLB shootdowns for

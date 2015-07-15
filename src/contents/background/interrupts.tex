@@ -31,9 +31,9 @@ the interrupt.
 % Handling Interrupts: SDM S 10.8
 
 Each LAPIC uses a 256-bit \textit{Interrupt Request Register} (IRR) to track
-the un-serviced interrupts that it has received, based on the interrupt vector
+the unserviced interrupts that it has received, based on the interrupt vector
 number. When the corresponding logical processor is available, the LAPIC copies
-the highest-priority un-serviced interrupt vector to the
+the highest-priority unserviced interrupt vector to the
 \textit{In-Service Register} (ISR), and invokes the logical processor's
 interrupt handling process.
 
