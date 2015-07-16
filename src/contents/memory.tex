@@ -54,9 +54,8 @@ to free previously allocated EPC pages.
 
 The SGX instructions that allocate an EPC page to an enclave also copy data
 from a page outside PRM to the EPC page. Non-enclave software is not permitted
-to access the PRM, so the page allocation instructions provide the only
-opportunity for system software to load the initial code and data into an
-enclave.
+to access the PRM, so the page allocation instructions are the only avenue for
+system software to load the initial code and data into an enclave.
 
 SGX also offers a method for system software to evict EPC pages into non-PRM
 memory, which allows the EPC to be over-committed, just like evicting DRAM
@@ -71,9 +70,9 @@ pages to disk (swapping) allows the main memory to be over-committed.
 One of SGX's design goals is to make it easy to migrate the sensitive pieces of
 an application into an enclave. To this end, enclave code uses the same address
 translation process (\S~\ref{sec:paging}) as the application hosting the
-enclave. It follows that enclave code can access the application's non-EPC
-memory using the same virtual addresses as the rest of the application, which
-facilitates moving application code that uses pointers into SGX enclaves.
+enclave. It follows that enclave code can access non-EPC memory using the same
+virtual addresses as the host application, which makes it easy to migrate
+application code that uses pointers into SGX enclaves.
 
 % Interactions with VMX: SGX/SGX2 S 6.5, 6.5.{1,2,3,4,5}
 
@@ -90,9 +89,12 @@ greatly increases one's ability to reason about SGX's security.
 \begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/sgx_mapping_attack.pdf}}
   \caption{
-    Enclave data is stored into the EPC, which is a subset of the PRM. The
-    PRM is a contiguous range of DRAM that cannot be accessed by system
-    software or peripherals.
+    An example of a memory mapping attack, which is prevented by SGX. The
+    enclave's author intends to disclose a piece of sensitive information only
+    when a security check passes. Malicious system software maps the virtual
+    address of the procedure called when the security check fails to an EPC
+    page that contains the procedure that discloses the sensitive information,
+    which is supposed to be called when the security check passes.
   }
   \label{fig:sgx_mapping_attack}
 \end{figure}
@@ -105,11 +107,11 @@ code starts at a 4KB boundary, and takes up less than 4KB, so each procedure
 fits in an EPC page. These requirements seem unrealistic, but the underlying
 attack remains an issue in real applications.
 
-In a memory mapping attack, malicious system software would set up the page
-tables or EPC in such a way that the virtual address intended to store the
+In a memory mapping attack, malicious system software sets up the page tables
+or EPT in such a way that the virtual address intended to store the
 \texttt{errorOut} procedure is actually mapped to an EPC page that contains the
 \texttt{disclose} procedure. Without any security measures in place, the
-enclave would execute the \texttt{disclose} code, and reveal sensitive
+enclave would execute the \texttt{disclose} code and reveal sensitive
 information, even though the security check fails.
 
 The SGX security mechanisms, explained throughout the rest of this paper,
@@ -123,9 +125,9 @@ information via memory mapping attacks.
 
 % EPCM table: SGX/SGX2 S 2.6.13
 
-SGX is able to prevent memory mapping attacks thanks to the \textit{Enclave
-Page Cache Map} (EPCM), which contains security metadata for each EPC page,
-summarized in Table~\ref{fig:epcm_entry}.
+SGX prevent memory mapping attacks using the \textit{Enclave Page Cache Map}
+(EPCM), which contains security metadata for each EPC page.
+Table~\ref{fig:epcm_entry} lists the metadata stored in the EPCM.
 
 \begin{table}[hbt]
   \center{\begin{tabularx}{\columnwidth}{| l | r | X |}
@@ -144,7 +146,7 @@ summarized in Table~\ref{fig:epcm_entry}.
   \hline
   PT & 8 & page type (\S~\ref{sec:key_structures})\\
   \hline
-  ADDRESS & 48 & the linear address used to access this page\\
+  ADDRESS & 48 & the virtual address used to access this page\\
   \hline
   EID & 64 & identifies the enclave owning the page\\
   \hline
@@ -157,17 +159,20 @@ summarized in Table~\ref{fig:epcm_entry}.
 
 % Access Control Requirements: SGX/SGX2 S 2.3
 
-The metadata for a page includes the expected linear address used to access the
-page (ENCLAVEADDRESS in Intel's documentation). This address must be specified
-when a page is allocated, and cannot be changed until the page is freed.
+The metadata for a page includes the expected virtual address
+(\S~\ref{sec:segments}) used to access the page (ENCLAVEADDRESS in Intel's
+documentation). This address must be specified when a page is allocated, and
+cannot be changed until the page is freed.
 
 When the result of a memory address translation is a physical address of an EPC
 page, the CPU ensures\footnote{A mismatch triggers a General Protection Fault.}
-that the linear address used in the address translation matches the expected
-linear address recorded in the page's EPCM entry. This prevents the system
+that the virtual address used in the address translation matches the expected
+virtual address recorded in the page's EPCM entry. This prevents the system
 software, which manages the page tables and EPT, from setting up an enclave's
 virtual address space in a manner that is inconsistent with the enclave
 author's expectations.
+
+% SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}, SGX2 S 2.11, S 2.11.{1,2}
 
 The EPCM entry for a page has three access protection bits that must be set to
 1 to allow a page to be read (R), written to (W) and executed (X) by enclave
@@ -193,26 +198,22 @@ is immutable throughout the page's lifetime.
   \hline
   \textbf{Type} & \textbf{Created by} & \textbf{Description}\\
   \hline
-  PT\_REG & EADD & enclave code / data \\
+  PT\_REG & \texttt{EADD} & enclave code / data \\
   \hline
-  PT\_SECS & ECREATE & SECS (\S~\ref{sec:secs}) \\
+  PT\_SECS & \texttt{ECREATE} & SECS (\S~\ref{sec:secs}) \\
   \hline
-  PT\_TCS & EADD & TCS (\S~\ref{sec:tcs}) \\
+  PT\_TCS & \texttt{EADD} & TCS (\S~\ref{sec:tcs}) \\
   \hline
-  PT\_VA & EPT & VA (\S~\ref{sec:va}) \\
+  PT\_VA & \texttt{EPT} & VA (\S~\ref{sec:va}) \\
   \hline
   \end{tabularx}}
   \caption{Values of the PT (page type) field in an EPCM entry.}
   \label{fig:pt_values}
 \end{table}
 
-
 The SGX documentation does not state where the EPCM is stored, but guarantees
 that the EPCM is ``trusted memory''. The documentation also does not describe
 the EPCM layout.
-
-% SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}, SGX2 S 2.11, S 2.11.{1,2}
-
 
 
 \subsection{Key SGX Structures}
@@ -268,9 +269,10 @@ assigned by \texttt{ECREATE}. The EID identifies an enclave's pages in the
 EPCM, so it must be unique across all active enclaves. The EID is visible
 
 The software-visible SECS layout has two fields (BASEADDR and SIZE) that
-specify the enclave's linear address space (ELRANGE in the Intel
+specify the enclave's virtual address space (ELRANGE, meaning enclave linear
+address range, in the Intel
 documentation). The enclave's starting address has to be aligned by the enclave
-size, which simplifies checking if a linear address belongs to an enclave or
+size, which simplifies checking if a virtual address belongs to an enclave or
 not, just like in the case of PRM physical addresses.
 
 % SECS.ATTRIBUTES.XFRM: SGX/SGX2 S 6.7.2.1

@@ -75,8 +75,8 @@ address.
 \end{figure}
 
 Outside the special case of using FS or GS to reference thread-local storage,
-the logical and linear / virtual addresses match, so most of this paper
-uses the term ``virtual address'' and ignores segmentation.
+the logical and virtual (linear) addresses match, so most of this paper uses
+the term ``virtual address'' and ignores segmentation.
 
 Even though CS is not used for segmentation, 64-bit system software needs to
 load a valid selector into it. The CPU uses the ring number in the CS selector

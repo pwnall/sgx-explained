@@ -2,38 +2,46 @@
 \label{sec:paging}
 
 Modern OS kernels rely on address translation to manage the access of
-applications to the memory address space (\S~\ref{sec:address_spaces}). This
-mechanism lets the kernel multiplex DRAM among multiple application processes,
-isolate the processes from each other, and restrict applications from accessing
-memory-mapped devices directly. The latter two are necessary to prevent an
-application's bugs from impacting other applications, or the OS kernel itself.
-Hypervisors also use address translation to divide the DRAM among operating
-systems that run concurrently, and to virtualize memory-mapped devices.
+applications to the memory address space (\S~\ref{sec:address_spaces}). The
+software running inside a SGX enclave is subject to address translation, and
+the implementation of SGX relies heavily on the translation implementation in
+Intel processors. This section summarizes the Intel-specific software-visible
+details needed to understand SGX. \cite{jacob1998virtual} describes the generic
+concepts and applications of address translation.
 
-The software running inside a SGX enclave is subject to address
-translation, and the implementation of SGX relies heavily on the translation
-implementation in Intel processors. This section summarizes the Intel-specific
-software-visible details needed to understand SGX, while \S~\ref{sec:tlbs}
-covers some architectural specifics. \cite{jacob1998virtual} describes the
-generic concepts and applications of address translation.
+From a systems perspective, address translation is a layer of indirection
+between the \textit{virtual addresses}, which are used by a program's memory
+load and store instructions, and the \textit{physical addresses}, which
+reference the physical address space (\S~\ref{sec:address_spaces}). The mapping
+between virtual and physical addresses is defined by \textit{page tables},
+which are set up by system software.
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=75mm]{figures/address_translation.pdf}}
+  \caption{
+    Virtual addresses used by software are translated into physical memory
+    addresses using a mapping defined by the page tables.
+  }
+  \label{fig:address_translation}
+\end{figure}
+
+This mechanism lets the operating system multiplex DRAM among multiple
+application processes, isolate the processes from each other, and prevent
+application code from accessing memory-mapped devices directly. The latter two
+protection measures prevent an application's bugs from impacting other
+applications or the OS kernel itself. Hypervisors also use address translation,
+to divide the DRAM among operating systems that run concurrently, and to
+virtualize memory-mapped devices.
 
 % Canonical Addressing: SDM vol1 S 3.3.7.1
 % IA-32e Paging: SDM S 4.5
 
-64-bit desktop operating systems use the addressing mode called IA-32e by
-Intel's documentation, which translates 48-bit \textit{virtual addresses} into
-\textit{physical addresses} of at most 52 bits\footnote{The size of a physical
-  address is CPU-dependent, and is 40 bits for recent desktop CPUs and 44 bits
-for recent high-end server CPUs.}.  Figure~\ref{fig:os_paging} illustrates the
-address translation process. The bottom 12 bits of a virtual address are not
-changed by the translation. The top 36 bits are grouped into four 9-bit indexes
-used to navigate a data structure called \textit{the page tables}. Despite its
-name, the data structure closely resembles a perfectly balanced 512-ary search
-tree where nodes have fixed keys.  Each node is an array of 512 8-byte entries
-that contain the physical addresses of the next-level children as well as some
-flags. The address of the root node is stored in the CR3 register. The arrays
-in the last-level nodes contain the physical addresses that are the result of
-the address translation.
+The address translation mode used by 64-bit operating systems, called
+IA-32e by Intel's documentation, maps 48-bit \textit{virtual addresses} to
+\textit{physical addresses} of at most 52 bits\footnote{The size of a
+physical address is CPU-dependent, and is 40 bits for recent desktop CPUs and
+44 bits for recent high-end server CPUs.}. Figure~\ref{fig:os_paging}
+illustrates the process used to map a virtual address to a physical address.
 
 \begin{figure}[hbtp]
   \center{\includegraphics[width=85mm]{figures/os_paging.pdf}}
@@ -44,20 +52,50 @@ the address translation.
   \label{fig:os_paging}
 \end{figure}
 
+The bottom 12 bits of a virtual address are not changed by the translation. The
+top 36 bits are grouped into four 9-bit indexes, which are used to index into
+the page tables. Despite its name, the page tables data structure closely
+resembles a full 512-ary search tree where nodes have fixed keys. Each
+node is represented in DRAM as an array of 512 8-byte entries that contain the
+physical addresses of the next-level children as well as some flags. The
+physical address of the root node is stored in the CR3 register. The arrays in
+the last-level nodes contain the physical addresses that are the result of the
+address translation.
+
 % VMX Support for Address Translation: SDM S 4.11
 
-Hypervisors have access to another layer of address translation, named
-\textit{extended page tables} (EPT), to multiplex the physical memory across
-operating systems. When EPT are enabled, the process above is used to translate
-from a virtual address into a \textit{guest-physical address}, effectively
-giving each OS kernel the illusion that it controls the entire machine's RAM.
-The translation from guest-physical addresses to actual physical addresses uses
-the same process as above, except the physical address of the root node is
-stored in the extended page table pointer (EPTP) field in the VM's control
-structure (VMCS). Figure~\ref{fig:vmx_paging} illustrates the address
+Computers that take advantage of hardware virtualization use a hypervisor to
+run multiple operating systems at the same time. This creates some tension,
+because each operating system was written under the assumption that it owns the
+entire computer's DRAM. The tension is solved by a second layer of address
+translation, illustrated in Figure~\ref{fig:vmx_address_translation}.
+
+\begin{figure}[hbt]
+  \center{\includegraphics[width=70mm]{figures/vmx_address_translation.pdf}}
+  \caption{
+    Virtual addresses used by software are translated into physical memory
+    addresses using a mapping defined by the page tables.
+  }
+  \label{fig:vmx_address_translation}
+\end{figure}
+
+
+The page tables set up by an operating system map between virtual addresses and
+\textit{guest-physical addresses} in a \textit{guest-physical address space}.
+The hypervisor multiplexes the computer's DRAM between the operating systems'
+guest-physical address spaces via the second layer of address translations,
+which uses \textit{extended page tables} (EPT) to map guest-physical addresses
+to physical addresses.
+
+The EPT uses the same data structure as the page tables, so the process of
+translating guest-physical addresses to physical addresses follows the same
+steps as IA-32e address translation. The main difference is that the physical
+address of the data structure's root node is stored in the extended page table
+pointer (EPTP) field in the \textit{Virtual Machine Control Structure} (VMCS)
+for the guest OS. Figure~\ref{fig:vmx_paging} illustrates the address
 translation process in the presence of hardware virtualization.
 
-\begin{figure}[hbtp]
+\begin{figure}[hbt]
   \center{\includegraphics[width=85mm]{figures/vmx_paging.pdf}}
   \caption{
     Address translation when hardware virtualization is enabled. The

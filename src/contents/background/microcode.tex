@@ -240,7 +240,7 @@ microcode-visible registers \cite{intel2009pipeline}.
 %   US 13/730,563 - 0072, 0073, 0074, Fig. 10
 
 When a TLB miss (\S~\ref{sec:tlbs}) occurs, the memory execution unit forwards
-the linear address to the \textit{Page Miss Handler} (PMH), which performs the
+the virtual address to the \textit{Page Miss Handler} (PMH), which performs the
 page walk needed to obtain a physical address. In order to minimize the latency
 of a page walk, the PMH is implemented as a finite-state machine (FSM)
 \cite{hildesheim2014ptm, raikin2014tlb}. Furthermore, the PMH fetches the

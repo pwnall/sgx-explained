@@ -81,7 +81,7 @@ The latter is true if the logical processor making the memory access is in
 enclave mode, the accessed physical address falls in an EPC range, the page's
 EPCM entry has the present (P) bit set and does not have the blocked (B) bit
 set, the current enclave's ID matches the enclave ID in the page's EPCM entry,
-and the linear address used to access the page matches the one in the page's
+and the virtual address used to access the page matches the one in the page's
 EPCM entry.
 
 The Intel patents call ELRANGE the Enclave Linear Space (ELS) range.

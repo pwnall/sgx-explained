@@ -60,7 +60,7 @@ SECS.
 % EADD: SGX S 5.3 EADD
 
 The EADD instruction extends the MRENCLAVE field in the enclave's SECS with the
-``EADD'' string, followed by the page's linear address (relative to the start
+``EADD'' string, followed by the page's virtual address (relative to the start
 of the enclave), and the first 48 bytes of the SECINFO structure that contains
 the R, W, X values for the page's EPCM entry.
 
@@ -86,7 +86,7 @@ the R, W, X values for the page's EPCM entry.
 % EEXTEND: SGX S 5.3 EEXTEND
 
 The EEXTEND instruction extends the MRENCLAVE field in the enclave's SECS with
-the ``EEXTEND'' string, followed by the linear address of the 256-byte chunk
+the ``EEXTEND'' string, followed by the virtual address of the 256-byte chunk
 (relative to the start of the enclave).
 
 \begin{table}[hbt]
