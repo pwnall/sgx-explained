@@ -20,7 +20,8 @@ software and SMM code. The CPU's integrated memory controllers
 protecting it from access by other peripherals.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/sgx_epc.pdf}}
+  \centering
+  \includegraphics[width=87mm]{figures/sgx_epc.pdf}
   \caption{
     Enclave data is stored into the EPC, which is a subset of the PRM. The
     PRM is a contiguous range of DRAM that cannot be accessed by system
@@ -87,7 +88,8 @@ that is prevented by SGX's security measures. Understanding this type of attack
 greatly increases one's ability to reason about SGX's security.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/sgx_mapping_attack.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/sgx_mapping_attack.pdf}
   \caption{
     An example of a memory mapping attack, which is prevented by SGX. The
     enclave's author intends to disclose a piece of sensitive information only
@@ -125,12 +127,13 @@ information via memory mapping attacks.
 
 % EPCM table: SGX/SGX2 S 2.6.13
 
-SGX prevent memory mapping attacks using the \textit{Enclave Page Cache Map}
+SGX prevents memory mapping attacks using the \textit{Enclave Page Cache Map}
 (EPCM), which contains security metadata for each EPC page.
 Table~\ref{fig:epcm_entry} lists the metadata stored in the EPCM.
 
 \begin{table}[hbt]
-  \center{\begin{tabularx}{\columnwidth}{| l | r | X |}
+  \centering
+  \begin{tabularx}{\columnwidth}{| l | r | X |}
   \hline
   \textbf{Field} & \textbf{Bits} & \textbf{Description}\\
   \hline
@@ -150,7 +153,7 @@ Table~\ref{fig:epcm_entry} lists the metadata stored in the EPCM.
   \hline
   EID & 64 & identifies the enclave owning the page\\
   \hline
-  \end{tabularx}}
+  \end{tabularx}
   \caption{
     The fields in an EPCM entry.
   }
@@ -181,9 +184,9 @@ protection bits in the page's EPCM entry influence the related bits in the
 page's TLB entry. For example, if X is 0, the XD bit (\S~\ref{sec:paging}) is
 set in the page's TLB entry.
 
-The EPCM metadata also tracks the enclave that owns each page, so the processor
-can prevent the code inside an enclave from accessing EPC pages belonging to
-other enclaves.
+The EPCM also stores the ID of the enclave that owns each EPC page, so the
+processor can prevent the code inside an enclave from accessing pages that
+belong to other enclaves.
 
 A page's EPCM entry also records a \textit{page type} (PT) for each page.
 Table~\ref{fig:pt_values} shows currently defined types. The EPC pages that
@@ -194,7 +197,8 @@ stored in the page. An EPC page's type is set when the page is allocated, and
 is immutable throughout the page's lifetime.
 
 \begin{table}[hbt]
-  \center{\begin{tabularx}{\columnwidth}{| l | l | X |}
+  \centering
+  \begin{tabularx}{\columnwidth}{| l | l | X |}
   \hline
   \textbf{Type} & \textbf{Created by} & \textbf{Description}\\
   \hline
@@ -206,7 +210,7 @@ is immutable throughout the page's lifetime.
   \hline
   PT\_VA & \texttt{EPT} & VA (\S~\ref{sec:va}) \\
   \hline
-  \end{tabularx}}
+  \end{tabularx}
   \caption{Values of the PT (page type) field in an EPCM entry.}
   \label{fig:pt_values}
 \end{table}
@@ -242,7 +246,8 @@ the ability to initialize the key data structures from the less flexible
 software-visible layout.
 
 \begin{figure}[hbt!]
-  \center{\includegraphics[width=70mm]{figures/enclave_layout.pdf}}
+  \centering
+  \includegraphics[width=70mm]{figures/enclave_layout.pdf}
   \caption{
     An enclave's memory layout. Each enclave has a SECS, and one TCS per
     supported hardware thread. Each TCS points to a sequence of SSAs, and

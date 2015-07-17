@@ -19,7 +19,8 @@ performs a \textit{page walk} (page table / EPT traversal) to translate the
 virtual address, and the result is stored in the TLB.
 
 \begin{table}[hbt]
-  \center{\begin{tabular}{| l | r | r |}
+  \centering
+  \begin{tabular}{| l | r | r |}
   \hline
   \textbf{Memory} & \textbf{Entries} & \textbf{Access Time}\\
   \hline
@@ -31,7 +32,7 @@ virtual address, and the result is stored in the TLB.
   \hline
   Page Tables & $2^{36} \approx 6 \cdot 10^{10} $ & 18 cycles - 200ms \\
   \hline
-  \end{tabular}}
+  \end{tabular}
   \caption{
     Approximate sizes and access times for each level in the TLB hierarchy,
     from \cite{7zip2014haswell}.
@@ -92,7 +93,8 @@ address for the memory access is known at that time, and can be used for
 indexing.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/caching_and_paging.pdf}}
+  \centering
+  \includegraphics[width=87mm]{figures/caching_and_paging.pdf}
   \caption{
     Virtual addresses from the perspective of cache lookup and address
     translation. The bits used for the L1 set index and line offset are not

@@ -45,7 +45,8 @@ a segment register. The selector's index is used to read a descriptor from the
 descriptor table and copy it into the segment register's hidden descriptor.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cpu_segment.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/cpu_segment.pdf}
   \caption{
     Loading a segment register. The 16-bit value loaded by software is a
     selector consisting of an index and a ring number. The index selects a GDT
@@ -65,7 +66,8 @@ The virtual address is then translated (\S~\ref{sec:paging}) to a physical
 address.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=80mm]{figures/cpu_segmentation.pdf}}
+  \centering
+  \includegraphics[width=80mm]{figures/cpu_segmentation.pdf}
   \caption{
     Example address computation process for \texttt{MOV FS:[RDX], 0}.  The
     segment's base address is added to the address in RDX before address
@@ -98,7 +100,8 @@ Table} (GDT), whose virtual address is stored in the GDTR register. Table~
 kernels to run both 32-bit and 64-bit applications.
 
 \begin{table}[hbt]
-  \center{\begin{tabular}{| l | l |}
+  \centering
+  \begin{tabular}{| l | l |}
   \hline
   \textbf{Descriptor} & \textbf{Selector}\\
   \hline
@@ -114,7 +117,7 @@ kernels to run both 32-bit and 64-bit applications.
   \hline
   TSS & 0x20 (index 5, ring 0) \\
   \hline
-  \end{tabular}}
+  \end{tabular}
   \caption{
     A typical GDT layout in the 64-bit Intel Architecture.
   }

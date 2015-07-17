@@ -28,7 +28,8 @@ firmware which implements the \textit{Unified Extensible Firmware Interface}
 and the SMM handler.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/motherboard.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/motherboard.pdf}
   \caption{
     The motherboard structures that are most relevant to SGX.
   }
@@ -96,7 +97,8 @@ provides functions that were traditionally hosted on separate chips, but are
 currently integrated on the CPU die to save power and improve latency.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cpu_die.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/cpu_die.pdf}
   \caption{
     The major components in a modern CPU package. \S~\ref{sec:cpu_die} gives
     an uncore overview. \S~\ref{sec:cpu_core} describes execution cores.
@@ -141,7 +143,8 @@ increases the utilization of the shared fetch, decode and execution units, in
 the presence of memory stalls.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cpu_core.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/cpu_core.pdf}
   \caption{
     CPU core with two logical processors. Each logical processor has its own
     execution context and LAPIC (\S~\ref{sec:interrupts}). All the other core

@@ -38,7 +38,8 @@ cache, it must be \textit{written back} to the next level of the memory
 hierarchy.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=80mm]{figures/cache_lookup.pdf}}
+  \centering
+  \includegraphics[width=80mm]{figures/cache_lookup.pdf}
   \caption{
     The steps taken by a cache memory to resolve an access to a memory address
     A. A normal memory access (to cacheable DRAM) always triggers a cache
@@ -68,7 +69,8 @@ package.
 % Cache Hierarchy: Optimization S 2.2.5
 
 \begin{table}[hbt]
-  \center{\begin{tabular}{| l | r | r |}
+  \centering
+  \begin{tabular}{| l | r | r |}
   \hline
   \textbf{Memory} & \textbf{Size} & \textbf{Access Time}\\
   \hline
@@ -82,7 +84,7 @@ package.
   \hline
   DRAM & 16~GB & 60 ns \\
   \hline
-  \end{tabular}}
+  \end{tabular}
   \caption{
     Approximate sizes and access times for each level in the memory
     hierarchy of an Intel processor, from \cite{intel2010perfanalysis}. Memory

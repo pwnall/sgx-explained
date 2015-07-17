@@ -21,7 +21,8 @@ components involved in out-of-order execution, and omits some less relevant
 details from Figure~\ref{fig:cpu_core}.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cpu_out_of_order.pdf}}
+  \centering
+  \includegraphics[width=87mm]{figures/cpu_out_of_order.pdf}
   \caption{
     The structures in a CPU core that are relevant to out-of-order and
     speculative execution. Instructions are decoded into micro-ops, which are
@@ -69,7 +70,8 @@ scheduler can have the load store unit execute the \texttt{LOAD} and the ALU
 execute the \texttt{ADD}, all in the same clock cycle.
 
 \begin{table}[hbt]
-  \center{\begin{tabular}{| l | l | l |}
+  \centering
+  \begin{tabular}{| l | l | l |}
   \hline
   \textbf{\#} & \textbf{Micro-op} & \textbf{Meaning}\\
   \hline
@@ -81,7 +83,7 @@ execute the \texttt{ADD}, all in the same clock cycle.
   \hline
   4 & \texttt{SUB RBX, RSI, RDX} & RBX $\leftarrow$ RSI - RDX\\
   \hline
-  \end{tabular}}
+  \end{tabular}
   \caption{
     Pseudo micro-ops for the out-of-order execution example.
   }
@@ -101,7 +103,8 @@ the ROB, as illustrated in Tables \ref{fig:out_of_order_rob} and
 determine the dependencies between micro-ops.
 
 \begin{table}[hbt]
-  \center{\begin{tabular}{| l | l | l | l | l |}
+  \centering
+  \begin{tabular}{| l | l | l | l | l |}
   \hline
   \textbf{\#} & \textbf{Op} & \textbf{Source 1} & \textbf{Source 2} &
   \textbf{Destination}\\
@@ -114,7 +117,7 @@ determine the dependencies between micro-ops.
   \hline
   4 & SUB & ROB \# 3 & RDX & RBX \\
   \hline
-  \end{tabular}}
+  \end{tabular}
   \caption{
     Data written by the renamer into the reorder buffer (ROB), for the
     micro-ops in Table~\ref{fig:out_of_order_micro_ops}.
@@ -123,13 +126,14 @@ determine the dependencies between micro-ops.
 \end{table}
 
 \begin{table}[hbt]
-  \center{\begin{tabular}{| l | r | r | r | r | r | r |}
+  \centering
+  \begin{tabular}{| l | r | r | r | r | r | r |}
   \hline
   \textbf{Register} & RAX & RBX & RCX & RDX & RSI & RDI \\
   \hline
   \textbf{ROB \#} & \#1 & \#4 & $\emptyset$ & $\emptyset$ & \#3 & \#2 \\
   \hline
-  \end{tabular}}
+  \end{tabular}
   \caption{
     Relevant entries of the register allocation table after the micro-ops in
     Table~\ref{fig:out_of_order_micro_ops} are inserted into the ROB.

@@ -14,7 +14,8 @@ processor starts or stops executing code that belongs to an enclave.
 % Basic Program Execution Registers: SDM vol1 S 3.4
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cpu_registers.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/cpu_registers.pdf}
   \caption{
     CPU registers in the 64-bit Intel architecture. RSP can be used as a
     general-purpose register (GPR), e.g., in pointer arithmetic, but it always
@@ -47,7 +48,8 @@ Software might use other registers to interact with specific processor
 features, some of which are shown in Table~\ref{fig:xsave_state}.
 
 \begin{table}[hbt]
-  \center{\begin{tabularx}{\columnwidth}{| l | X | l |}
+  \centering
+  \begin{tabularx}{\columnwidth}{| l | X | l |}
   \hline
   \textbf{Feature} & \textbf{Registers} & \textbf{XCR0 bit}\\
   \hline
@@ -65,7 +67,7 @@ features, some of which are shown in Table~\ref{fig:xsave_state}.
   \hline
   PK & PKRU & 9 \\
   \hline
-  \end{tabularx}}
+  \end{tabularx}
   \caption{Sample feature-specific Intel architecture registers.}
   \label{fig:xsave_state}
 \end{table}

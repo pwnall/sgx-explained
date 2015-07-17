@@ -17,7 +17,8 @@ between virtual and physical addresses is defined by \textit{page tables},
 which are set up by system software.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=75mm]{figures/address_translation.pdf}}
+  \centering
+  \includegraphics[width=75mm]{figures/address_translation.pdf}
   \caption{
     Virtual addresses used by software are translated into physical memory
     addresses using a mapping defined by the page tables.
@@ -44,7 +45,8 @@ physical address is CPU-dependent, and is 40 bits for recent desktop CPUs and
 illustrates the process used to map a virtual address to a physical address.
 
 \begin{figure}[hbtp]
-  \center{\includegraphics[width=85mm]{figures/os_paging.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/os_paging.pdf}
   \caption{
     IA-32e address translation takes in a 48-bit virtual address and outputs
     a 52-bit physical address.
@@ -71,7 +73,8 @@ entire computer's DRAM. The tension is solved by a second layer of address
 translation, illustrated in Figure~\ref{fig:vmx_address_translation}.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=70mm]{figures/vmx_address_translation.pdf}}
+  \centering
+  \includegraphics[width=70mm]{figures/vmx_address_translation.pdf}
   \caption{
     Virtual addresses used by software are translated into physical memory
     addresses using a mapping defined by the page tables.
@@ -80,12 +83,12 @@ translation, illustrated in Figure~\ref{fig:vmx_address_translation}.
 \end{figure}
 
 
-The page tables set up by an operating system map between virtual addresses and
-\textit{guest-physical addresses} in a \textit{guest-physical address space}.
-The hypervisor multiplexes the computer's DRAM between the operating systems'
-guest-physical address spaces via the second layer of address translations,
-which uses \textit{extended page tables} (EPT) to map guest-physical addresses
-to physical addresses.
+When a hypervisor is active, the page tables set up by an operating system map
+between virtual addresses and \textit{guest-physical addresses} in a
+\textit{guest-physical address space}. The hypervisor multiplexes the
+computer's DRAM between the operating systems' guest-physical address spaces
+via the second layer of address translations, which uses \textit{extended page
+tables} (EPT) to map guest-physical addresses to physical addresses.
 
 The EPT uses the same data structure as the page tables, so the process of
 translating guest-physical addresses to physical addresses follows the same
@@ -96,7 +99,8 @@ for the guest OS. Figure~\ref{fig:vmx_paging} illustrates the address
 translation process in the presence of hardware virtualization.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/vmx_paging.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/vmx_paging.pdf}
   \caption{
     Address translation when hardware virtualization is enabled. The
     kernel-managed page tables contain guest-physical addresses, so each level

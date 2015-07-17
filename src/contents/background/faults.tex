@@ -26,7 +26,8 @@ invariants, just like an OS kernel.
 % Fast System Calls in 64-Bit Mode: SDM S 5.8.8
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/cpu_ring_switch.pdf}}
+  \center
+  \includegraphics[width=85mm]{figures/cpu_ring_switch.pdf}
   \caption{
     Modern privilege switching methods in the 64-bit Intel architecture.
   }
@@ -80,7 +81,8 @@ code. Kernels protect the IDT memory using page tables, so that ring 3 software
 cannot access it.
 
 \begin{table}[hbt]
-  \center{\begin{tabular}{| l | r |}
+  \centering
+  \begin{tabular}{| l | r |}
   \hline
   \textbf{Field} & \textbf{Bits} \\
   \hline
@@ -90,7 +92,7 @@ cannot access it.
   \hline
   Interrupt Stack Table (IST) index & 3 \\
   \hline
-  \end{tabular}}
+  \end{tabular}
   \caption{
     The essential fields of an IDT entry in 64-bit mode. Each entry points to a
     hardware exception or interrupt handler.
@@ -116,7 +118,8 @@ the stack, then loads the IDT entry's values into the CS and RIP registers,
 which trigger the execution of the exception handler.
 
 \begin{table}[hbt]
-  \center{\begin{tabular}{| l | r |}
+  \centering
+  \begin{tabular}{| l | r |}
   \hline
   \textbf{Field} & \textbf{Bits} \\
   \hline
@@ -132,7 +135,7 @@ which trigger the execution of the exception handler.
   \hline
   Exception code & 64 \\
   \hline
-  \end{tabular}}
+  \end{tabular}
   \caption{
     The snapshot pushed on the handler's stack when a hardware exception
     occurs. IRET restores registers from this snapshot.

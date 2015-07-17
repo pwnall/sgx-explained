@@ -61,7 +61,8 @@ to perform, the system software executes the EREMOVE instructions to deallocate
 the enclave's EPC pages.
 
 \begin{figure}[hbt]
-  \center{\includegraphics[width=85mm]{figures/enclave_lifecycle.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/enclave_lifecycle.pdf}
   \caption{
     The SGX enclave lifecycle management instructions and state transition.
     ECREATE establishes the enclave's ID (EID). EINIT sets MRENCLAVE, the
@@ -113,7 +114,8 @@ infrastructure from buggy or malicious software.
 % EPA: SGX S 5.3 EPA
 
 \begin{figure}[hbt!]
-  \center{\includegraphics[width=85mm]{figures/sgx_ewb.pdf}}
+  \centering
+  \includegraphics[width=85mm]{figures/sgx_ewb.pdf}
   \caption{
     The data flow of the EWB instruction that evicts an EPC page. The page's
     content is encrypted in a non-EPC RAM page. A nonce is created and saved

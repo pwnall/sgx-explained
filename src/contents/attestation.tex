@@ -37,7 +37,8 @@ the ``ECREATE'' string, followed by the SSAFRAMESIZE and SIZE fields in the
 SECS.
 
 \begin{table}[hbt]
-  \center{\begin{tabularx}{\columnwidth}{| r | r | X |}
+  \centering
+  \begin{tabularx}{\columnwidth}{| r | r | X |}
   \hline
   \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
   \hline
@@ -49,7 +50,7 @@ SECS.
   \hline
   32 & 8 & 32 zero (0) bytes \\
   \hline
-  \end{tabularx}}
+  \end{tabularx}
   \caption{
     Data extended into MRENCLAVE by the ECREATE instruction.
   }
@@ -65,7 +66,8 @@ of the enclave), and the first 48 bytes of the SECINFO structure that contains
 the R, W, X values for the page's EPCM entry.
 
 \begin{table}[hbt]
-  \center{\begin{tabularx}{\columnwidth}{| r | r | X |}
+  \centering
+  \begin{tabularx}{\columnwidth}{| r | r | X |}
   \hline
   \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
   \hline
@@ -76,7 +78,7 @@ the R, W, X values for the page's EPCM entry.
   \hline
   16 & 48 & SECINFO (first 48 bytes) \\
   \hline
-  \end{tabularx}}
+  \end{tabularx}
   \caption{
     Data extended into MRENCLAVE by the EADD instruction.
   }
@@ -90,7 +92,8 @@ the ``EEXTEND'' string, followed by the virtual address of the 256-byte chunk
 (relative to the start of the enclave).
 
 \begin{table}[hbt]
-  \center{\begin{tabularx}{\columnwidth}{| r | r | X |}
+  \centering
+  \begin{tabularx}{\columnwidth}{| r | r | X |}
   \hline
   \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
   \hline
@@ -112,7 +115,7 @@ the ``EEXTEND'' string, followed by the virtual address of the 256-byte chunk
   \hline
   256 & 64 & bytes 192 - 256 in the chunk \\
   \hline
-  \end{tabularx}}
+  \end{tabularx}
   \caption{
     Data extended into MRENCLAVE by the EEXTEND instruction.
   }
