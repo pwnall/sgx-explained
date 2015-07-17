@@ -128,8 +128,8 @@ information via memory mapping attacks.
 % EPCM table: SGX/SGX2 S 2.6.13
 
 SGX prevents memory mapping attacks using the \textit{Enclave Page Cache Map}
-(EPCM), which contains security metadata for each EPC page.
-Table~\ref{fig:epcm_entry} lists the metadata stored in the EPCM.
+(EPCM), which has an entry for each EPC page, containing the security metadata
+shown in Table~\ref{fig:epcm_entry}.
 
 \begin{table}[hbt]
   \centering
@@ -162,18 +162,18 @@ Table~\ref{fig:epcm_entry} lists the metadata stored in the EPCM.
 
 % Access Control Requirements: SGX/SGX2 S 2.3
 
-The metadata for a page includes the expected virtual address
-(\S~\ref{sec:segments}) used to access the page (ENCLAVEADDRESS in Intel's
-documentation). This address must be specified when a page is allocated, and
-cannot be changed until the page is freed.
+SGX's main weapon against memory mapping attacks is the ENCLAVEADDRESS metadata
+field, which contains the expected virtual address (\S~\ref{sec:segments}) used
+to access the page. The expected virtual address must be specified when a page
+is allocated, and cannot be changed until the page is freed.
 
-When the result of a memory address translation is a physical address of an EPC
-page, the CPU ensures\footnote{A mismatch triggers a General Protection Fault.}
-that the virtual address used in the address translation matches the expected
-virtual address recorded in the page's EPCM entry. This prevents the system
-software, which manages the page tables and EPT, from setting up an enclave's
-virtual address space in a manner that is inconsistent with the enclave
-author's expectations.
+When an address translation (\S~\ref{sec:paging}) result is the physical
+address of an EPC page, the CPU ensures\footnote{A mismatch triggers a General
+Protection Fault.} that the virtual address given to the address translation
+process matches the expected virtual address recorded in the page's EPCM entry.
+This prevents the system software, which manages the page tables and EPT, from
+modifying an enclave's virtual address space in a manner that is inconsistent
+with the enclave author's expectations.
 
 % SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}, SGX2 S 2.11, S 2.11.{1,2}
 
@@ -269,32 +269,58 @@ to designate a previously unused EPC page as the enclave's \textit{SGX Enclave
 Control Structure} (SECS). All instructions that operate on an enclave access
 its control structure directly or indirectly.
 
+% Internal CREGs: SGX2 S 5.1.4
+% ECREATE: SGX2 S 5.3
+% EWB: SGX2 S 5.3
+
 The most important field in the SECS is the 64-bit enclave ID (EID), which is
 assigned by \texttt{ECREATE}. The EID identifies an enclave's pages in the
-EPCM, so it must be unique across all active enclaves. The EID is visible
+EPCM, so it must be unique across all active enclaves. According to the
+ECREATE pseudo-code in the SGX manual, enclave IDs are allocated using an
+atomic counter. An enclave's EID is mostly hidden, as most SGX instructions use
+the address of the enclave's SECS page as the enclave's handler. However, the
+system software can learn an enclave's EID by evicting one of its EPC pages
+(\S~\ref{sec:sgx_ewb}).
 
-The software-visible SECS layout has two fields (BASEADDR and SIZE) that
-specify the enclave's virtual address space (ELRANGE, meaning enclave linear
-address range, in the Intel
-documentation). The enclave's starting address has to be aligned by the enclave
-size, which simplifies checking if a virtual address belongs to an enclave or
-not, just like in the case of PRM physical addresses.
+The software-visible SECS layout specifies the range of virtual addresses that
+can be mapped to the enclave's EPC pages. Intel documentation calls this range
+ELRANGE, for ``enclave linear address range''. The range is specified using a
+base (the BASEADDR field) and a size (the SIZE) field. ELRANGE must meet the
+same constraints as a variable memory type range
+(\S~\ref{cacheability_config}), namely the size must be a power of 2, and the
+base must be aligned to the size.
+
+Currently, the main implication of ELRANGE is that all the SGX data structures
+are initialized with enclave virtual addresses specified relatively to
+BASEADDR. Furthermore, BASEADDR is not a part of the enclave's measurement
+hash (details in \S~\ref{sec:measurement}). It follows that system software can
+relocate an enclave in its host application's virtual address space, without
+impacting the enclave's measurement hash.
+
+Having ELRANGE follow the memory type range constraints provides a cheap way to
+verify if a virtual address belongs to the address, in hardware. This provides
+SGX engineers the option to implement per-enclave page tables in future SGX
+revisions.
 
 % SECS.ATTRIBUTES.XFRM: SGX/SGX2 S 6.7.2.1
 
-The software-visible SECS also has an ATTRIBUTE field that specifies the Intel
+The software-visible SECS has an ATTRIBUTE field that specifies the Intel
 achitecture features used by the enclave code. For example, the MODE64BIT flag
 is set if the enclave uses 64-bit code, and the XFRM sub-field contains the
 XCR0 register value expected by the enclave's code. XCR0 controls Intel
-architecture extensions such as SSE and AVX (see \S~\ref{sec:registers}). When
-a logical processor executes code inside an enclave, it uses the XCR0 value
-specified by the enclave's SECS, so malicious system software cannot enable
-features that the enclave code is not prepared to handle. This frees Intel to
-introduce extensions that change the behavior of existing instructions, such as
-Memory Protection Extensions (MPX).
+architecture extensions such as SSE and AVX (see \S~\ref{sec:registers}).
+
+When a logical processor executes code inside an enclave, it uses the XCR0
+value specified by the enclave's SECS, so malicious system software cannot
+enable features that the enclave code is not prepared to handle. This lets
+Intel introduce extensions that change the architectural behavior of existing
+instructions, such as Memory Protection Extensions (MPX), without having to
+worry about introducing security vulnerabilities in SGX enclaves written before
+MPX.
 
 The other fields in the software-visible SECS layout are used by the
 attestation process, which is explained in \S~\ref{sec:attestation}.
+
 
 \subsubsection{The Thread Control Structure (TCS)}
 \label{sec:tcs}
@@ -302,9 +328,9 @@ attestation process, which is explained in \S~\ref{sec:attestation}.
 % TCS: SGX S 2.6.2, S 2.6.2.{1,2,3,4}, SGX2 S 2.8, S 2.8.{1,2,3,4}
 
 A logical processor uses a \textit{Thread Control Structure} (TCS) while
-executing code inside an enclave, so enclaves must have at least as many TCS
-instances as the number of simultaneous hardware threads that they want to
-support.
+executing code inside an enclave, so enclave authors must provision at least as
+many TCS instances as the number of concurrent software threads that they want
+to use.
 
 The fields in the software-visible TCS layout direct the context switches
 performed by a logical processor when it transitions between non-enclave and
