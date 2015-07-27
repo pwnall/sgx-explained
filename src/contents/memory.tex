@@ -287,8 +287,8 @@ can be mapped to the enclave's EPC pages. Intel documentation calls this range
 ELRANGE, for ``enclave linear address range''. The range is specified using a
 base (the BASEADDR field) and a size (the SIZE) field. ELRANGE must meet the
 same constraints as a variable memory type range
-(\S~\ref{cacheability_config}), namely the size must be a power of 2, and the
-base must be aligned to the size.
+(\S~\ref{sec:cacheability_config}), namely the size must be a power of 2, and
+the base must be aligned to the size.
 
 Currently, the main implication of ELRANGE is that all the SGX data structures
 are initialized with enclave virtual addresses specified relatively to
