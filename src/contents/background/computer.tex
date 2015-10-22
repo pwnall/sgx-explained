@@ -46,13 +46,14 @@ a CPU to peripherals such as a \textit{Network Interface Card} (NIC), and the
 with the flash memory.
 
 In high-end systems, the PCH also contains a service processor, called the
-Intel \textit{Management Engine} (ME) \cite{ruan2014intelme}.  The ME runs
-firmware stored in the same flash memory chip as the UEFI firmware. The
-Management Engine is intended for remote system management and troubleshooting,
-and has tremendous privileges. The ME is running even when the system is in
-\textit{Soft Off} mode (ACPI G2/S5), when the CPU and DRAM are unpowered. Also,
-the ME can access the network via a NIC without CPU support, can read and
-modify DRAM via DMA transfers, and can override the CPU boot vector.
+Intel \textit{Management Engine} (ME)
+\cite{ruan2014intelme, ververis2010security}.  The ME runs firmware stored in
+the same flash memory chip as the UEFI firmware. The Management Engine is
+intended for remote system management and troubleshooting, and has tremendous
+privileges. The ME is running even when the system is in \textit{Soft Off} mode
+(ACPI G2/S5), when the CPU and DRAM are unpowered. Also, the ME can access the
+network via a NIC without CPU support, can read and modify DRAM via DMA
+transfers, and can override the CPU boot vector.
 
 The PCIe bus is an extended, point-to-point version of the PCI standard, which
 provides a method for any peripheral connected to the bus to perform
@@ -69,7 +70,7 @@ attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
 as the memory bus tap used to hack the Xbox \cite{huang2003xbox}, the
 memory glitching attack that subverted the PlayStation 3 hypervisor
 \cite{hotz2010ps3}, and the rowhammer DRAM bit-flipping attack
-\cite{kim2014rowhammer}.
+\cite{kim2014rowhammer, google2015rowhammer, gruss2015rowhammer}.
 
 The flash memory stores the SMM handler and Intel ME firmware, which run with
 high privileges. Furthermore, the contents of flash memory persists across
@@ -77,15 +78,14 @@ power cycles. This opens up the possibility for an attacker that gains SPI
 access to deploy a persistent payload that runs at high privilege. To prevent
 against these attacks, most of the firware is signed. For example, the ME
 checks that its firmware was signed by a burned-in Intel public key. However,
-both the computer firmware checks \cite{wojtczuk2010bios} and the ME firmware
-checks \cite{tereshkin2009amt} have been subverted in the past.
+both the computer firmware checks \cite{wojtczuk2010bios, furtak2014bios} and
+the ME firmware checks \cite{tereshkin2009amt} have been subverted in the past.
 
 The SGX threat model explicitly considers SMM to be untrusted. However, it does
 not account for malicious code running on the Management Engine. Unfortunately,
 the ME, PCH and DMI are Intel-proprietary and largely undocumented, so we
 cannot assess the impact of an ME attack on software running inside an SGX
 enclave.
-
 
 \subsubsection{The Processor}
 \label{sec:cpu_die}

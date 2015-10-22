@@ -83,11 +83,68 @@ expects, running in an isolated container on hardware that it trusts.
 The Trusted Platform Module (TPM) \cite{grawrock2003tpm} was the first widely
 deployed attempt to bring software attestation to the Intel architecture. The
 TPM model relies on a tamper-resistant chip that is dedicated to storing the
-attestation key and using it to perform software attestation.
+attestation key and using it to perform software attestation. The following
+paragraphs highlight the issues in the TPM design, in order to facilitate an
+understanding of its successors.
 
 The TPM design provides one isolation container, covering all the software
-running on the computer that has the TPM chip. The threat model assumes that
-the motherboard securely connects the processor to DRAM and to the TPM chip.
-and relies on the computer's early boot firmware (BIOS) to start the
-measurement process.
+running on the computer that has the TPM chip. It follows that the measurement
+included in an attestation signature covers the entire OS kernel and all the
+kernel modules, such as device drivers. However, commercial computers use a
+wide diversity of devices, and their system software is updated at an
+ever-increasing pace, so it is impossible to maintain a list of acceptable
+measurement hashes corresponding to a piece of trusted software. Due to this
+issue, the TPM's software attestation is not used in many security systems,
+despite its wide deployment.
+
+The TPM design is technically not vulnerable to any software attacks, because
+it trusts all the software on the computer. However, a TPM-based system is
+vulnerable to an attacker who has physical access to the machine, as the TPM
+chip does not provide any isolation for the software on the computer.
+Furthermore, the TPM chip receives the software measurements from the CPU,
+so TPM-based systems are vulnerable to attackers who can tap the communication
+bus between the CPU and the TPM.
+
+Last, the TPM's design relies on the software running on the CPU to report its
+own cryptographic hash. The TPM chip resets the measurements stored in Platform
+Configuration Registers (PCRs) when the computer is rebooted. Then, the TPM
+expects the software at each boot stage to cryptographically hash the software
+at the next stage, and send the hash to the TPM. The TPM updates the PCRs to
+incorporate the new hashes it receives, as shown in
+Figure~\ref{fig:tpm_measurement}. Most importantly, the PCR value at any point
+reflects all the software hashes received by the TPM up to that point. This
+makes it impossible for software that has been measured to ``remove'' itself
+from the measurement.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/tpm_measurement.pdf}
+  \caption{
+    The measurement stored in a TPM platform configuration register (PCR). The
+    PCR is reset when the system reboots. The software at every boot stage
+    hashes the next boot stage, and sends the hash to the TPM. The PCR's new
+    value incorporates both the old PCR value, and the new softare hash.
+  }
+  \label{fig:tpm_measurement}
+\end{figure}
+
+Unfortunately, the security of the whole measurement scheme hinges on the
+requirement that the first hash sent to the TPM must reflect the software that
+runs in the first boot stage. The TPM threat model explicitly acknowledges this
+issue, and assumes that the firmware responsible for loading the first stage
+bootloader is securely embedded in the motherboard. However, virtually every
+TPM-enabled computer stores its firmware in a flash memory chip that can be
+re-programmed in software (\S~\ref{sec:motherboard}), so the TPM's measurement
+can be subverted by an attacker that can reflash the computer's firmware
+\cite{butterworth2013bios}.
+
+On very recent Intel processors, the attack described above can be defeated by
+having the initialization microcode (\S~\ref{sec:microcode_sec}) hash the
+computer's firmware (specifically, the PEI code in UEFI \cite{forum2015uefi}
+firwmare) and communicate the hash to the TPM chip. This is marketed as the
+Measured Boot feature of Intel's Boot Guard \ref{ruan2014intelme}.
+Unfortunately, most computer manufacuters use Verified Boot instead of Measured
+Boot, which entails having the microcode check that the PEI firmware contains a
+signature produced by a key burned into e-fuses.
+
 
