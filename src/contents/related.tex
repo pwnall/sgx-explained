@@ -80,8 +80,9 @@ expects, running in an isolated container on hardware that it trusts.
 
 \subsection{Secure Processors in the Industry}
 
-The Trusted Platform Module (TPM) \cite{grawrock2003tpm} was the first widely
-deployed attempt to bring software attestation to the Intel architecture. The
+The Trusted Platform Module (TPM) \cite{grawrock2003tpm} introduced the
+software attestation model described above, and was the first widely deployed
+. The
 TPM model relies on a tamper-resistant chip that is dedicated to storing the
 attestation key and using it to perform software attestation. The following
 paragraphs highlight the issues in the TPM design, in order to facilitate an
@@ -142,9 +143,92 @@ On very recent Intel processors, the attack described above can be defeated by
 having the initialization microcode (\S~\ref{sec:microcode_sec}) hash the
 computer's firmware (specifically, the PEI code in UEFI \cite{forum2015uefi}
 firwmare) and communicate the hash to the TPM chip. This is marketed as the
-Measured Boot feature of Intel's Boot Guard \ref{ruan2014intelme}.
-Unfortunately, most computer manufacuters use Verified Boot instead of Measured
-Boot, which entails having the microcode check that the PEI firmware contains a
-signature produced by a key burned into e-fuses.
+Measured Boot feature of Intel's Boot Guard \cite{ruan2014intelme}.
+
+Sadly, most computer manufacturers use Verified Boot (also known as ``secure
+boot'') instead of Measured Boot (also known as ``trusted boot''). Verified
+Boot means that the processor's microcode only boots into PEI firmware that
+contains a signature produced by a key burned into the chip's e-fuses. Verified
+Boot does not impact the measurements stored on the TPM, so it does not improve
+the security of software attestation.
+
+
+\subsection{The XOM Architecture}
+
+The execute-only memory (XOM) architecture \cite{lie2000xom} introduced the
+approach of having sensitive code and data execute in isolated containers
+managed by untrusted host software. XOM outlined the mechanisms needed to
+isolate a container's data from its untrusted software environment, such as
+saving the register state to a protected memory area before servicing an
+interrupt.
+
+XOM supports multiple containers by tagging every cache line with the
+identifier of the container owning it, and ensures isolation by disallowing
+memory accesses to cache lines that don't match the current container's
+identifier. The operating system and the untrusted applications are considered
+to belong to a container with a null identifier.
+
+XOM also introduced the integration of encryption and HMAC funcationality in
+the processor's memory controller to protect container memory from physical
+attacks on DRAM. The encryption and HMAC functionality is used for all cache
+line evictions and fetches, and the ECC bits in DRAM chips are repurposed to
+store HMAC values.
+
+XOM's design cannot guarantee DRAM freshness, so the software in its containers
+is vulnerable to physical replay attacks. Furthermore, XOM does not protect a
+container's memory access patterns, meaning that any piece of malicious
+software can perform cache timing attacks against the software in a container.
+Last, XOM containers are destroyed when they encounter hardware exceptions,
+such as including page faults, so XOM does not support paging.
+
+XOM pre-dates the attestation scheme described above, and relies on a modified
+software distribution scheme instead. Each container's contents is encrypted
+with a symmetric key, which also serves as the container's identity. The
+symmetric key, in turn, is encrypted with the public key of each CPU that is
+trusted to run the container. A container's author can be assured that the
+container is running on trusted software by embedding a secret into the
+encrypted container data, and using it to authenticate the container. While
+conceptually simpler than software attestation, this scheme does not allow the
+container author to vet the container's software environment.
+
+
+\subsection{The Aegis Secure Processor}
+
+The Aegis secure processor \cite{suh2003aegis} argued that Physically
+Uncloneable Functions (PUFs) \cite{gassend2002puf} can be used to endow a
+secure processor with a tamper-resistant private key, which is required for
+software attestation. PUFs do not have the fabrication process drawbacks of
+EEPROM, and are significantly more resilient to physical attacks than e-fuses.
+Aegis relies on a security kernel in the operating system to isolate
+containers, and includes the kernel's cryptographic hash in the measurement
+reported by the software attestation signature.
+
+Aegis relies on a trusted security kernel to isolate each container from the
+other software on the computer by configuring the page tables used in address
+translation. As the security kernel is a part of the \textit{trusted code base}
+(TCB), its cryptographic hash is included in the software attestation
+measurement.
+
+The Aegis memory controller encrypts the cache lines in one memory range, and
+HMACs the cache lines in one other memory range. The two memory ranges can
+overlap, and are configurable by the security kernel. Thanks to the two ranges,
+the memory controller can avoid the latency overhead of cryptographic
+operations for the DRAM outside containers.
+
+Aegis uses a Merkle tree construction \cite{gassend2003merkle} to guarantee
+DRAM freshness, so it is not vulnerable to physical replay attacks. The latency
+overhead of the Merkle tree is greatly reduced by augmenting the L2 cache with
+the tree nodes for the cache lines. Unlike XOM, Aegis does not tag its cache
+lines with container identifiers, as the page tables and the configurable
+memory ranges are sufficient for software and hardware isolation.
+
+Aegis' security kernel allows the OS to page out container memory, but verifies
+the correctness of the paging operations. The security kernel uses the same
+encryption and Merkle tree algorithms as the memory controller to guarantee the
+privacy and integrity of the container pages that are swapped out from DRAM.
+As the OS is free to page out container memory, it can learn a containter's
+memory access patterns, at page granularity. Aegis containers are also
+vulnerable to cache timing attacks.
+
 
 
