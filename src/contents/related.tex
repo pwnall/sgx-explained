@@ -78,15 +78,55 @@ exchange, and is assured that it now shares a secret with the software that it
 expects, running in an isolated container on hardware that it trusts.
 
 
-\subsection{Secure Processors in the Industry}
+\subsection{The XOM Architecture}
+
+The execute-only memory (XOM) architecture \cite{lie2000xom} introduced the
+approach of having sensitive code and data execute in isolated containers
+managed by untrusted host software. XOM outlined the mechanisms needed to
+isolate a container's data from its untrusted software environment, such as
+saving the register state to a protected memory area before servicing an
+interrupt.
+
+XOM supports multiple containers by tagging every cache line with the
+identifier of the container owning it, and ensures isolation by disallowing
+memory accesses to cache lines that don't match the current container's
+identifier. The operating system and the untrusted applications are considered
+to belong to a container with a null identifier.
+
+XOM also introduced the integration of encryption and HMAC funcationality in
+the processor's memory controller to protect container memory from physical
+attacks on DRAM. The encryption and HMAC functionality is used for all cache
+line evictions and fetches, and the ECC bits in DRAM chips are repurposed to
+store HMAC values.
+
+XOM's design cannot guarantee DRAM freshness, so the software in its containers
+is vulnerable to physical replay attacks. Furthermore, XOM does not protect a
+container's memory access patterns, meaning that any piece of malicious
+software can perform cache timing attacks against the software in a container.
+Last, XOM containers are destroyed when they encounter hardware exceptions,
+such as including page faults, so XOM does not support paging.
+
+XOM pre-dates the attestation scheme described above, and relies on a modified
+software distribution scheme instead. Each container's contents is encrypted
+with a symmetric key, which also serves as the container's identity. The
+symmetric key, in turn, is encrypted with the public key of each CPU that is
+trusted to run the container. A container's author can be assured that the
+container is running on trusted software by embedding a secret into the
+encrypted container data, and using it to authenticate the container. While
+conceptually simpler than software attestation, this scheme does not allow the
+container author to vet the container's software environment.
+
+
+\subsection{The Trusted Platform Module (TPM)}
 
 The Trusted Platform Module (TPM) \cite{grawrock2003tpm} introduced the
-software attestation model described above, and was the first widely deployed
-. The
-TPM model relies on a tamper-resistant chip that is dedicated to storing the
-attestation key and using it to perform software attestation. The following
-paragraphs highlight the issues in the TPM design, in order to facilitate an
-understanding of its successors.
+software attestation model described at the beginning of this section. The TPM
+design does not require any hardware modifications to the CPU, and instead
+relies on an auxilliary tamper-resistant chip. The TPM chip is only used to
+store the attestation key and to perform software attestation. The TPM was
+widely deployed on commodity computers, because it does not rely on CPU
+modifications. Unfortunately, the cost of this approach is that the TPM has
+very weak security guarantees, as explained below.
 
 The TPM design provides one isolation container, covering all the software
 running on the computer that has the TPM chip. It follows that the measurement
@@ -153,43 +193,45 @@ Boot does not impact the measurements stored on the TPM, so it does not improve
 the security of software attestation.
 
 
-\subsection{The XOM Architecture}
+\subsection{Intel's Trusted Execution Technology (TXT)}
 
-The execute-only memory (XOM) architecture \cite{lie2000xom} introduced the
-approach of having sensitive code and data execute in isolated containers
-managed by untrusted host software. XOM outlined the mechanisms needed to
-isolate a container's data from its untrusted software environment, such as
-saving the register state to a protected memory area before servicing an
-interrupt.
+Intel's Trusted Execution Technology (TXT) \cite{grawrock2009txt} uses the
+TPM's software attestation model and auxilliary tamper-resistant chip, but
+reduces the software inside the secure container to a virtual machine (guest
+operating system and application) hosted by the CPU's hardware virtualization
+features (VMX \cite{uhlig2005vmx}, \S~\ref{sec:rings}).
 
-XOM supports multiple containers by tagging every cache line with the
-identifier of the container owning it, and ensures isolation by disallowing
-memory accesses to cache lines that don't match the current container's
-identifier. The operating system and the untrusted applications are considered
-to belong to a container with a null identifier.
+TXT isolates the software inside the container from untrusted software by
+ensuring that the container has exclusive control over the entire computer
+while it is active. This is accomplished by a secure initialization
+authenticated code module (SINIT ACM) that effectively performs a warm system
+reset before starting the container's VM.
 
-XOM also introduced the integration of encryption and HMAC funcationality in
-the processor's memory controller to protect container memory from physical
-attacks on DRAM. The encryption and HMAC functionality is used for all cache
-line evictions and fetches, and the ECC bits in DRAM chips are repurposed to
-store HMAC values.
+TXT does not implement DRAM encryption or HMACs, and therefore is vulnerable to
+physical DRAM attacks, just like TPM-based designs. Furthermore, early TXT
+implementations were vulnerable to attacks where a malicious operating system
+would program a device, such as a network card, to perform DMA transfers
+to the DRAM region used by a TXT container \cite{wojtczuk2009txt,
+wojtczuk2009txt2}. In recent Intel CPUs, the memory controller is integrated on
+the CPU die (\S~\ref{sec:cpu_die}, Figure~\ref{fig:cpu_die}), so the SINIT ACM
+can securely set up the memory controller to reject DMA transfers targeting TXT
+memory.
 
-XOM's design cannot guarantee DRAM freshness, so the software in its containers
-is vulnerable to physical replay attacks. Furthermore, XOM does not protect a
-container's memory access patterns, meaning that any piece of malicious
-software can perform cache timing attacks against the software in a container.
-Last, XOM containers are destroyed when they encounter hardware exceptions,
-such as including page faults, so XOM does not support paging.
+Early TXT implementations did not measure the SINIT ACM. Instead, the microcode
+implementing the TXT launch instruction verified that the code module contained
+an RSA signature by a hard-coded Intel key. SINIT ACM signatures cannot be
+revoked if vulnerabilities are found, so TXT's software attestation had to be
+revised when SINIT ACM exploits \cite{wojtczuk2011txt} surfaced. Currently, the
+SINIT ACM's cryptographic hash is included in the attestation measurement.
 
-XOM pre-dates the attestation scheme described above, and relies on a modified
-software distribution scheme instead. Each container's contents is encrypted
-with a symmetric key, which also serves as the container's identity. The
-symmetric key, in turn, is encrypted with the public key of each CPU that is
-trusted to run the container. A container's author can be assured that the
-container is running on trusted software by embedding a secret into the
-encrypted container data, and using it to authenticate the container. While
-conceptually simpler than software attestation, this scheme does not allow the
-container author to vet the container's software environment.
+Last, the warm reset performed by the SINIT ACM does not include the software
+running in System Management Mode (SMM, \S~\ref{sec:rings}). SMM was designed
+solely for the use of firmware, and is stored in a protected memory area
+(SMRAM) which should not be accessible to non-SMM software. However, the SMM
+handler was compromised on multiple occasions \cite{duflot2006smm,
+rutkowska2008remap, wojtczuk2009smm, wecherowski2009smm, embleton2010smm}, and
+an attacker that obtains SMM execution can access the memory used by TXT's
+container.
 
 
 \subsection{The Aegis Secure Processor}
@@ -213,14 +255,10 @@ The Aegis memory controller encrypts the cache lines in one memory range, and
 HMACs the cache lines in one other memory range. The two memory ranges can
 overlap, and are configurable by the security kernel. Thanks to the two ranges,
 the memory controller can avoid the latency overhead of cryptographic
-operations for the DRAM outside containers.
-
-Aegis uses a Merkle tree construction \cite{gassend2003merkle} to guarantee
-DRAM freshness, so it is not vulnerable to physical replay attacks. The latency
-overhead of the Merkle tree is greatly reduced by augmenting the L2 cache with
-the tree nodes for the cache lines. Unlike XOM, Aegis does not tag its cache
-lines with container identifiers, as the page tables and the configurable
-memory ranges are sufficient for software and hardware isolation.
+operations for the DRAM outside containers. Aegis is not vulnerable to physical
+replay attacks, as it uses a Merkle tree construction \cite{gassend2003merkle}
+to guarantee DRAM freshness. The latency overhead of the Merkle tree is greatly
+reduced by augmenting the L2 cache with the tree nodes for the cache lines.
 
 Aegis' security kernel allows the OS to page out container memory, but verifies
 the correctness of the paging operations. The security kernel uses the same
@@ -231,4 +269,51 @@ memory access patterns, at page granularity. Aegis containers are also
 vulnerable to cache timing attacks.
 
 
+\subsection{The Bastion Architecture}
 
+The Bastion architecture \cite{champagne2010bastion} introduced the use of a
+trusted hypervisor to provide secure containers to applications running inside
+umodified, untrusted operating systems.
+
+Bastion's cache lines are not tagged with container identifiers. Instead, only
+TLB entries are tagged. The hypervisor is invoked on every TLB miss, and sets
+the container identifier for the newly created TLB entry. Similarly to XOM and
+Aegis, the secure processor checks the TLB tag against the current container's
+identifier on every memory access.
+
+Bastion offers the same protection against physical DRAM attacks as Aegis,
+without the restriction that a container's data must be stored inside a
+continuous DRAM range. This is accomplished by extending cache lines and TLB
+entries with flags that enable memory encryption and HMACing. The hypervisor's
+TLB miss handler sets the flags on TLB entries, and the flags are propagated to
+cache lines on memory writes.
+
+Bastion does not trust the platform's firmware, and computes the cryptographic
+hash of the hypervisor after the firmware finishes playing its part in the
+booting process. The hypervisor's hash is included in the measurement reported
+by software attestation.
+
+
+\subsection{Intel's Software Guard Extensions (SGX)}
+
+Intel's Software Guard Extensions (SGX) proposal draws inspiration from XOM and
+Aegis, and does not suffer from the issues mentioned above, as SGX doesn't
+trust any piece of software outside the enclave. SGX tackles many of the issues
+brought by multi-core processors with a shared, coherent last-level cache. It
+introduces a method for verifying that the OS performs a TLB shoot-down, and
+concurrent operations have well-defined semantics. Last, SGX implements all its
+access controls when a virtual address is translated due to a TLB miss, so it
+does not require any changes on the critical path in any execution unit.
+
+SGX also introduces a clever scheme for having an authenticated tree whose
+structure is managed by the untrusted operating system. Unfortunately, SGX's
+memory management scheme exposes page-level memory access patterns to the
+operating system. Furthermore, SGX enclaves are vulnerable to cache timing
+attacks that can be performed by unprivileged software running on a different
+core. This places a huge burden on enclave software developers, as they have to
+either rule out cache timing attacks from their threat model, or limit their
+code to data-independent memory accesses. For example, SGX relies on a signing
+enclave to implement the EPID \cite{brickell2009epid} signature scheme used by
+the attestation process. If the code in the signing enclave is susceptible to
+cache timing attacks, an attacker could potentially extract the processor's
+EPID signing key and completely compromise SGX.
