@@ -296,14 +296,15 @@ by software attestation.
 
 \subsection{Intel's Software Guard Extensions (SGX)}
 
-Intel's Software Guard Extensions (SGX) proposal draws inspiration from XOM and
-Aegis, and does not suffer from the issues mentioned above, as SGX doesn't
-trust any piece of software outside the enclave. SGX tackles many of the issues
-brought by multi-core processors with a shared, coherent last-level cache. It
-introduces a method for verifying that the OS performs a TLB shoot-down, and
-concurrent operations have well-defined semantics. Last, SGX implements all its
-access controls when a virtual address is translated due to a TLB miss, so it
-does not require any changes on the critical path in any execution unit.
+Intel's Software Guard Extensions (SGX) \cite{mckeen2013sgx, anati2013sgx,
+hoekstra2013sgx} proposal draws inspiration from XOM and Aegis, and does not
+suffer from the issues mentioned above, as SGX doesn't trust any piece of
+software outside the enclave. SGX tackles many of the issues brought by
+multi-core processors with a shared, coherent last-level cache. It introduces a
+method for verifying that the OS performs a TLB shoot-down, and concurrent
+operations have well-defined semantics. Last, SGX implements all its access
+controls when a virtual address is translated due to a TLB miss, so it does not
+require any changes on the critical path in any execution unit.
 
 SGX also introduces a clever scheme for having an authenticated tree whose
 structure is managed by the untrusted operating system. Unfortunately, SGX's
@@ -317,3 +318,25 @@ enclave to implement the EPID \cite{brickell2009epid} signature scheme used by
 the attestation process. If the code in the signing enclave is susceptible to
 cache timing attacks, an attacker could potentially extract the processor's
 EPID signing key and completely compromise SGX.
+
+
+\subsection{Sanctum}
+
+Sanctum \cite{costan2015sanctum}
+
+
+\subsection{Ascend and Phantom}
+
+The Ascend \cite{fletcher2012ascend} and Phantom \cite{maas2013phantom} secure
+processors introduced practical implementations of Oblivious RAM
+\cite{goldreich1987oram} techniques in the CPU's memory controller. These
+processors are resilient to attackers who can probe the DRAM address bus and
+attempt to learn a container's private information from its DRAM memory access
+pattern.
+
+Implementing an ORAM scheme in a memory controller is largely orthogonal to the
+other secure architectures described above. It follows, for example, that
+Ascend's ORAM implementation can be combined with Aegis' memory encryption and
+authentication, and with Sanctum's hardware extensions and security monitor,
+yielding a secure processor that can withstand both software attacks and
+physical DRAM attacks.
