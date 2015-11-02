@@ -1,0 +1,15 @@
+\subsection{Ascend and Phantom}
+
+The Ascend \cite{fletcher2012ascend} and Phantom \cite{maas2013phantom} secure
+processors introduced practical implementations of Oblivious RAM
+\cite{goldreich1987oram} techniques in the CPU's memory controller. These
+processors are resilient to attackers who can probe the DRAM address bus and
+attempt to learn a container's private information from its DRAM memory access
+pattern.
+
+Implementing an ORAM scheme in a memory controller is largely orthogonal to the
+other secure architectures described above. It follows, for example, that
+Ascend's ORAM implementation can be combined with Aegis' memory encryption and
+authentication, and with Sanctum's hardware extensions and security monitor,
+yielding a secure processor that can withstand both software attacks and
+physical DRAM attacks.

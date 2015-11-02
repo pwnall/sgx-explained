@@ -1,0 +1,45 @@
+\subsection{The Bastion Architecture}
+
+The Bastion architecture \cite{champagne2010bastion} introduced the use of a
+trusted hypervisor to provide secure containers to applications running inside
+umodified, untrusted operating systems. Bastion's hypervisor ensures that the
+operating system does not interfere with the secure containers. We only
+describe Bastion's virtualization extensions to architectures that use nested
+page tables, like Intel's VMX \cite{uhlig2005vmx}.
+
+The hypervisor enforces the containers' desired memory mappings in the OS page
+tables, as follows. Each Bastion container has a Security Segment that lists
+the the virtual addresses and permissions of all the container's pages, and the
+hypervisor maintains a Module State Table that stores an inverted page map,
+associating each physical memory page to its container and virtual address. The
+processor's hardware page walker is modified to invoke the hypervisor on every
+TLB miss, before updating the TLB with the address translation result. The
+hypervisor checks that the virtual address used by the translation matches the
+expected virtual address associated with the physical address in the Module
+State Table.
+
+Bastion's cache lines are not tagged with container identifiers. Instead, only
+TLB entries are tagged. The hypervisor's TLB miss handler sets the container
+identifier for each TLB entry as it is created. Similarly to XOM and Aegis, the
+secure processor checks the TLB tag against the current container's identifier
+on every memory access.
+
+Bastion offers the same protection against physical DRAM attacks as Aegis,
+without the restriction that a container's data must be stored inside a
+continuous DRAM range. This is accomplished by extending cache lines and TLB
+entries with flags that enable memory encryption and HMACing. The hypervisor's
+TLB miss handler sets the flags on TLB entries, and the flags are propagated to
+cache lines on memory writes.
+
+The Bastion hypervisor allows the untrusted operating system to evict secure
+container pages. The evicted pages are encrypted, HMACed, and covered by a
+Merkle tree maintained by the hypervisor. Thus, the hypervisor ensures the
+privacy, authenticity, and freshness of the swapped pages. However, the ability
+to freely evict container pages allows a malicious OS to learn a container's
+memory accesses with page granularity. Furthermore, Bastion's threat model
+excludes cache timing attacks.
+
+Bastion does not trust the platform's firmware, and computes the cryptographic
+hash of the hypervisor after the firmware finishes playing its part in the
+booting process. The hypervisor's hash is included in the measurement reported
+by software attestation.

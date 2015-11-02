@@ -142,19 +142,19 @@ is a prerequisite to being able to trust any computing performed by the CPU.
 The challenge in providing trusting computing guarantees to software running on
 commodity computers is that after 30 years of organic evolution, today's x86
 CPUs expose many architectural features and privilege levels that interact in
-complex ways. \S \ref{sec:background} reviews these features and mentions
-attacks that have compromised the software running at all privilege levels,
-forcing us to conclude that we cannot rely on any software running on the
-infrastructure.
+complex ways. \S~\ref{sec:architecture_background} reviews these features and
+mentions attacks that have compromised the software running at all privilege
+levels, forcing us to conclude that we cannot rely on any software running on
+the infrastructure.
 
 The opportunity that our model brings is being able to take advantage of the
 isolation mechanisms and the high level of integration in modern CPUs (see
 Figure \ref{fig:cpu_die}). For example, the memory controller that used to be
 relegated to a separate northbridge chip is now in the CPU, so it is part of
 the TCB, and we can rely on it to enforce the memory isolation needed to
-implement a protected execution environment, as explained in \S \ref{sec:sgx}.
+implement a protected execution environment, as explained in \S~\ref{sec:sgx}.
 Today's CPUs also have on-die L2 and L3 cache memory, so we can rely on some
-privacy and integrity for cache accesses, as detailed in \S \ref{sec:caching}.
+privacy and integrity for cache accesses, as detailed in \S~\ref{sec:caching}.
 
 \begin{figure}[hbtp]
   \centering

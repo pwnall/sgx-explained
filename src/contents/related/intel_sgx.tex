@@ -1,0 +1,51 @@
+\subsection{Intel SGX in Context}
+
+Intel's Software Guard Extensions (SGX) \cite{mckeen2013sgx, anati2013sgx,
+hoekstra2013sgx} implements secure containers for applications without making
+any modifications to the processor's critical execution path. SGX does not
+trust any layer in the computer's software stack (firmware, hypervisor, OS).
+Instead, SGX's TCB consists of the CPU's microcode and a few privileged
+containers. SGX introduces an approach to solving some of the issues brought by
+multi-core processors with a shared, coherent last-level cache.
+
+SGX does not extend caches or TLBs with container identity bits, and does not
+require any security checks during normal memory accesses. Instead, SGX always
+ensures that a core's TLBs only contain entries for the container that it is
+executing. Like Bastion, SGX implements a TLB miss handler that relies on an
+inverted page map (the EPCM) to reject address translations for memory that
+does not belong to the current container. This approach requires flushing a
+core's TLBs on every container switch.
+
+Like Bastion, SGX allows the untrusted operating system to evict secure
+container pages, in a controlled fashion. After the OS initiates a container
+page eviction, it must prove to the SGX implementation that it also switched
+the container out of all cores that were executing its code, effectively
+performing a very coarse-grained TLB shootdown.
+
+SGX's microcode ensures the privacy, authenticity, and freshness of each
+container's evicted pages, like Bastion's hypervisor. However, SGX relies on a
+version-based Merkle tree, inspired from Aegis, and adds an innovative twist
+that allows the operating system to dynamically shape the Merkle tree. SGX also
+shares Bastion's vulnerability to memory access pattern leaks, namely a
+malicious OS can directly learn a container's memory accesses at page
+granularity, and any piece of software can perform cache timing attacks.
+
+SGX's software attestation is implemented using Intel's Enhanced Privacy ID
+(EPID) group signature scheme \cite{brickell2009epid}, which is too complex for
+a microcode implementation. Therefore, SGX relies on an assortment of
+privileged containers that receive direct access to the SGX processor's
+hardware keys. The privileged containers are signed using an Intel private key
+whose corresponding public key is hard-coded into the SGX microcode, similarly
+to TXT's SINIT ACM.
+
+As SGX does not protect against cache timing attacks, the privileged enclave's
+authors cannot use data-independent memory accesses. For example, cache attacks
+on the Quoting Enclave, which computes attestation signatures, would provide
+an attack with a processor's EPID signing key and completely compromise SGX.
+
+Intel's documentation states that SGX guarantees DRAM privacy, authentication,
+and freshness by virtue of a Memory Encryption Engine (MEE). The MEE is
+informally described in an ISCA 2015 tutorial \cite{intel2015iscasgx}, and
+appears to lack a formal specification. In the absence of further information,
+we assume that SGX provides the same protection against physical DRAM attacks
+as Aegis and Bastion.

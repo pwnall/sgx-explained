@@ -1,0 +1,39 @@
+\subsection{Intel's Trusted Execution Technology (TXT)}
+
+Intel's Trusted Execution Technology (TXT) \cite{grawrock2009txt} uses the
+TPM's software attestation model and auxilliary tamper-resistant chip, but
+reduces the software inside the secure container to a virtual machine (guest
+operating system and application) hosted by the CPU's hardware virtualization
+features (VMX \cite{uhlig2005vmx}).
+
+TXT isolates the software inside the container from untrusted software by
+ensuring that the container has exclusive control over the entire computer
+while it is active. This is accomplished by a secure initialization
+authenticated code module (SINIT ACM) that effectively performs a warm system
+reset before starting the container's VM.
+
+TXT does not implement DRAM encryption or HMACs, and therefore is vulnerable to
+physical DRAM attacks, just like TPM-based designs. Furthermore, early TXT
+implementations were vulnerable to attacks where a malicious operating system
+would program a device, such as a network card, to perform DMA transfers
+to the DRAM region used by a TXT container \cite{wojtczuk2009txt,
+wojtczuk2009txt2}. In recent Intel CPUs, the memory controller is integrated on
+the CPU die, so the SINIT ACM
+can securely set up the memory controller to reject DMA transfers targeting TXT
+memory.
+
+Early TXT implementations did not measure the SINIT ACM. Instead, the microcode
+implementing the TXT launch instruction verified that the code module contained
+an RSA signature by a hard-coded Intel key. SINIT ACM signatures cannot be
+revoked if vulnerabilities are found, so TXT's software attestation had to be
+revised when SINIT ACM exploits \cite{wojtczuk2011txt} surfaced. Currently, the
+SINIT ACM's cryptographic hash is included in the attestation measurement.
+
+Last, the warm reset performed by the SINIT ACM does not include the software
+running in System Management Mode (SMM). SMM was designed
+solely for the use of firmware, and is stored in a protected memory area
+(SMRAM) which should not be accessible to non-SMM software. However, the SMM
+handler was compromised on multiple occasions \cite{duflot2006smm,
+rutkowska2008remap, wojtczuk2009smm, wecherowski2009smm, embleton2010smm}, and
+an attacker that obtains SMM execution can access the memory used by TXT's
+container.

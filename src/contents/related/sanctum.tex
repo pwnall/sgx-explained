@@ -1,0 +1,37 @@
+\subsection{Sanctum}
+
+Sanctum \cite{costan2015sanctum} introduced a straightforward software/hardware
+co-design that yields the same resilience against software attacks as SGX, and
+adds protection against memory access pattern leaks, such as page fault
+monitoring attacks and cache timing attacks.
+
+Sanctum uses a conceptually simple cache partitioning scheme, where a
+computer's DRAM is split into equally-sized continuous DRAM regions, and each
+DRAM region uses distinct sets in the shared last-level cache (LLC). Each DRAM
+region is allocated to exactly one container, so containers are isolated in
+both DRAM and in the LLC. Containers are isolated in the other caches by
+flushing on context switches.
+
+Like in XOM, Aegis and Bastion, the hypervisor, OS, and the application
+software outside containers are conceptually considered to belong to a separate
+container. Containers are protected from the untrusted outside software by the
+same measures that isolate containers from each other.
+
+Sanctum relies on a trusted security monitor, which is the first piece of
+firmware executed by the processor, and has the same security properties as
+Aegis' security kernel. The monitor is measured by bootstrap code in the
+processor's ROM, and its cryptographich hash is included in the software
+attestation measurement. The monitor verifies the operating system's resource
+allocation decisions. For example it ensures that no DRAM region is ever
+accessible to two different containers.
+
+Each Sanctum container manages its own page tables, mapping its DRAM regions,
+and handles its own page faults. It follows that an malicious OS cannot learn
+a container's page faults addresses. Sanctum's hardware modifications work in
+conjunction with the security monitor to make sure that a container's page
+tables only reference memory inside the container's DRAM regions.
+
+The Sanctum design focuses completely on software attacks, and does not offer
+protection from any physical attack. The authors expect Sanctum's hardware
+modifications to be combined with the physical attack protections in Aegis or
+Ascend.
