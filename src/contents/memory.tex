@@ -31,10 +31,10 @@ protecting it from access by other peripherals.
 \end{figure}
 
 The PRM range is configured using a base and a mask register with the same
-semantics as a memory type range (\S~\ref{sec:cacheability_config}), which
-implies that the PRM's size must be an integer power of two, and its start
-address must be aligned to the same power of two. These restrictions make it
-cheap to check if an address belongs to the PRM in hardware, as described in
+semantics as a variable memory type range (\S~\ref{sec:cacheability_config}),
+which implies that the PRM's size must be an integer power of two, and its
+start address must be aligned to the same power of two. These restrictions make
+it cheap to check if an address belongs to the PRM in hardware, as described in
 \S~\ref{sec:cacheability_config}.
 
 
@@ -169,11 +169,11 @@ is allocated, and cannot be changed until the page is freed.
 
 When an address translation (\S~\ref{sec:paging}) result is the physical
 address of an EPC page, the CPU ensures\footnote{A mismatch triggers a General
-Protection Fault.} that the virtual address given to the address translation
-process matches the expected virtual address recorded in the page's EPCM entry.
-This prevents the system software, which manages the page tables and EPT, from
-modifying an enclave's virtual address space in a manner that is inconsistent
-with the enclave author's expectations.
+Protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
+to the address translation process matches the expected virtual address
+recorded in the page's EPCM entry.  This prevents the system software, which
+manages the page tables and EPT, from modifying an enclave's virtual address
+space in a manner that is inconsistent with the enclave author's expectations.
 
 % SECINFO: SGX S 2.6.5, S 2.6.5.{1,2}, SGX2 S 2.11, S 2.11.{1,2}
 
@@ -273,18 +273,18 @@ its control structure directly or indirectly.
 % ECREATE: SGX2 S 5.3
 % EWB: SGX2 S 5.3
 
-The most important field in the SECS is the 64-bit enclave ID (EID), which is
-assigned by \texttt{ECREATE}. The EID identifies an enclave's pages in the
-EPCM, so it must be unique across all active enclaves. According to the
-ECREATE pseudo-code in the SGX manual, enclave IDs are allocated using an
-atomic counter. An enclave's EID is mostly hidden, as most SGX instructions use
-the address of the enclave's SECS page as the enclave's handler. However, the
-system software can learn an enclave's EID by evicting one of its EPC pages
-(\S~\ref{sec:sgx_ewb}).
+The most important field in the SECS is the 64-bit \textit{enclave ID} (EID),
+which is assigned by \texttt{ECREATE}. The EID identifies an enclave's pages in
+the EPCM, so it must be unique across all the computer's active enclaves.
+According to the ECREATE pseudo-code in the SDM, enclave IDs are allocated
+using an atomic counter. An enclave's EID is generally hidden, as most SGX
+instructions use the address of the enclave's SECS page as the enclave's
+handler. However, the system software can learn an enclave's EID by evicting
+one of its EPC pages (\S~\ref{sec:sgx_ewb}).
 
 The software-visible SECS layout specifies the range of virtual addresses that
-can be mapped to the enclave's EPC pages. Intel documentation calls this range
-ELRANGE, for ``enclave linear address range''. The range is specified using a
+can be mapped to the enclave's EPC pages. Intel documentation calls the range
+\textit{enclave linear address range} (ELRANGE). The range is specified using a
 base (the BASEADDR field) and a size (the SIZE) field. ELRANGE must meet the
 same constraints as a variable memory type range
 (\S~\ref{sec:cacheability_config}), namely the size must be a power of 2, and
@@ -310,7 +310,7 @@ is set if the enclave uses 64-bit code, and the XFRM sub-field contains the
 XCR0 register value expected by the enclave's code. XCR0 controls Intel
 architecture extensions such as SSE and AVX (see \S~\ref{sec:registers}).
 
-When a logical processor executes code inside an enclave, it uses the XCR0
+When a logical processor executes code inside an enclave, it sets XCR0 to the
 value specified by the enclave's SECS, so malicious system software cannot
 enable features that the enclave code is not prepared to handle. This lets
 Intel introduce extensions that change the architectural behavior of existing
@@ -319,7 +319,7 @@ worry about introducing security vulnerabilities in SGX enclaves written before
 MPX.
 
 The other fields in the software-visible SECS layout are used by the
-attestation process, which is explained in \S~\ref{sec:attestation}.
+software attestation process, which is explained in \S~\ref{sec:attestation}.
 
 
 \subsubsection{The Thread Control Structure (TCS)}
