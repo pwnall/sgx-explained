@@ -273,13 +273,27 @@ vulnerable to cache timing attacks.
 
 The Bastion architecture \cite{champagne2010bastion} introduced the use of a
 trusted hypervisor to provide secure containers to applications running inside
-umodified, untrusted operating systems.
+umodified, untrusted operating systems. Bastion's hypervisor ensures that the
+operating system does not interfere with the secure containers. We only
+describe Bastion's virtualization extensions to architectures that use nested
+page tables, like Intel's VMX \cite{uhlig2005vmx}.
+
+The hypervisor enforces the containers' desired memory mappings in the OS page
+tables, as follows. Each Bastion container has a Security Segment that lists
+the the virtual addresses and permissions of all the container's pages, and the
+hypervisor maintains a Module State Table that stores an inverted page map,
+associating each physical memory page to its container and virtual address. The
+processor's hardware page walker is modified to invoke the hypervisor on every
+TLB miss, before updating the TLB with the address translation result. The
+hypervisor checks that the virtual address used by the translation matches the
+expected virtual address associated with the physical address in the Module
+State Table.
 
 Bastion's cache lines are not tagged with container identifiers. Instead, only
-TLB entries are tagged. The hypervisor is invoked on every TLB miss, and sets
-the container identifier for the newly created TLB entry. Similarly to XOM and
-Aegis, the secure processor checks the TLB tag against the current container's
-identifier on every memory access.
+TLB entries are tagged. The hypervisor's TLB miss handler sets the container
+identifier for each TLB entry as it is created. Similarly to XOM and Aegis, the
+secure processor checks the TLB tag against the current container's identifier
+on every memory access.
 
 Bastion offers the same protection against physical DRAM attacks as Aegis,
 without the restriction that a container's data must be stored inside a
@@ -287,6 +301,14 @@ continuous DRAM range. This is accomplished by extending cache lines and TLB
 entries with flags that enable memory encryption and HMACing. The hypervisor's
 TLB miss handler sets the flags on TLB entries, and the flags are propagated to
 cache lines on memory writes.
+
+The Bastion hypervisor allows the untrusted operating system to evict secure
+container pages. The evicted pages are encrypted, HMACed, and covered by a
+Merkle tree maintained by the hypervisor. Thus, the hypervisor ensures the
+privacy, authenticity, and freshness of the swapped pages. However, the ability
+to freely evict container pages allows a malicious OS to learn a container's
+memory accesses with page granularity. Furthermore, Bastion's threat model
+excludes cache timing attacks.
 
 Bastion does not trust the platform's firmware, and computes the cryptographic
 hash of the hypervisor after the firmware finishes playing its part in the
@@ -297,27 +319,54 @@ by software attestation.
 \subsection{Intel's Software Guard Extensions (SGX)}
 
 Intel's Software Guard Extensions (SGX) \cite{mckeen2013sgx, anati2013sgx,
-hoekstra2013sgx} proposal draws inspiration from XOM and Aegis, and does not
-suffer from the issues mentioned above, as SGX doesn't trust any piece of
-software outside the enclave. SGX tackles many of the issues brought by
-multi-core processors with a shared, coherent last-level cache. It introduces a
-method for verifying that the OS performs a TLB shoot-down, and concurrent
-operations have well-defined semantics. Last, SGX implements all its access
-controls when a virtual address is translated due to a TLB miss, so it does not
-require any changes on the critical path in any execution unit.
+hoekstra2013sgx} implements secure containers for applications without making
+any modifications to the processor's critical execution path. SGX does not
+trust any layer in the computer's software stack (firmware, hypervisor, OS).
+Instead, SGX's TCB consists of the CPU's microcode and a few privileged
+containers. SGX introduces an approach to solving some of the issues brought by
+multi-core processors with a shared, coherent last-level cache.
 
-SGX also introduces a clever scheme for having an authenticated tree whose
-structure is managed by the untrusted operating system. Unfortunately, SGX's
-memory management scheme exposes page-level memory access patterns to the
-operating system. Furthermore, SGX enclaves are vulnerable to cache timing
-attacks that can be performed by unprivileged software running on a different
-core. This places a huge burden on enclave software developers, as they have to
-either rule out cache timing attacks from their threat model, or limit their
-code to data-independent memory accesses. For example, SGX relies on a signing
-enclave to implement the EPID \cite{brickell2009epid} signature scheme used by
-the attestation process. If the code in the signing enclave is susceptible to
-cache timing attacks, an attacker could potentially extract the processor's
-EPID signing key and completely compromise SGX.
+SGX does not extend caches or TLBs with container identity bits, and does not
+require any security checks during normal memory accesses. Instead, SGX always
+ensures that a core's TLBs only contain entries for the container that it is
+executing. Like Bastion, SGX implements a TLB miss handler that relies on an
+inverted page map (the EPCM) to reject address translations for memory that
+does not belong to the current container. This approach requires flushing a
+core's TLBs on every container switch.
+
+Like Bastion, SGX allows the untrusted operating system to evict secure
+container pages, in a controlled fashion. After the OS initiates a container
+page eviction, it must prove to the SGX implementation that it also switched
+the container out of all cores that were executing its code, effectively
+performing a very coarse-grained TLB shootdown.
+
+SGX's microcode ensures the privacy, authenticity, and freshness of each
+container's evicted pages, like Bastion's hypervisor. However, SGX relies on a
+version-based Merkle tree, inspired from Aegis, and adds an innovative twist
+that allows the operating system to dynamically shape the Merkle tree. SGX also
+shares Bastion's vulnerability to memory access pattern leaks, namely a
+malicious OS can directly learn a container's memory accesses at page
+granularity, and any piece of software can perform cache timing attacks.
+
+SGX's software attestation is implemented using Intel's Enhanced Privacy ID
+(EPID) group signature scheme \cite{brickell2009epid}, which is too complex for
+a microcode implementation. Therefore, SGX relies on an assortment of
+privileged containers that receive direct access to the SGX processor's
+hardware keys. The privileged containers are signed using an Intel private key
+whose corresponding public key is hard-coded into the SGX microcode, similarly
+to TXT's SINIT ACM.
+
+As SGX does not protect against cache timing attacks, the privileged enclave's
+authors cannot use data-independent memory accesses. For example, cache attacks
+on the Quoting Enclave, which computes attestation signatures, would provide
+an attack with a processor's EPID signing key and completely compromise SGX.
+
+Intel's documentation states that SGX guarantees DRAM privacy, authentication,
+and freshness by virtue of a Memory Encryption Engine (MEE). The MEE is
+informally described in an ISCA 2015 tutorial \cite{intel2015iscasgx}, and
+appears to lack a formal specification. In the absence of further information,
+we assume that SGX provides the same protection against physical DRAM attacks
+as Aegis and Bastion.
 
 
 \subsection{Sanctum}

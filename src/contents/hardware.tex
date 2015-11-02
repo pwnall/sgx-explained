@@ -131,13 +131,13 @@ increases the cost of obtaining a chip's fuse key material, as an attacker must
 compromise both provisioning stages in order to be able to decrypt the fuse key
 material.
 
-The SGX manuals~\cite{intel2013sgxmanual, intel2014sgx2manual} mention a
-16-byte CPU security version number (SVN), which contains the version numbers
-of various TCB components, and is a source in the key derivation process. The
-patents further specify that the SVN register is made up of (most likely 8-bit)
-sections that contain the SVNs of each layer in the SGX initialization process,
-and that each initialization step sets the corresponding section to its SVN,
-and then locks it for the duration of the power-up cycle.
+The SDN~\cite{intel2015sdm} mentions a 16-byte CPU security version number
+(SVN), which contains the version numbers of various TCB components, and is a
+source in the key derivation process. The patents further specify that the SVN
+register is made up of (most likely 8-bit) sections that contain the SVNs of
+each layer in the SGX initialization process, and that each initialization step
+sets the corresponding section to its SVN, and then locks it for the duration
+of the power-up cycle.
 
 Intel's patents disclose that the key derivation process uses 128-bit AES in
 ECB mode as a pseudo-random function (PRF). When an SVN is an input to a key

@@ -3,9 +3,9 @@
 
 This section summarizes the aspects of the SGX documentation that are relevant
 to our system. The interested but time-constrained reader is advised to read
-\cite{mckeen2013innovative}, \cite{anati2013sgx}, and Chapters 1 (Introduction
-to SGX), 3 (Enclave Operation), 4 (Enclave Exiting Events) and 6 (SGX
-Interactions with IA32 and Intel 64 Architecture) of \cite{intel2013sgxmanual}
+\cite{mckeen2013innovative}, \cite{anati2013sgx}, and Chapters 37 (Introduction
+to SGX), 39 (Enclave Operation), 40 (Enclave Exiting Events) and 42 (SGX
+Interactions with IA32 and Intel 64 Architecture) of \cite{intel2015sdm}
 for a deeper understanding of SGX.
 
 
@@ -68,7 +68,7 @@ the virtual address associated with it. This mechanism ensures that the OS
 kernel and hypervisor maintain a consistent mapping of virtual addresses to
 EPC pages. The CPU encrypts and HMACs pages evicted with \texttt{EWB},
 providing privacy and integrity guarantees, including protection against replay
-attacks. The details are described in \cite{intel2013sgxmanual}.
+attacks. The details are described in \cite{intel2015sdm}.
 
 Page faults in enclave code are handled using the AEX process. The CR2
 register, which normally holds the virtual address that causes the fault, has
@@ -82,7 +82,7 @@ sure that only one page is present at any given time.
 \subsection{SGX Information Leaks}
 \label{sec:sgx_leaks}
 
-Software Guard Extensions, as documented in \cite{intel2013sgxmanual}, does not
+Software Guard Extensions, as documented in \cite{intel2015sdm}, does not
 provide full privacy guarantees to the code executing inside an enclave. We
 present methods that an attacker can use to extract information from an
 enclave.
@@ -183,7 +183,7 @@ a continuous memory area, and can be configured as write-back (WB) or
 uncacheable (UC) memory. If the PRM is uncacheable, the CPU will generate a
 memory transaction for every memory access. The granularity of the memory
 transactions depends on the encryption engine used for the EPC, which is not
-documented in \cite{intel2013sgxmanual}. If 128-bit AES is used, memory tapping
+documented in \cite{intel2015sdm}. If 128-bit AES is used, memory tapping
 would yield addresses at 16-byte granularity, which means two 64-bit words.
 
 At the same time, configuring the PRM as uncacheable memory removes the cache
