@@ -7,12 +7,12 @@ describes the processes used to set up an enclave and perform computation
 inside it.
 
 % TODO: find a place for the rest of this section
-% Access Control Requirements: SGX/SGX2 S 2.3
+% Access Control Requirements: SDM S 38.3
 
 Enclave code runs at ring 3 (\S~\ref{sec:rings}), just like application code,
 so that it cannot interfere with the system software that manages resources.
 
-% Interactions with VMX: SGX/SGX2 S 6.5, 6.5.{1,2,3,4,5}
+% Interactions with VMX: SDM S 42.5, S 42.5.{1,2,3,4,5}
 
 On most computers, the system software that manages SGX resources is an
 operating system kernel. When VMX is in use, the hypervisor is responsible for
@@ -27,7 +27,7 @@ specifically the allocation of EPC pages. Therefore, the instructions that
 transition between different lifecycle states can only be executed by the
 system software. Enclaves go through the following phases.
 
-% ECREATE, EADD, EREMOVE: SGX/SGX2 S 5.3
+% ECREATE, EADD, EREMOVE: SDM S 41.3
 
 \textbf{Creation.} An enclave is born when the system software issues the
 ECREATE instruction to create a SECS page (\S~\ref{sec:secs}). Most
@@ -75,8 +75,8 @@ the enclave's EPC pages.
 \subsection{The Enclave Mode}
 \label{sec:enclave_mode}
 
-% Internal CREGs: SGX/SGX2 S 5.1.4
-% Access Control Requirements: SGX/SGX2 S 2.3
+% Internal CREGs: SDM S 41.1.4
+% Access Control Requirements: SDM S 38.3
 
 When executing the code inside an enclave, a logical processor is said to be
 \textit{in enclave mode}. When a processor is outside enclave mode, software
@@ -109,9 +109,11 @@ infrastructure from buggy or malicious software.
 \subsection{Evicting EPC Pages}
 \label{sec:sgx_ewb}
 
-% Eviction of Enclave Pages: SGX S 3.5.3
+% Eviction of Enclave Pages: SDM S 39.5.3
+% Eviction of an SECS Page: SDM S 39.5.5
+% Eviction of a Version Array Page: SDM S 39.5.6
 
-% EPA: SGX S 5.3 EPA
+% EPA: SDM S 41.3
 
 \begin{figure}[hbt!]
   \centering
@@ -125,5 +127,6 @@ infrastructure from buggy or malicious software.
   \label{fig:sgx_ewb}
 \end{figure}
 
-% Loading an Enclave Page: SGX S 3.5.4
+% Loading an Enclave Page: SDM S 39.5.4
+
 

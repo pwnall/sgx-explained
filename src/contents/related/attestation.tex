@@ -42,9 +42,9 @@ of trust shown in Figure~\ref{fig:generic_attestation_chain}.
   \caption{
     The chain of trust in software attestation. The root of trust is a
     manufacturer key, which produces an endorsement certificate for the secure
-    processor's attestation key. The processor signs the attestation
-    certificate, which contains a cryptographic hash of the container, and a
-    message produced by the software inside the container.
+    processor's attestation key. The processor uses the attestation key to
+    produce the attestation signature, which contains a cryptographic hash of
+    the container and a message produced by the software inside the container.
   }
   \label{fig:generic_attestation_chain}
 \end{figure}

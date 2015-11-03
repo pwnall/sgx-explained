@@ -24,12 +24,12 @@ certificate, and
 \subsection{Enclave Measurement}
 \label{sec:measurement}
 
-% SGX Enclave Control Structure (SECS): SGX S 2.6.1
+% SGX Enclave Control Structure (SECS): SDM S 38.7, S 38.7.1
 
 The enclave measurement process uses the MRENCLAVE field in the SECS of the
 enclave being measured. MRENCLAVE holds a 32-byte SHA-256 signature.
 
-% ECREATE: SGX S 2.6.3, SGX S 5.3 ECREATE
+% ECREATE: SDM S 41.3
 
 The ECREATE instruction initializes the MRENCLAVE field in the newly created
 SECS using the SHA-256 initialization algorithm, then extends the hash with
@@ -57,8 +57,8 @@ SECS.
   \label{fig:ecreate_mrenclave}
 \end{table}
 
-% EADD and EEXTEND Interaction: SGX S 3.1.1
-% EADD: SGX S 5.3 EADD
+% EADD and EEXTEND Interaction: SDM S 39.1.1
+% EADD: SDM S 41.3
 
 The EADD instruction extends the MRENCLAVE field in the enclave's SECS with the
 ``EADD'' string, followed by the page's virtual address (relative to the start
@@ -85,7 +85,7 @@ the R, W, X values for the page's EPCM entry.
   \label{fig:eadd_mrenclave}
 \end{table}
 
-% EEXTEND: SGX S 5.3 EEXTEND
+% EEXTEND: SDM S 41.3
 
 The EEXTEND instruction extends the MRENCLAVE field in the enclave's SECS with
 the ``EEXTEND'' string, followed by the virtual address of the 256-byte chunk
@@ -122,19 +122,19 @@ the ``EEXTEND'' string, followed by the virtual address of the 256-byte chunk
   \label{fig:eextend_mrenclave}
 \end{table}
 
-% EINIT: SGX S 5.3 EINIT
+% EINIT: SDM S 41.3
 
 The EINIT instruction
 
 \subsection{The Attestation Process}
 
 
-% EINIT Token Structure (EINITTOKEN): SGX S 2.6.8
+% EINIT Token Structure (EINITTOKEN): SDM S 38.14
 
 
 
-% Enclave Signature Structure (SIGSTRUCT): SGX S 2.6.7
+% Enclave Signature Structure (SIGSTRUCT): SDM S 38.13
 
 
-% Internal CREGs: SGX S 5.1.4
+% Internal CREGs: SDM S 41.1.4
 
