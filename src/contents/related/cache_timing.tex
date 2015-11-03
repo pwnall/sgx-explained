@@ -1,0 +1,30 @@
+\subsection{Cache Timing Attacks}
+\label{sec:cache_timing}
+
+% TODO: Figure out how to mention MSR's attacks that collect page fault
+%       addresses.
+
+Cache timing attacks~\cite{banescu2011cache} are a powerful class of software
+attacks that can be mounted entirely by application
+(ring 3, \S~\ref{sec:rings}) code. The attacker software measures the latency
+of accesses to its own memory in order to determine whether the accesses caused
+misses in a cache that is shared with a victim program. The memory accesses are
+carefully chosen to reveal the memory access pattern of the victim program.
+Cache timing attacks do not access the victim's memory directly, so they are
+\emph{not} prevented by the address translation-based protections
+(\S~\ref{sec:paging}) implemented in today's kernels and hypervisors.
+
+Cache timing attacks are known to retrieve cryptographic keys used by
+AES~\cite{bonneau2006aes}, RSA~\cite{brumley2005rsa},
+Diffie-Hellman~\cite{kocher1996timing}, and elliptic-curve
+cryptography~\cite{brumley2011ecc}.
+Early attacks required access to the victim's CPU core, but more sophisticated
+recent attacks~\cite{yarom2013llctiming, liu2015llctiming} are able to use the
+last-level cache (LLC), which is shared by all the cores on a CPU. Recently,
+cache-timing attacks were demonstrated to be mountable via JavaScript code in a
+page visited by a Web browser~\cite{oren2015jstiming}.
+
+Given this pattern of vulnerabilities, ignoring cache timing attacks is
+dangerously similar to ignoring the string of demonstrated attacks which led to
+the deprecation of SHA-1~\cite{nist2014sha1policy, google2014sha1deprecation,
+microsoft2014sha1deprecation}.
