@@ -5,6 +5,12 @@ The rest of this section describes the security properties of
 enclaves, discussing the trade-offs made while trying to balance security with
 backwards compatibility.
 
+% Interactions with Paging: SDM S 42.4
+% The Intel SGX access control itself is implemented as an extension to the
+% three paging modes of Intel Architecture.
+
+% Page-Based Access Control: SDM S 38.5
+
 % ECREATE forces R, W, X to 0 in the page's EPCM. EADD also forces R/W/X to 0
 % if the page type in SECINFO is PT_TCS (the only special type it can create).
 %

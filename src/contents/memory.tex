@@ -9,6 +9,7 @@ This section provides an overview of the data structures used by an enclave.
 \subsection{Enclaves in DRAM}
 \label{sec:prm}
 
+% Intel SGX Resource Enumeration Leaves: SDM S 37.7.2
 % EPC and Management of EPC Pages: SDM S 39.5
 % Interactions with DMA: SDM S 42.10
 % Interactions with Memory Configuration: SDM S 42.11
@@ -41,7 +42,7 @@ it cheap to check if an address belongs to the PRM in hardware, as described in
 \subsubsection{The Enclave Page Cache (EPC)}
 \label{sec:epc}
 
-% Enclave Page Cache: SDM S 37.5, S 37.5.1
+% Enclave Page Cache: SDM S 37.5
 % EPC and Management of EPC Pages: SDM S 39.5, S 39.5.1
 
 The contents of enclaves and the associated data structures are stored in the
@@ -125,7 +126,7 @@ information via memory mapping attacks.
 \subsubsection{The Enclave Page Cache Map (EPCM)}
 \label{sec:epcm}
 
-% Enclave Page Cache Map (EPCM): SDM S 38.19
+% Enclave Page Cache Map (EPCM): SDM S 37.5.1, SDM S 38.19
 % SECINFO.FLAGS: SDM S 38.11.1
 % PAGE_TYPE Field Definition: SDM S 38.11.2
 
@@ -170,8 +171,8 @@ to access the page. The expected virtual address must be specified when a page
 is allocated, and cannot be changed until the page is freed.
 
 When an address translation (\S~\ref{sec:paging}) result is the physical
-address of an EPC page, the CPU ensures\footnote{A mismatch triggers a General
-Protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
+address of an EPC page, the CPU ensures\footnote{A mismatch triggers a general
+protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
 to the address translation process matches the expected virtual address
 recorded in the page's EPCM entry.  This prevents the system software, which
 manages the page tables and EPT, from modifying an enclave's virtual address
@@ -264,7 +265,7 @@ software-visible layout.
 % Data Structures and Enclave Operation: SDM S 37.4
 % SGX Enclave Control Structure (SECS): SDM S 38.7, S 38.7.1
 % Constructing an Enclave: SDM S 39.1
-% ECREATE: SDM S 41.3
+% ECREATE: SDM S 39.1.1, S 41.3
 % Implicit vs. Explicit accesses: SDM S 38.5.3
 % Implicit accesses: SDM S 38.5.3.2
 
@@ -274,7 +275,7 @@ Control Structure} (SECS). All instructions that operate on an enclave access
 its control structure directly or indirectly.
 
 % Internal CREGs: SDM S 41.1.4
-% ECREATE: SDM S 41.3
+% ECREATE: SDM S 39.1.1, S 41.3
 % EWB: SDM S 41.3
 
 The most important field in the SECS is the 64-bit \textit{enclave ID} (EID),
@@ -311,9 +312,10 @@ revisions.
 
 The software-visible SECS has an ATTRIBUTE field that specifies the Intel
 achitecture features used by the enclave code. For example, the MODE64BIT flag
-is set if the enclave uses 64-bit code, and the XFRM sub-field contains the
-XCR0 register value expected by the enclave's code. XCR0 controls Intel
-architecture extensions such as SSE and AVX (see \S~\ref{sec:registers}).
+is set if the enclave targets the 64-bit Intel architecture, and the XFRM
+sub-field contains the XCR0 register value expected by the enclave's code. XCR0
+controls Intel architecture extensions such as SSE and AVX (see
+\S~\ref{sec:registers}).
 
 When a logical processor executes code inside an enclave, it sets XCR0 to the
 value specified by the enclave's SECS, so malicious system software cannot
@@ -420,4 +422,12 @@ EPC page simultaneously accessible by two different enclaves, which would
 compromise the SGX security guarantees. Therefore, the SGX instructions used
 for EPC management ensure that the system software performs TLB shootdowns for
 the entries that represent EPC pages.
+
+
+% PRMRR documented in HASP papers and both SGX manuals, completely removed from
+% SDM. It still exists in Coreboot. Couldn't find other Skywell code.
+The SGX manual states that the EPC (the memory used to store enclave data) can
+only be set up as UC or WB. While no further explanation is provided, we assume
+that the UC option was provided in order to attempt to mitigate against some
+cache-timing attacks.
 

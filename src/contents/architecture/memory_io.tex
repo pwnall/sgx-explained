@@ -113,8 +113,3 @@ has 8 entries that specify caching behaviors, and is stored in its entirety in
 a MSR. Each page table entry contains a 3-bit index that points to a PAT entry,
 so the system software that controls the page tables can specify caching
 behavior at a very fine granularity.
-
-The SGX manual states that the EPC (the memory used to store enclave data) can
-only be set up as UC or WB. While no further explanation is provided, we assume
-that the UC option was provided in order to attempt to mitigate against some
-cache-timing attacks.

@@ -27,6 +27,7 @@ specifically the allocation of EPC pages. Therefore, the instructions that
 transition between different lifecycle states can only be executed by the
 system software. Enclaves go through the following phases.
 
+% Enclave Entry and Exiting : SDM S 39.2, S 39.2.1
 % ECREATE, EADD, EREMOVE: SDM S 41.3
 
 \textbf{Creation.} An enclave is born when the system software issues the
@@ -41,8 +42,8 @@ enclave's initial state. This includes creating TCS pages (\S~\ref{sec:tcs})
 and regular pages that hold the SSA sequences referenced by TCS pages, as well
 as the enclave's code and data. EADD requires a reference to the SECS of the
 enclave that will own the newly allocated EPC page, and
-refuses\footnote{results in a General Protection fault (\#GP)} to operate if
-the SECS is in the initialized state.
+refuses\footnote{issues a general protection fault (\#GP, \S~\ref{sec:faults})}
+to operate if the SECS is in the initialized state.
 
 \textbf{Launch.} After building up the enclave's initial state, the system
 software follows a largely undocumented process that ends with the execution of
