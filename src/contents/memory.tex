@@ -10,9 +10,7 @@ This section provides an overview of the data structures used by an enclave.
 \label{sec:prm}
 
 % Intel SGX Resource Enumeration Leaves: SDM S 37.7.2
-% EPC and Management of EPC Pages: SDM S 39.5
-% Interactions with DMA: SDM S 42.10
-% Interactions with Memory Configuration: SDM S 42.11
+% Interactions with DMA: SDM S 42.10, SGX2 S 6.10
 
 The enclaves' code and data is stored in \textit{Processor Reserved Memory}
 (PRM), which cannot be directly accessed by other software, including system
@@ -31,12 +29,22 @@ protecting it from access by other peripherals.
   \label{fig:sgx_epc}
 \end{figure}
 
+% EPC and Management of EPC Pages: SGX2 S 3.5
+% Interactions with Memory Configuration: SGX2 S 6.11
+% Memory Type Considerations for PRMRR: SGX2 S 6.11.1
+% Interactions of PRMRR with Physical Memory Accesses: SGX2 S 6.11.3.1
+
 The PRM range is configured using a base and a mask register with the same
 semantics as a variable memory type range (\S~\ref{sec:cacheability_config}),
 which implies that the PRM's size must be an integer power of two, and its
 start address must be aligned to the same power of two. These restrictions make
 it cheap to check if an address belongs to the PRM in hardware, as described in
 \S~\ref{sec:cacheability_config}.
+
+The PRM and PRM range registers (PRMRR) are described in the SGX
+manuals~\cite{intel2013sgxmanual, intel2014sgx2manual} and in one of the SGX
+papers~\cite{mckeen2013sgx}. The SDM mostly mirrors the SGX manuals, but lacks
+most of the sections mentioning the PRM.
 
 
 \subsubsection{The Enclave Page Cache (EPC)}

@@ -11,9 +11,12 @@ reported by the software attestation signature.
 
 Aegis relies on a trusted security kernel to isolate each container from the
 other software on the computer by configuring the page tables used in address
-translation. As the security kernel is a part of the \textit{trusted code base}
-(TCB), its cryptographic hash is included in the software attestation
-measurement.
+translation. The security kernel is a subset of a typical OS kernel, and
+handles virtual memory management, processes, and hardware exceptions. As the
+security kernel is a part of the \textit{trusted code base} (TCB), its
+cryptographic hash is included in the software attestation measurement. The
+security kernel uses processor features to isolate itself from the untrusted
+part of the operatings system, such as device drivers.
 
 The Aegis memory controller encrypts the cache lines in one memory range, and
 HMACs the cache lines in one other memory range. The two memory ranges can
