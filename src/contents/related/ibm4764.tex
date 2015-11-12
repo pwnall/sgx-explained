@@ -1,2 +1,19 @@
-\subsection{The IBM 4764 Secure Coprocessor}
+\subsection{The IBM 4765 Secure Coprocessor}
 
+Secure co-processors~\cite{yee1994coprocessors} encapsulate an entire computer
+system, including a CPU, a cryptographic accelerator, caches, DRAM, and an I/O
+controller within a tamper-resistant environment. The enclosure actively
+monitors its own condition to detect tampering and wipes sensitive keys from a
+battery-backed RAM when an attack is detected. This approach has good security
+properties against physical attacks, but tamper-resistant enclosures are very
+expensive~\cite{anderson2001security}, relatively to the cost of a computer
+system.
+
+The IBM 4758~\cite{smith1999ibm4758}, and its most recent successor, the
+IBM 4765~\cite{nist2015ibm4765}, were certified to withstand physical attacks
+to FIPS 140-1 Level 4~\cite{smith1999validating}, and respectively FIPS 140-2
+Level 4~\cite{nist2011fipscert}. IBM's coprocessors implement software
+attestation, and rely on a trusted bootloader to measure application software
+that can be stored in the device's flash memory. The coprocessors avoid
+software attacks by supporting a single application at a time, and by assuming
+that all the privileged software supporting the application is trusted.
