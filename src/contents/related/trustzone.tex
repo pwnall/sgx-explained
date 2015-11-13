@@ -9,7 +9,21 @@ property cores (IP blocks) and ways in which they can be combined to achieve
 certain security properties, reflecting the fact that ARM is an IP core
 provider, not a chip manufacturer. Therefore, the mere presence of TrustZone IP
 blocks in a system is not sufficient to determine whether the system is secure
-under a specific threat model.
+under a specific threat model. Figure~\ref{fig:trustzone} illustrates a design
+for a smartphone \textit{System-on-Chip} (SoC) design that uses TrustZone IP
+blocks.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/trustzone.pdf}
+  \caption{
+    Smart SoC design based on TrustZone. The red IP blocks are TrustZone-aware.
+    The red connections ignore the TrustZone secure bit in the bus address.
+    Defining the system's security properties requires a complete understanding
+    of all the red elements in this figure.
+  }
+  \label{fig:trustzone}
+\end{figure}
 
 TrustZone extends the address lines in the AMBA AXI system
 bus~\cite{arm2004ambaxi} with one signal that indicates whether an access
@@ -80,20 +94,20 @@ The TrustZone components do not have any counter-measures for physical attacks.
 However, a system that follows the recommendations in the TrustZone
 documentation will not be exposed to physical attacks, under a threat model
 that trusts the processor chip package. The AXI bus is designed to connect
-components in a System-on-Chip (SoC) design, so it cannot be tapped by an
-attacker. The TrustZone documentation recommends having all the code and data
-in the secure world stored in on-chip SRAM, which is not subjected to physical
-attacks. However, this approach places significant limits on the secure
-container's functionality, because on-chip SRAM is many orders of magnitude
-more expensive than a DRAM chip of the same capacity.
+components in a SoC design, so it cannot be tapped by an attacker. The
+TrustZone documentation recommends having all the code and data in the secure
+world stored in on-chip SRAM, which is not subjected to physical attacks.
+However, this approach places significant limits on the secure container's
+functionality, because on-chip SRAM is many orders of magnitude more expensive
+than a DRAM chip of the same capacity.
 
 TrustZone's documentation does not describe any software attestation
 implementation. However, it does outline a method for implementing secure boot,
-which comes down to having the first-stage bootloader verify a signature in
-the second-stage bootloader against a public key whose cryptographic hash is
-burned into on-chip polysilicon fuses. A hardware measurement root can be built
-on top of the same components, by storing a per-chip attestation key in the
-polyfuses, and having the first-stage bootloader measure the second-stage
-bootloader and store its hash in an on-chip SRAM region allocated to the secure
-world. The polyfuses would be gated by a TZMA IP block that only makes them
-accessible to the secure world.
+which comes down to having the first-stage bootloader verify a signature in the
+second-stage bootloader against a public key whose cryptographic hash is burned
+into on-chip \textit{One-Time Programmable} (OTP) polysilicon fuses. A hardware
+measurement root can be built on top of the same components, by storing a
+per-chip attestation key in the polyfuses, and having the first-stage
+bootloader measure the second-stage bootloader and store its hash in an on-chip
+SRAM region allocated to the secure world. The polyfuses would be gated by a
+TZMA IP block that only makes them accessible to the secure world.
