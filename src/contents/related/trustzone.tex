@@ -31,7 +31,7 @@ belongs to the secure or normal (non-secure) world. ARM processor cores that
 include TrustZone's ``Security Extensions'' can switch between executing code
 in the normal world and code in the secure world. The address in each bus
 access executed by a core reflects the world that the core is currently
-executed.
+executing in.
 
 The reset circuitry in a TrustZone processor places it in secure mode, and
 points it to the first-stage bootloader stored in on-chip ROM. TrustZone's TCB
@@ -64,7 +64,7 @@ tables, its memory accesses cannot be directly observed by the untrusted OS's
 page fault handler.
 
 TrustZone-aware hardware modules, such as caches, are trusted to use the secure
-address bit in each bus access enforce the isolation between worlds. For
+address bit in each bus access to enforce the isolation between worlds. For
 example, TrustZone's caches store the secure bit in the address tag for each
 cache line, which effectively provides completely different views of the memory
 space to the software running in different worlds. This design assumes that

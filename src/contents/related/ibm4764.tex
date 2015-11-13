@@ -24,7 +24,7 @@ and the 4765 meets the rigors of FIPS 140-2 Level 4~\cite{nist2011fipscert}.
     placed inside an enclosure that can deter and detect physical attacks.
     The application and the system use separate processors. Sensitive memory
     can only be accessed by the system code, thanks to access control checks
-    implemented in the system bus' hardware. Dedicate hardware is used to clear
+    implemented in the system bus' hardware. Dedicated hardware is used to clear
     the platform's secrets and shut down the system when a physical attack is
     detected.
   }
@@ -32,7 +32,7 @@ and the 4765 meets the rigors of FIPS 140-2 Level 4~\cite{nist2011fipscert}.
 \end{figure}
 
 The 4765 relies heavily on physical isolation for its security properties. Its
-system software is protected from attacks by the application software by the
+system software is protected from attacks by the application software by
 virtue of using a dedicated service processor that is completely separate from
 the application processor. Special-purpose bus logic prevents the application
 processor from accessing privileged resources, such as the battery-backed

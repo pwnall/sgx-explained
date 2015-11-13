@@ -9,7 +9,7 @@ page tables, like Intel's VMX \cite{uhlig2005vmx}.
 
 The hypervisor enforces the containers' desired memory mappings in the OS page
 tables, as follows. Each Bastion container has a Security Segment that lists
-the the virtual addresses and permissions of all the container's pages, and the
+the virtual addresses and permissions of all the container's pages, and the
 hypervisor maintains a Module State Table that stores an inverted page map,
 associating each physical memory page to its container and virtual address. The
 processor's hardware page walker is modified to invoke the hypervisor on every
