@@ -143,49 +143,6 @@
   note={[Online; accessed 2-Nov-2015]}
 }
 
-% Background: SMM
-@article{duflot2006smm,
-  title={Using CPU system management mode to circumvent operating system
-         security functions},
-  author={Duflot, Lo{\"\i}c and Etiemble, Daniel and Grumelard, Olivier},
-  journal={CanSecWest/core06},
-  year={2006}
-}
-@article{rutkowska2008remap,
-  title={Preventing and detecting Xen hypervisor subversions},
-  author={Rutkowska, Joanna and Wojtczuk, Rafa{\l}},
-  journal={Blackhat Briefings USA},
-  year={2008}
-}
-@article{wojtczuk2009smm,
-  title={Attacking SMM memory via Intel CPU cache poisoning},
-  author={Wojtczuk, Rafal and Rutkowska, Joanna},
-  journal={Invisible Things Lab},
-  year={2009}
-}
-@misc{kallenberg2014smm,
-  title={Extreme Privilege Escalation On Windows 8/UEFI Systems},
-  author={Kallenberg, Corey and Kovah, Xeno and Butterworth, John and
-          Cornwell, Sam},
-  year={2014},
-  publisher={BlackHat}
-}
-@article{wecherowski2009smm,
-  title={A real SMM rootkit: Reversing and hooking BIOS SMI handlers},
-  author={Wecherowski, Filip},
-  journal={Phrack Magazine},
-  volume={13},
-  number={66},
-  year={2009}
-}
-@article{embleton2010smm,
-  title={SMM rootkit: a new breed of OS independent malware},
-  author={Embleton, Shawn and Sparks, Sherri and Zou, Cliff C},
-  journal={Security and Communication Networks},
-  year={2010},
-  publisher={Wiley Online Library}
-}
-
 % Background: Hypervisor.
 @inproceedings{zhang2008xen,
   title={Optimizing Xen VMM Based on Intel{\textregistered} Virtualization
@@ -206,69 +163,6 @@
   volume={38},
   number={5},
   pages={39-47},
-}
-@misc{cvedetails2014xen,
-  title={XEN: CVE security vulnerabilities, versions and detailed reports},
-  howpublished="\url{http://www.cvedetails.com/product/23463/XEN-XEN.html?vendor_id=6276}",
-  year={2014},
-  note={[Online; accessed 27-April-2015]}
-}
-@inproceedings{mccune2010trustvisor,
-  title={TrustVisor: Efficient TCB reduction and attestation},
-  author={McCune, Jonathan M and Li, Yanlin and Qu, Ning and Zhou, Zongwei and
-          Datta, Anupam and Gligor, Virgil and Perrig, Adrian},
-  booktitle={Security and Privacy (SP), 2010 IEEE Symposium on},
-  pages={143--158},
-  year={2010},
-  organization={IEEE}
-}
-@incollection{vasudevan2010requirements,
-  title={Requirements for an integrity-protected hypervisor on the x86 hardware
-         virtualized architecture},
-  author={Vasudevan, Amit and McCune, Jonathan M and Qu, Ning and Van Doorn,
-          Leendert and Perrig, Adrian},
-  booktitle={Trust and Trustworthy Computing},
-  pages={141--165},
-  year={2010},
-  publisher={Springer}
-}
-@article{wojtczuk2009txt,
-  title={Attacking intel trusted execution technology},
-  author={Wojtczuk, Rafal and Rutkowska, Joanna},
-  journal={Black Hat DC},
-  year={2009}
-}
-@article{wojtczuk2009txt2,
-  title={Another Way to Circumvent Intel{\textregistered} Trusted Execution
-         Technology},
-  author={Wojtczuk, Rafal and Rutkowska, Joanna and Tereshkin, Alexander},
-  journal={Invisible Things Lab},
-  year={2009}
-}
-@misc{wojtczuk2011txt,
-  title={Attacking Intel TXT via SINIT code execution hijacking},
-  author={Wojtczuk, Rafal and Rutkowska, Joanna},
-  journal={Invisible Things Lab},
-  year={2011}
-}
-
-% Background: Kernel.
-@inproceedings{chen2011linux,
-  title={Linux kernel vulnerabilities: State-of-the-art defenses and open
-         problems},
-  author={Chen, Haogang and Mao, Yandong and Wang, Xi and Zhou, Dong and
-          Zeldovich, Nickolai and Kaashoek, M Frans},
-  booktitle={Proceedings of the Second Asia-Pacific Workshop on Systems},
-  pages={5},
-  year={2011},
-  organization={ACM}
-}
-@misc{cvedetails2014linux,
-  title={Linux Kernel: CVE security vulnerabilities, versions and detailed
-         reports},
-  howpublished="\url{http://www.cvedetails.com/product/47/Linux-Linux-Kernel.html?vendor_id=33}",
-  year={2014},
-  note={[Online; accessed 27-April-2015]}
 }
 
 % Background: Address Translation.
@@ -801,6 +695,126 @@
   month={Aug},
   note={[Online; accessed 23-January-2015]}
 }
+
+% Security Background
+
+% Security Background: Privileged Software Attacks
+@article{duflot2006smm,
+  title={Using CPU system management mode to circumvent operating system
+         security functions},
+  author={Duflot, Lo{\"\i}c and Etiemble, Daniel and Grumelard, Olivier},
+  journal={CanSecWest/core06},
+  year={2006}
+}
+@article{rutkowska2008remap,
+  title={Preventing and detecting Xen hypervisor subversions},
+  author={Rutkowska, Joanna and Wojtczuk, Rafa{\l}},
+  journal={Blackhat Briefings USA},
+  year={2008}
+}
+@article{wojtczuk2009smm,
+  title={Attacking SMM memory via Intel CPU cache poisoning},
+  author={Wojtczuk, Rafal and Rutkowska, Joanna},
+  journal={Invisible Things Lab},
+  year={2009}
+}
+@misc{kallenberg2014smm,
+  title={Extreme Privilege Escalation On Windows 8/UEFI Systems},
+  author={Kallenberg, Corey and Kovah, Xeno and Butterworth, John and
+          Cornwell, Sam},
+  year={2014},
+  publisher={BlackHat}
+}
+@article{wecherowski2009smm,
+  title={A real SMM rootkit: Reversing and hooking BIOS SMI handlers},
+  author={Wecherowski, Filip},
+  journal={Phrack Magazine},
+  volume={13},
+  number={66},
+  year={2009}
+}
+@article{embleton2010smm,
+  title={SMM rootkit: a new breed of OS independent malware},
+  author={Embleton, Shawn and Sparks, Sherri and Zou, Cliff C},
+  journal={Security and Communication Networks},
+  year={2010},
+  publisher={Wiley Online Library}
+}
+@inproceedings{mccune2010trustvisor,
+  title={TrustVisor: Efficient TCB reduction and attestation},
+  author={McCune, Jonathan M and Li, Yanlin and Qu, Ning and Zhou, Zongwei and
+          Datta, Anupam and Gligor, Virgil and Perrig, Adrian},
+  booktitle={Security and Privacy (SP), 2010 IEEE Symposium on},
+  pages={143--158},
+  year={2010},
+  organization={IEEE}
+}
+@incollection{vasudevan2010requirements,
+  title={Requirements for an integrity-protected hypervisor on the x86 hardware
+         virtualized architecture},
+  author={Vasudevan, Amit and McCune, Jonathan M and Qu, Ning and Van Doorn,
+          Leendert and Perrig, Adrian},
+  booktitle={Trust and Trustworthy Computing},
+  pages={141--165},
+  year={2010},
+  publisher={Springer}
+}
+@article{wojtczuk2009txt,
+  title={Attacking intel trusted execution technology},
+  author={Wojtczuk, Rafal and Rutkowska, Joanna},
+  journal={Black Hat DC},
+  year={2009}
+}
+@article{wojtczuk2009txt2,
+  title={Another Way to Circumvent Intel{\textregistered} Trusted Execution
+         Technology},
+  author={Wojtczuk, Rafal and Rutkowska, Joanna and Tereshkin, Alexander},
+  journal={Invisible Things Lab},
+  year={2009}
+}
+@misc{wojtczuk2011txt,
+  title={Attacking Intel TXT via SINIT code execution hijacking},
+  author={Wojtczuk, Rafal and Rutkowska, Joanna},
+  journal={Invisible Things Lab},
+  year={2011}
+}
+@misc{xen2015loc,
+  title={Xen Project Software Overview},
+  howpublished="\url{http://wiki.xen.org/wiki/Xen_Project_Software_Overview}",
+  year={2015},
+  note={[Online; accessed 27-April-2015]}
+}
+@misc{cvedetails2014xen,
+  title={XEN: CVE security vulnerabilities, versions and detailed reports},
+  howpublished="\url{http://www.cvedetails.com/product/23463/XEN-XEN.html?vendor_id=6276}",
+  year={2014},
+  note={[Online; accessed 27-April-2015]}
+}
+@misc{anthony2014linuxsize,
+  title={Who actually develops Linux? The answer might surprise you},
+  author={Anthony, Sebastian},
+  howpublished="\url{http://www.extremetech.com/computing/175919-who-actually-develops-linux-the-answer-might-surprise-you}",
+  year={2014},
+  note={[Online; accessed 27-April-2015]}
+}
+@inproceedings{chen2011linux,
+  title={Linux kernel vulnerabilities: State-of-the-art defenses and open
+         problems},
+  author={Chen, Haogang and Mao, Yandong and Wang, Xi and Zhou, Dong and
+          Zeldovich, Nickolai and Kaashoek, M Frans},
+  booktitle={Proceedings of the Second Asia-Pacific Workshop on Systems},
+  pages={5},
+  year={2011},
+  organization={ACM}
+}
+@misc{cvedetails2014linux,
+  title={Linux Kernel: CVE security vulnerabilities, versions and detailed
+         reports},
+  howpublished="\url{http://www.cvedetails.com/product/47/Linux-Linux-Kernel.html?vendor_id=33}",
+  year={2014},
+  note={[Online; accessed 27-April-2015]}
+}
+
 
 % Related Work
 

@@ -62,6 +62,4 @@ System software can cause an interrupt on any logical processor by writing the
 target processor's APIC ID into the \textit{Interrupt Command Register} (ICR)
 of the LAPIC associated with the logical processor that the software is runing
 on. These interrupts, called \textit{Inter-Processor Interrupts} (IPI), are
-needed to implement TLB shoot-downs (\S~\ref{sec:tlbs}). The IPI mechanism can
-also be used to send SMI interrupts, which opens up an avenue for a malicious
-kernel or hypervisor to mount a SMM mode (\S~\ref{sec:rings}) attack.
+needed to implement TLB shoot-downs (\S~\ref{sec:tlbs}).

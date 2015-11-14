@@ -92,43 +92,6 @@ support to existing system software. However, it also gives system software the
 ability to attack an enclave by setting up its virtual address space in a way
 that was not intended by the enclave's author.
 
-Figure~\ref{fig:sgx_mapping_attack} shows a hypothetical memory mapping attack
-that is prevented by SGX's security measures. Understanding this type of attack
-greatly increases one's ability to reason about SGX's security.
-
-\begin{figure}[hbt]
-  \centering
-  \includegraphics[width=85mm]{figures/sgx_mapping_attack.pdf}
-  \caption{
-    An example of a memory mapping attack, which is prevented by SGX. The
-    enclave's author intends to disclose a piece of sensitive information only
-    when a security check passes. Malicious system software maps the virtual
-    address of the procedure called when the security check fails to an EPC
-    page that contains the procedure that discloses the sensitive information,
-    which is supposed to be called when the security check passes.
-  }
-  \label{fig:sgx_mapping_attack}
-\end{figure}
-
-For simplicity, we assume an enclave that performs a security check to decide
-whether to disclose some sensitive information. Depending on the security
-check's outcome, the enclave code either calls a \texttt{errorOut} procedure,
-or a \texttt{disclose} procedure. We furthermore assume that each procedure's
-code starts at a 4KB boundary, and takes up less than 4KB, so each procedure
-fits in an EPC page. These requirements seem unrealistic, but the underlying
-attack remains an issue in real applications.
-
-In a memory mapping attack, malicious system software sets up the page tables
-or EPT in such a way that the virtual address intended to store the
-\texttt{errorOut} procedure is actually mapped to an EPC page that contains the
-\texttt{disclose} procedure. Without any security measures in place, the
-enclave would execute the \texttt{disclose} code and reveal sensitive
-information, even though the security check fails.
-
-The SGX security mechanisms, explained throughout the rest of this paper,
-prevent enclave code execution if a memory mapping attack occurs. Therefore,
-SGX prevents malicious system software from directly obtaining sensitive
-information via memory mapping attacks.
 
 
 \subsubsection{The Enclave Page Cache Map (EPCM)}
