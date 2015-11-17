@@ -5,16 +5,16 @@ A computer's main resources are processing power and storage, which is also
 known as \textit{memory}. On Intel computers, processing power is offered by
 logical processors (\S~\ref{sec:cpu_core}) inside CPUs, and memory is
 implemented by DRAM chips (\S~\ref{sec:motherboard}). The software that manages
-these resources is called \textit{system software}.
+these resources is called \textit{system software}. An Intel computer typically
+runs two kinds of system software, namely operating systems and hypervisors.
 
 A typical Intel computer runs multiple application software instances, called
-\textit{processes}. A piece of system software, called an
-\textit{operating system} (\S~\ref{sec:rings}), assigns the computer's
-resources to the running processes. Server computers, especially in cloud
-environments, may run multiple operating system instances at the same time.
-These computers rely on a piece of system software, called a
-\textit{hypervisor} (\S~\ref{sec:rings}), to partition the computer's resources
-between the operating system instances running on the computer.
+\textit{processes}. An \textit{operating system} (\S~\ref{sec:rings}), assigns
+the computer's resources to the running processes. Server computers, especially
+in cloud environments, may run multiple operating system instances at the same
+time. This is accomplished by having a \textit{hypervisor}~(\S~\ref{sec:rings})
+partition the computer's resources between the operating system instances
+running on the computer.
 
 System software uses virtualization techniques to isolate each piece of
 software that it manages (process or operating system) from the rest of the
@@ -36,12 +36,12 @@ logical processors. A thread contains an execution context
 (\S~\ref{sec:registers}), which is the information necessary to perform a
 computation, such as the address of the next instruction to be executed.
 
-The operating system gives each process the illusion that it has an
-infinite amount of logical processors at its disposal, and multiplexes the
-available logical processors between the threads created by each process.
-Modern operating systems implement \textit{preemptive multithreading}, where
-the logical processors are rotated between all the threads on a system every
-few milliseconds. Changing the thread assigned to a logical processor is
+Operating systems give each process the illusion that it has an infinite amount
+of logical processors at its disposal, and multiplex the available logical
+processors between the threads created by each process.  Modern operating
+systems implement \textit{preemptive multithreading}, where the logical
+processors are rotated between all the threads on a system every few
+milliseconds. Changing the thread assigned to a logical processor is
 accomplished by an execution context switch (\S~\ref{sec:registers}).
 
 Hypervisors expose a fixed number of virtual processors (vCPUs) to each

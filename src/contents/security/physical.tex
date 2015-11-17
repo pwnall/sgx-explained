@@ -1,0 +1,84 @@
+\subsection{Physical Attacks}
+\label{sec:physical_attacks}
+
+Physical attacks are generally classified according to their cost, which
+factors in the equipment needed to carry out the attack and the attack's
+complexity. Joe Grand's DefCon presentation~\cite{grand2004physicalattacks}
+provides a good overview with a large number of intuition-building pictures.
+
+The simplest type of physical attack is a denial of service attack performed by
+disconnecting the victim computer's power supply or network cable. The threat
+models of most secure architectures ignore this attack, because denial of
+service can also be achieved by software attacks that compromise the computer's
+system software, such as the hypervisor.
+
+
+\subsubsection{Port Attacks}
+
+Slightly more involved attacks rely on connecting a device to an existing port
+on the victim computer's case or motherboard~(\S~\ref{sec:motherboard}). A
+simple example is a \textit{cold boot attack}, where the attacker plugs in a
+USB flash drive into the victim's case and causes the computer to boot from
+the flash drive, whose malicious system software receives unrestricted access
+to the computer's peripherals.
+
+More expensive physical attacks that still require relatively little effort
+target the debug ports of various peripherals. The cost of these attacks is
+generally dominated by the expense of acquiring the development kits needed to
+connect to the debug ports. For example, recent Intel processors include the
+Generic Debug eXternal Connection~(GDXC)~\cite{yuffe2011sandybridge,
+intel2011gdxc}, which collects and filters the data transfered by the uncore's
+ring bus (\S~\ref{sec:cache_coherence}), and reports it to an external
+debugger.
+
+The threat models of secure architectures generally ignore debug port attacks,
+under the assumption that devices sold for general consumption have their debug
+ports irreversibly disabled. In practice, manufacturers have strong incentives
+to preserve debugging ports in production hardware, as this facilitates the
+diagnosis and repair of defective units. Due to insufficient documentation on
+this topic, we ignore the possibility of GDXC-based attacks. Fortunately, a
+recent Intel patent~\cite{shanbhogue2015gdxcsgx} indicates that Intel engineers
+are tackling at least some classes of attacks targeting debugging ports.
+
+
+\subsubsection{Bus Tapping Attacks}
+
+More complex physical attacks consist of installing a device that taps a bus on
+the computer's motherboard (\S~\ref{sec:motherboard}). \textit{Passive attacks}
+are limited to monitoring the bus traffic, whereas \textit{active attacks} can
+modify the traffic, or even place new commands on the bus. \textit{Replay
+attacks} are a notoriously difficult to defeat class of active attacks, where
+the attacker first records the bus traffic, and then selectively replays a
+subset of the traffic. Replay attacks bypass systems that rely on static
+signatures or HMACs, and generally aim to double-spend a limited resource.
+
+The cost of bus tapping attacks is generally dominated by the cost of the
+equipment used to tap the bus, which increases with bus speed and complexity.
+For example, the flash chip that stores the computer's firmware is connected to
+the PCH via an SPI bus (\S~\ref{sec:motherboard}), which is simpler and much
+slower than the DDR bus connecting DRAM to the CPU. Consequently, tapping the
+SPI bus is much cheaper than tapping the DDR bus. For this reason, systems
+whose security relies on a cryptographiic hash of the firmware will first copy
+the firmware into DRAM, hash the DRAM copy of the firmware, and then execute
+the firmware from DRAM.
+
+Although the DDR bus's speed makes tapping it very difficult, there are
+well-publicized records of successful attempts. The original Xbox console's
+booting process was reverse-engineered thanks to a passive tap on the DRAM
+bus~\cite{huang2003xbox} that showed that the firmware used to boot the
+console was partially stored in its southbridge. The protection mechanisms of
+the PlayStation 3 hypervisor were subverted by an active tap on its memory
+bus~\cite{hotz2010ps3} that targeted the hypervisor's page tables.
+
+
+\subsubsection{Chip Tampering Attacks}
+
+
+The CPU's chip
+package is generally considered to be a minimal trust boundary, because
+physical attacks that can breach the CPU modify
+The most
+rigurous threat models only assume that
+
+
+\subsubsection{Power Analysis Attacks}

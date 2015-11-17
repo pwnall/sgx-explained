@@ -1,31 +1,42 @@
 \subsection{A Computer Map}
 \label{sec:computer_map}
 
-This section maps out a computer using the Intel architecture at three zoom
-levels: the motherboard, the CPU, and the execution core, focusing on the
-concepts needed to understand SGX and analyze its security properties. Most
-details in here are documented in Intel's
-\textit{Optimization Reference Manual} \cite{intel2014optimization}.
+This section outlines the hardware components that make up a computer system
+based on the Intel architecture.
+
+\S~\ref{sec:motherboard} summarizes the structure of a \textit{motherboard}.
+This is necessary background for reasoning about the cost and impact of
+physical attacks against a computing system.
+
+\S~\ref{sec:cpu_die} presents the building blocks of an Intel processor, and
+\S~\ref{sec:cpu_core} models an Intel execution core at a high level. This is
+the foundation for implementing defenses against physical attacks. Perhaps more
+importantly, reasoning about software attacks based on information leakage,
+such as timing attacks, requires understanding how a processor's computing
+resources are shared and partitioned between mutually distrusting parties.
+
+The information in here is either contained in the SDM or in Intel's
+\textit{Optimization Reference Manual}~\cite{intel2014optimization}.
 
 
 \subsubsection{The Motherboard}
 \label{sec:motherboard}
 
 A computer's components are connected by a printed circuit board called a
-\textit{motherboard}, which consists of \textit{sockets} connected by
-\textit{buses}. Sockets connect chip-carrying \textit{packages} to the board.
-The Intel documentation uses the term ``package'' to specifically refer to a
-CPU.
+\textit{motherboard}, shown in Figure~\ref{fig:motherboard}, which consists of
+\textit{sockets} connected by \textit{buses}. Sockets connect chip-carrying
+\textit{packages} to the board. The Intel documentation uses the term
+``package'' to specifically refer to a CPU.
 
-Figure~\ref{fig:motherboard} shows the most relevant chips, from an SGX
-perspective. The CPU's package (described in \S~\ref{sec:cpu_die}) is the only
-piece of trusted hardware in the SGX model. The \textit{Platform Controller
-Hub} (PCH) houses (relatively) low-speed I/O controllers driving the slower
-buses in the system, like SATA, used by storage devices, and USB, used by
-input peripherals.  Motherboards also have a flash memory chip that hosts
-firmware which implements the \textit{Unified Extensible Firmware Interface}
-(UEFI) specification \cite{forum2015uefi}. The firmware contains the boot code
-and the SMM handler.
+The CPU (described in \S~\ref{sec:cpu_die}) hosts the execution cores that run
+the SMM, hypervisor, operating system, and application software. The
+\textit{Platform Controller Hub}~(PCH) houses (relatively) low-speed I/O
+controllers driving the slower buses in the system, like SATA, used by storage
+devices, and USB, used by input peripherals.  Motherboards also have a flash
+memory chip that hosts firmware which implements the \textit{Unified Extensible
+Firmware Interface}~(UEFI) specification~\cite{forum2015uefi}. The firmware
+contains the boot code and the code that executes in System Management Mode
+(SMM, \S~\ref{sec:rings}).
 
 \begin{figure}[hbt]
   \centering
@@ -36,56 +47,35 @@ and the SMM handler.
   \label{fig:motherboard}
 \end{figure}
 
-The relevant buses are the \textit{Quick-Path Interconnect} (QPI)
-\cite{intel2009qpi}, a network of point-to-point links that connect processors,
-the \textit{double data rate} (DDR) bus that connects a CPU to DRAM, the
-\textit {Direct Media Interface} (DMI) bus that connects a CPU to the PCH,
-the \textit{Peripheral Component Interconnect Express} (PCIe) bus that connects
-a CPU to peripherals such as a \textit{Network Interface Card} (NIC), and the
-\textit {Serial Programming Interface} (SPI) used by the PCH to communicate
+The components we care about are connected by the following buses: the
+\textit{Quick-Path Interconnect}~(QPI~\cite{intel2009qpi}), a network of
+point-to-point links that connect processors, the
+\textit{double data rate}~(DDR) bus that connects a CPU to DRAM, the
+\textit{Direct Media Interface}~(DMI) bus that connects a CPU to the PCH, the
+\textit{Peripheral Component Interconnect Express}~(PCIe) bus that connects
+a CPU to peripherals such as a \textit{Network Interface Card}~(NIC), and the
+\textit {Serial Programming Interface}~(SPI) used by the PCH to communicate
 with the flash memory.
 
 In high-end systems, the PCH also contains a service processor, called the
-Intel \textit{Management Engine} (ME)
-\cite{ruan2014intelme, ververis2010security}.  The ME runs firmware stored in
-the same flash memory chip as the UEFI firmware. The Management Engine is
+Intel \textit{Management Engine}
+(ME)~\cite{ruan2014intelme, ververis2010security}. The ME runs firmware stored
+in the same flash memory chip as the UEFI firmware. The Management Engine is
 intended for remote system management and troubleshooting, and has tremendous
 privileges. The ME is running even when the system is in \textit{Soft Off} mode
 (ACPI G2/S5), when the CPU and DRAM are unpowered. Also, the ME can access the
 network via a NIC without CPU support, can read and modify DRAM via DMA
-transfers, and can override the CPU boot vector.
+transfers, and can override the CPU boot vector. The ME's powers make it a very
+high-value attack target~(\S~\ref{sec:device_attacks}).
 
 The PCIe bus is an extended, point-to-point version of the PCI standard, which
 provides a method for any peripheral connected to the bus to perform
-\textit{Direct Memory Access} (DMA), transferring data to and from DRAM without
+\textit{Direct Memory Access}~(DMA), transferring data to and from DRAM without
 involving an execution core and spending CPU cycles. The PCI standard includes
 a configuration mechanism that assigns a range of DRAM to each peripheral, but
 makes no provisions for preventing a rogue peripheral from accessing DRAM
 outside the range that has been assigned to it.
 
-The SGX trusted computing base includes the processor package, and excludes the
-other hardware in the computer. It follows that SGX must be able to fend off
-attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
-\cite{wojtczuk2011txt}, as well as passive or active bus-tapping attacks, such
-as the memory bus tap used to hack the Xbox \cite{huang2003xbox}, the
-memory glitching attack that subverted the PlayStation 3 hypervisor
-\cite{hotz2010ps3}, and the rowhammer DRAM bit-flipping attack
-\cite{kim2014rowhammer, google2015rowhammer, gruss2015rowhammer}.
-
-The flash memory stores the SMM handler and Intel ME firmware, which run with
-high privileges. Furthermore, the contents of flash memory persists across
-power cycles. This opens up the possibility for an attacker that gains SPI
-access to deploy a persistent payload that runs at high privilege. To prevent
-against these attacks, most of the firware is signed. For example, the ME
-checks that its firmware was signed by a burned-in Intel public key. However,
-both the computer firmware checks \cite{wojtczuk2010bios, furtak2014bios} and
-the ME firmware checks \cite{tereshkin2009amt} have been subverted in the past.
-
-The SGX threat model explicitly considers SMM to be untrusted. However, it does
-not account for malicious code running on the Management Engine. Unfortunately,
-the ME, PCH and DMI are Intel-proprietary and largely undocumented, so we
-cannot assess the impact of an ME attack on software running inside an SGX
-enclave.
 
 \subsubsection{The Processor}
 \label{sec:cpu_die}
@@ -120,11 +110,12 @@ intel2010datasheet}, and in the overview sections in Intel's uncore performance
 monitoring documentation \cite{intel2014uncore, intel2012uncore,
 intel2010uncore}.
 
-The SGX design relies on the fact that the processor die includes the memory
-and I/O controller, and thus can prevent any device from accessing protected
-memory areas via \textit{Direct Memory Access} (DMA) transfers.
-\S~\ref{sec:cache_coherence} takes a deeper look at the uncore organization and
-at the mechanism used by the SGX implementation to protect sensitive memory.
+Security extensions to the Intel architecture, such as TXT and SGX, rely on the
+fact that the processor die includes the memory and I/O controller, and thus
+can prevent any device from accessing protected memory areas via
+\textit{Direct Memory Access} (DMA) transfers. \S~\ref{sec:cache_coherence}
+takes a deeper look at the uncore organization and at the machinery used to
+prevent unauthorized DMA transfers.
 
 
 \subsubsection{The Core}
@@ -154,8 +145,8 @@ the presence of memory stalls.
 \end{figure}
 
 A hyper-threaded core is exposed to system software as two \textit{logical
-processors} (LPs), also named \textit{hardware threads} in the Intel
-documentation.  The logical processor abstraction allows the code used to
+processors}~(LPs), also named \textit{hardware threads} in the Intel
+documentation. The logical processor abstraction allows the code used to
 distribute work across processors in a multi-processor system to function
 without any change on multi-core hyper-threaded processors.
 

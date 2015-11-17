@@ -2,16 +2,14 @@
 \label{sec:rings}
 
 In an Infrastructure-as-a-Service (IaaS) cloud environment, such as Amazon EC2,
-commodity CPUs run software at four different privilege levels. A solid
-understanding of Intel architecture's privilege stack is a vital piece of
-context for analyzing SGX.
-
-Figure~\ref{fig:cpu_rings} shows the privilege levels in the Intel
-architecture. Software running at each level is strictly more powerful than
-software running at less privileged levels. It follows that software running at
-a level can access the code and data at less privileged levels, and compromise
-the software running at these levels. Thus, software at each level must trust
-all the software running at more privileged levels.
+commodity CPUs run software at four different privilege levels, shown in
+Figure~\ref{fig:cpu_rings}. Each privilege level is strictly more powerful than
+the ones below it, so the code running at a given level can freely read and
+modify the code and data at less privileged levels, and can compromise the
+software running at these levels. Therefore, a piece of software implicitly
+trusts all the software running at more privileged levels, and establishing a
+system's security properties can only be done by analyzing the software at all
+privilege levels.
 
 \begin{figure}[hbtp]
   \centering
@@ -54,11 +52,11 @@ a small \textit{kernel}, which runs at a high privilege level, known as the
 \textit{kernel mode} or \textit{supervisor mode} and, in the Intel
 architecture, as \textit{ring 0}. The kernel allocates the computer's resources
 to the other system components, such as device drivers and services, which run
-at lower privilege levels. However, for performance reasons\footnote{Switching
-between rings is much slower than a normal procedure call.}, mainstream
-operating systems have large amounts of code running at ring 0. Their
-\textit{monolithic kernels} include device drivers, filesystem code, networking
-stacks, and video rendering functionality.
+at lower privilege levels. However, for performance reasons\footnote{Calling a
+procedure in a different ring is much slower than calling code at the same
+privilege level.}, mainstream operating systems have large amounts of code
+running at ring 0. Their \textit{monolithic kernels} include device drivers,
+filesystem code, networking stacks, and video rendering functionality.
 
 Application code, such as a Web server or a game client, runs at the lowest
 privilege level, referred to as \textit{user mode} (\textit{ring 3} in the

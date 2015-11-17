@@ -1,22 +1,24 @@
 \section{Computer Architecture Background}
 \label{sec:architecture_background}
 
-This section attempts to present the architectural context around Intel's SGX,
-because analyzing the security of SGX requires understanding the interactions
-between all the parts of an enclave's execution environment. Unless specified
-otherwise, the information here is summarized from Intel's
-\textit{Software Development Manual} (SDM) \cite{intel2015sdm}.
+This section attempts to summarize the general architectural principles behind
+Intel's most popular computer processors, as well as the peculiarities needed
+to reason about the security properties of a system running on these
+processors. Unless specified otherwise, the information here is summarized from
+Intel's \textit{Software Development Manual}~(SDM)~\cite{intel2015sdm}.
 
-Each of the sub-sections below explains how its information is relevant to SGX,
-but does not introduce any SGX concepts. Readers familiar with x86's
-intricacies can safely skip this section and refer back when necessary.
+Analyzing the security of a software system requires understanding the
+interactions between all the parts of the software's execution environment, so
+this section is quite long. We do refrain from introducing any security
+concepts here, so readers familiar with x86's intricacies can safely skip this
+section and refer back to it when necessary.
 
-We use the term \textit{Intel processor} and \textit{Intel CPU} to refer to the
-server and desktop versions of Intel's Core line-up, as we focus on the SGX
-design's most likely targets. This writing is not interested in Intel's other
-processors, such as the embedded line of Atom CPUs, or the failed Itanium line.
-Consequently, the terms \textit{Intel computers} and \textit{Intel systems}
-refers to computer systems built around Intel's Core processors.
+We use the terms \textit{Intel processor} or \textit{Intel CPU} to refer to the
+server and desktop versions of Intel's Core line-up. In the interest of space
+and mental sanity, we ignore Intel's other processors, such as the embedded
+line of Atom CPUs, or the failed Itanium line. Consequently, the terms
+\textit{Intel computers} and \textit{Intel systems} refers to computer systems
+built around Intel's Core processors.
 
 In this paper, the term \textit{Intel architecture} refers to the x86
 architecture described in Intel's SDM. The x86 architecture is overly complex,

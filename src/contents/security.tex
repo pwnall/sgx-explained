@@ -1,6 +1,29 @@
 \section{Security Background}
 \label{sec:security_background}
 
+The attacks that can be performed on a computer system are broadly classified
+into physical attacks and software attacks. In \textit{physical attacks}, the
+attacker takes advantage of a system's physical implementation detail to
+perform an operation that bypasses the limitations set by the computer
+system's software abstraction layers. In contrast, \textit{software attacks}
+are performed solely by interacting with the victim computer via software
+means. \S~\ref{sec:physical_attacks} summarizes the main types of physical
+attacks.
+
+The distinction between software and physical attacks is particularly relevant
+in cloud computing scenario, where gaining software access to the computer
+running a victim's software can be accomplished with a credit card backed by
+modest funds~\cite{ristenpart2009colocation}, whereas physical access is a
+harder prospect, requiring trespass, coercion, or social engineering on the
+cloud provider's employees.
+
+However, the distinction between software and physical attacks is blurred by
+the attacks presented in \S~\ref{sec:device_attacks}, which exploit
+programmable peripherals connected to the victim computer's bus in order to
+carry out actions that are normally associated with physical attacks.
+
+\input{contents/security/physical.tex}
+\input{contents/security/device_sw.tex}
 \input{contents/security/privileged_sw.tex}
 \input{contents/security/memory_mapping.tex}
 %\input{contents/security/page_faults.tex}

@@ -1,0 +1,28 @@
+\subsection{Software Attacks on Peripherals}
+\label{sec:device_attacks}
+
+The SGX trusted computing base includes the processor package, and excludes the
+other hardware in the computer. It follows that SGX must be able to fend off
+attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
+\cite{wojtczuk2011txt}.
+
+
+the rowhammer DRAM bit-flipping attack
+\cite{kim2014rowhammer, google2015rowhammer, gruss2015rowhammer}.
+
+
+The SGX threat model explicitly considers SMM to be untrusted. However, it does
+not account for malicious code running on the Management Engine. Unfortunately,
+the ME, PCH and DMI are Intel-proprietary and largely undocumented, so we
+cannot assess the impact of an ME attack on software running inside an SGX
+enclave.
+
+The flash memory stores the SMM handler and Intel ME firmware, which run with
+high privileges. Furthermore, the contents of flash memory persists across
+power cycles. This opens up the possibility for an attacker that gains SPI
+access to deploy a persistent payload that runs at high privilege. To prevent
+against these attacks, most of the firware is signed. For example, the ME
+checks that its firmware was signed by a burned-in Intel public key. However,
+both the computer firmware checks \cite{wojtczuk2010bios, furtak2014bios} and
+the ME firmware checks \cite{tereshkin2009amt} have been subverted in the past.
+

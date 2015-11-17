@@ -1,27 +1,26 @@
 \subsection{Segment Registers}
 \label{sec:segments}
 
-The price of the Intel 64-bit architecture's widespread adoption was the
-ability to run software targeting the older 32-bit architecture side-by-side
-with 64-bit software \cite{cnet2005itanium}, which resulted in some warts in
-the 64-bit architecture. While most warts are not material to the understanding
-and operation of SGX, the 64-bit architecture's segment registers and vestigial
-segmentation model must be understood. Therefore, this section covers the
-segmentation concepts needed to understand SGX.
+The Intel 64-bit architecture gained widespread adoption thanks to its ability
+to run software targeting the older 32-bit architecture side-by-side
+with 64-bit software~\cite{cnet2005itanium}. This ability comes at the cost of
+some warts. While most of these warts can be ignored while reasoning about the
+security of 64-bit software, the segment registers and vestigial
+segmentation model must be understood.
 
 The semantics of the Intel architecture's instructions include the implicit use
-of a few segments which are loaded into the processor's
-\textit{segment registers} shown in Figure~\ref{fig:cpu_registers}. Code
-fetches use the \textit{code segment} (CS).  Instructions that reference the
-stack implicitly use the \textit{stack segment} (SS). Memory references
-implicitly use the \textit{data segment} (DS) or the \textit{destination
-segment} (ES). Via segment override prefixes, instructions can be modified to
-use the unnamed segments FS and GS for memory references.
+of a few segments which are loaded into the processor's \textit{segment
+registers} shown in Figure~\ref{fig:cpu_registers}. Code fetches use the
+\textit{code segment}~(CS). Instructions that reference the stack implicitly
+use the \textit{stack segment}~(SS). Memory references implicitly use the
+\textit{data segment}~(DS) or the \textit{destination segment}~(ES). Via
+segment override prefixes, instructions can be modified to use the unnamed
+segments FS and GS for memory references.
 
 Modern operating systems effectively disable segmentation by covering the
 entire addressable space with one segment, which is loaded in CS, and one data
 segment, which is loaded in SS, DS and ES. The FS and GS registers store
-segments covering \textit{thread-local storage} (TLS).
+segments covering \textit{thread-local storage}~(TLS).
 
 % Segment Selectors: SDM S 3.4.2
 % Segment Registers: SDM S 3.4.3
@@ -77,8 +76,10 @@ address.
 \end{figure}
 
 Outside the special case of using FS or GS to reference thread-local storage,
-the logical and virtual (linear) addresses match, so most of this paper uses
-the term ``virtual address'' and ignores segmentation.
+the logical and virtual (linear) addresses match. Therefore, most of the time,
+we can get away with completely ignoring segmentation. In these cases, we use
+the term ``virtual address'' to refer to both the virtual and hte linear
+address.
 
 Even though CS is not used for segmentation, 64-bit system software needs to
 load a valid selector into it. The CPU uses the ring number in the CS selector

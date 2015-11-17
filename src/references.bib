@@ -239,19 +239,6 @@
   address={Stockholm, Sweden},
   year={2010}
 }
-@book{huang2003xbox,
-  title={Hacking the Xbox: an Introduction to Reverse Engineering},
-  author={Huang, Andrew},
-  year={2003},
-  publisher={No Starch Press}
-}
-@article{hotz2010ps3,
-  title={PS3 Glitch Hack},
-  author={Hotz, George},
-  year={2010},
-  howpublished="\url{http://www.eurasia.nu/wiki/index.php/PS3_Glitch_Hack}",
-  note={[Online; accessed 7-January-2015]}
-}
 @article{wojtczuk2010bios,
   title={Attacking Intel{\textregistered} BIOS},
   author={Wojtczuk, Rafal and Tereshkin, Alexander},
@@ -346,13 +333,6 @@
 }
 
 % Background: Caching.
-@article{banescu2011cache,
-  title={Cache Timing Attacks},
-  author={Banescu, Sebastian},
-  year={2011},
-  howpublished="\url{http://www.academia.edu/3224323/Cache_Timing_Attacks}",
-  note={[Online; accessed 26-January-2014]}
-}
 @article{smith1982cache,
   title={Cache memories},
   author={Smith, Alan Jay},
@@ -407,32 +387,6 @@
   year={2015},
   month={Jan},
   note={Reference no. 330784-002},
-}
-@inproceedings{yuffe2011sandybridge,
-  title={A Fully Integrated Multi-CPU, GPU and Memory Controller 32nm
-         processor},
-  author={Yuffe, Marcelo and Knoll, Ernest and Mehalel, Moty and Shor, Joseph
-          and Kurts, Tsvika},
-  booktitle={Solid-State Circuits Conference Digest of Technical Papers
-             (ISSCC), 2011 IEEE International},
-  pages={264--266},
-  year={2011},
-  organization={IEEE}
-}
-@misc{intel2011gdxc,
-  title={Generic Debug eXternal Connection (GDXC) for High Integration
-         Integrated Circuits},
-  author={Kurts, Tsvika and Savransky, Guillermo and Ratner, Jason and Hazan,
-          Eilon and Skaba, Daniel and Elmosnino, Sharon and Santhanakrishnan,
-          Geeyarpuram N},
-  year={2011},
-  note={US Patent 8,074,131}
-}
-@misc{shanbhogue2015gdxcsgx,
-  title={Protecting information processing system secrets from debug attacks},
-  author={Shanbhogue, V. and Brandt, J.W. and Wiedemeier, J.},
-  year={2015},
-  note={US Patent 8,955,144}
 }
 
 % Background: TLBs
@@ -698,7 +652,65 @@
 
 % Security Background
 
+% Security Background: Physical Attacks
+
+@misc{grand2004physicalattacks,
+  title={Advanced Hardware Hacking Techniques},
+  author={Grand, Joe},
+  month={Jul},
+  year={2004},
+  publisher={Defcon}
+}
+@inproceedings{yuffe2011sandybridge,
+  title={A Fully Integrated Multi-CPU, GPU and Memory Controller 32nm
+         processor},
+  author={Yuffe, Marcelo and Knoll, Ernest and Mehalel, Moty and Shor, Joseph
+          and Kurts, Tsvika},
+  booktitle={Solid-State Circuits Conference Digest of Technical Papers
+             (ISSCC), 2011 IEEE International},
+  pages={264--266},
+  year={2011},
+  organization={IEEE}
+}
+@misc{intel2011gdxc,
+  title={Generic Debug eXternal Connection (GDXC) for High Integration
+         Integrated Circuits},
+  author={Kurts, Tsvika and Savransky, Guillermo and Ratner, Jason and Hazan,
+          Eilon and Skaba, Daniel and Elmosnino, Sharon and Santhanakrishnan,
+          Geeyarpuram N},
+  year={2011},
+  note={US Patent 8,074,131}
+}
+@misc{shanbhogue2015gdxcsgx,
+  title={Protecting information processing system secrets from debug attacks},
+  author={Shanbhogue, V. and Brandt, J.W. and Wiedemeier, J.},
+  year={2015},
+  note={US Patent 8,955,144}
+}
+@book{huang2003xbox,
+  title={Hacking the Xbox: an Introduction to Reverse Engineering},
+  author={Huang, Andrew},
+  year={2003},
+  publisher={No Starch Press}
+}
+@article{hotz2010ps3,
+  title={PS3 Glitch Hack},
+  author={Hotz, George},
+  year={2010},
+  howpublished="\url{http://www.eurasia.nu/wiki/index.php/PS3_Glitch_Hack}",
+  note={[Online; accessed 7-January-2015]}
+}
+
+
+@book{beck1998integrated,
+  title={Integrated Circuit Failure Analysis: A guide to preparation techniques},
+  author={Beck, Friedrich},
+  year={1998},
+  publisher={John Wiley \& Sons}
+}
+
 % Security Background: Privileged Software Attacks
+
 @article{duflot2006smm,
   title={Using CPU system management mode to circumvent operating system
          security functions},
@@ -815,31 +827,15 @@
   note={[Online; accessed 27-April-2015]}
 }
 
+% Security Background: Cache timing attacks
 
-% Related Work
-
-@article{diffie1976keyexchange,
-  title={New directions in cryptography},
-  author={Diffie, Whitfield and Hellman, Martin E},
-  journal={Information Theory, IEEE Transactions on},
-  volume={22},
-  number={6},
-  pages={644--654},
-  year={1976},
-  publisher={IEEE}
+@article{banescu2011cache,
+  title={Cache Timing Attacks},
+  author={Banescu, Sebastian},
+  year={2011},
+  howpublished="\url{http://www.academia.edu/3224323/Cache_Timing_Attacks}",
+  note={[Online; accessed 26-January-2014]}
 }
-@inproceedings{butterworth2013bios,
-  title={Bios chronomancy: Fixing the core root of trust for measurement},
-  author={Butterworth, John and Kallenberg, Corey and Kovah, Xeno and
-          Herzog, Amy},
-  booktitle={Proceedings of the 2013 ACM SIGSAC conference on Computer \&
-             Communications Security},
-  pages={25--36},
-  year={2013},
-  organization={ACM}
-}
-
-
 @incollection{bonneau2006aes,
   title={Cache-collision timing attacks against AES},
   author={Bonneau, Joseph and Mironov, Ilya},
@@ -898,6 +894,31 @@
          Operating Systems},
   year={2015},
 }
+
+
+% Related Work
+
+@article{diffie1976keyexchange,
+  title={New directions in cryptography},
+  author={Diffie, Whitfield and Hellman, Martin E},
+  journal={Information Theory, IEEE Transactions on},
+  volume={22},
+  number={6},
+  pages={644--654},
+  year={1976},
+  publisher={IEEE}
+}
+@inproceedings{butterworth2013bios,
+  title={Bios chronomancy: Fixing the core root of trust for measurement},
+  author={Butterworth, John and Kallenberg, Corey and Kovah, Xeno and
+          Herzog, Amy},
+  booktitle={Proceedings of the 2013 ACM SIGSAC conference on Computer \&
+             Communications Security},
+  pages={25--36},
+  year={2013},
+  organization={ACM}
+}
+
 
 @phdthesis{yee1994coprocessors,
   title={Using secure coprocessors},

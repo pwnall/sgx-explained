@@ -2,7 +2,18 @@
 \label{sec:cache_timing}
 
 % TODO: Figure out how to mention MSR's attacks that collect page fault
-%       addresses.
+%       addresses. \cite{xu2015pagefaults}
+
+Unfortunately, caches create a dependency between the location of a memory
+access and the time it takes to perform the access. A cache miss requires
+at least one memory access to the next level cache, and might require a second
+memory access if a write-back occurs. The related work presented in
+\cite{banescu2011cache} shows that it is practical to use the timing
+differences between hits and misses to learn the memory access patterns of a
+target thread, as long as an attacker thread shares a cache with the target
+thread. The target's memory access patterns, in turn, can reveal private
+information, such as whether certain bits in an encryption key are set or not.
+
 
 Cache timing attacks~\cite{banescu2011cache} are a powerful class of software
 attacks that can be mounted entirely by application
@@ -28,3 +39,24 @@ Given this pattern of vulnerabilities, ignoring cache timing attacks is
 dangerously similar to ignoring the string of demonstrated attacks which led to
 the deprecation of SHA-1~\cite{nist2014sha1policy, google2014sha1deprecation,
 microsoft2014sha1deprecation}.
+
+Alarmingly, {\em cache timing attacks require only unprivileged software
+running on the victim's host computer}, and do not rely on any physical
+access to the machine.
+
+Some MSRs are also
+exposed by instructions accessible to applications. For example, applications
+can read the time-stamp counter with the \texttt{RDTSC} and \texttt{RDTSCP},
+which are very useful for benchmarking and optimizing software, but also for
+mounting timing attacks.
+
+The high level of resource sharing introduced by hyper-threading introduces a
+security vulnerability. Software running on one logical processor can use the
+high-resolution performance counter (\texttt{RDTSCP},
+\S~\ref{sec:address_spaces}) \cite{petters1999making} to get information about
+the instructions and memory access patterns of another piece of software that
+is executed on the other logical processor on the same core.
+
+Our analysis of SGX concludes that it is vulnerable to cache timing attacks,
+which can be used to obtain high-resolution memory access patterns for the
+software running inside an SGX enclave.

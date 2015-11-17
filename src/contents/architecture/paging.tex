@@ -1,13 +1,13 @@
 \subsection{Address Translation}
 \label{sec:paging}
 
-Modern OS kernels rely on address translation to manage the access of
-applications to the memory address space (\S~\ref{sec:address_spaces}). The
-software running inside a SGX enclave is subject to address translation, and
-the implementation of SGX relies heavily on the translation implementation in
-Intel processors. This section summarizes the Intel-specific software-visible
-details needed to understand SGX. \cite{jacob1998virtual} describes the generic
-concepts and applications of address translation.
+System software relies on the CPU's address translation mechanism for
+implementing isolation among less privileged pieces of software (applications
+or operating systems). Virtually all secure architecture designs bring changes
+to address translation. We summarize the Intel architecture's address
+translation features that are most relevant when establishing a system's
+security properties, and refer the reader to \cite{jacob1998virtual} for a more
+general presentation of address translation concepts and its other uses.
 
 From a systems perspective, address translation is a layer of indirection
 between the \textit{virtual addresses}, which are used by a program's memory
@@ -88,13 +88,13 @@ between virtual addresses and \textit{guest-physical addresses} in a
 \textit{guest-physical address space}. The hypervisor multiplexes the
 computer's DRAM between the operating systems' guest-physical address spaces
 via the second layer of address translations, which uses \textit{extended page
-tables} (EPT) to map guest-physical addresses to physical addresses.
+tables}~(EPT) to map guest-physical addresses to physical addresses.
 
 The EPT uses the same data structure as the page tables, so the process of
 translating guest-physical addresses to physical addresses follows the same
 steps as IA-32e address translation. The main difference is that the physical
 address of the data structure's root node is stored in the extended page table
-pointer (EPTP) field in the \textit{Virtual Machine Control Structure} (VMCS)
+pointer~(EPTP) field in the \textit{Virtual Machine Control Structure}~(VMCS)
 for the guest OS. Figure~\ref{fig:vmx_paging} illustrates the address
 translation process in the presence of hardware virtualization.
 
@@ -105,7 +105,7 @@ translation process in the presence of hardware virtualization.
     Address translation when hardware virtualization is enabled. The
     kernel-managed page tables contain guest-physical addresses, so each level
     in the kernel's page table requires a full walk of the hypervisor's
-    extended page table (EPT).  A translation requires up to 20 memory accesses
+    extended page table~(EPT).  A translation requires up to 20 memory accesses
     (the bold boxes), assuming the physical address of the kernel's PML4 is
     cached.
   }
@@ -114,23 +114,23 @@ translation process in the presence of hardware virtualization.
 
 Each entry in the page tables has some Boolean flags, in addition to the
 pointer to the next level. The following flags are particularly interesting for
-our goals. The \textit{present} (P) flag is set to 0 to indicate unused parts
+our goals. The \textit{present}~(P) flag is set to 0 to indicate unused parts
 of the address space, which do not have physical memory associated with them,
 or pages that have been evicted from RAM to a cheaper and slower storage
-medium.  The \textit{accessed} (A) flag is set to 1 by the CPU whenever the
-address translation machinery reads a page table entry, and the \textit{dirty}
-(D) flag is set to 1 by the CPU when an entry is accessed by a memory write
-operation. The A and D flags give the hypervisor and kernel insight into
-application memory access patterns, providing the input for the algorithms that
-select which pages get to be evicted from RAM.
+medium.  The \textit{accessed}~(A) flag is set to 1 by the CPU whenever the
+address translation machinery reads a page table entry, and the
+\textit{dirty}~(D) flag is set to 1 by the CPU when an entry is accessed by a
+memory write operation. The A and D flags give the hypervisor and kernel
+insight into application memory access patterns, providing the input for the
+algorithms that select which pages get to be evicted from RAM.
 
 % Page-Level Protection: SDM S 5.11, S 5.11.{1,2,3,4}
 
 Page table entries have flags that provide access control, in addition to the
-flags supporting page swapping. The interesting flags are the \textit{writable}
-(W) flag, which can be set to 0 to prohibit\footnote{Writes to non-writable
-pages result in \#GP exceptions (\S~\ref{sec:faults}).} memory writes to a
-page, the \textit{disable execution} (XD) flag, which can be set to 1 to
-prevent instruction fetches from a page, and the \textit{supervisor} (S) flag,
-which can be set to 1 to prohibit accesses from application software running at
-ring 3.
+flags supporting page swapping. The interesting flags are the
+\textit{writable}~(W) flag, which can be set to 0 to prohibit\footnote{Writes
+to non-writable pages result in \#GP exceptions (\S~\ref{sec:faults}).} memory
+writes to a page, the \textit{disable execution}~(XD) flag, which can be set to
+1 to prevent instruction fetches from a page, and the \textit{supervisor}~(S)
+flag, which can be set to 1 to prohibit accesses from application software
+running at ring 3.

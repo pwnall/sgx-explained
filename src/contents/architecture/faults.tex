@@ -1,29 +1,32 @@
 \subsection{Privilege Level Switching}
 \label{sec:privilege_switches}
 
-Applications software needs a method to invoke the kernel, because it cannot
-directly perform privileged operations, such as network or disk I/O. At the
-same time, ring 3 software cannot be offered the ability to jump arbitrarily
-into kernel code, as that would compromise the kernel's ability to isolate
-applications and enforce security invariants.\footnote{For example, when an
-application wishes to write a file to the disk, the kernel must check if the
-application's user has access to that file. If the ring 3 code could perform
-an arbitrary jump in kernel space, it would be able to skip the access check.}
-Therefore, the processor has designated methods for switching privilege levels,
-which protect the integrity of the more privileged software.
+Any architecture that has software privilege levels must provide a method for
+less privileged software to invoke the services of more privileged software.
+For example, application software needs the OS kernel's assistance to
+perform network or disk I/O, as that requires access to privileged memory or
+to the I/O address space.
 
-This section describes the privilege switching mechanisms that impact the SGX
-design, summarized in Figure~\ref{fig:cpu_ring_switch}. Also, understanding the
-considerations behind privilege switching is useful when analyzing SGX, because
-the process of calling code inside an enclave is similar to switching privilege
-levels, as an enclave's code must be able to enforce its own security
-invariants, just like an OS kernel.
+At the same time, less privileged software cannot be offered the ability to
+jump arbitrarily into more privileged code, as that would compromise the
+privileged software's ability to enforce security and isolation invariants. In
+our example, when an application wishes to write a file to the disk, the kernel
+must check if the application's user has access to that file. If the ring 3
+code could perform an arbitrary jump in kernel space, it would be able to skip
+the access check.
 
+For these reasons, the Intel architecture includes privilege-switching
+mechanisms used to transfer control from less privileged software to
+well-defined entry points in more privileged software. As suggested above, an
+architecture's privilege-switching mechanisms have deep implications for the
+security properties of its software. Furthermore, securely executing the
+software inside a protected container requires the same security considerations
+as privilege level switching.
 
-\subsubsection{System Calls}
-\label{sec:syscalls}
-
-% Fast System Calls in 64-Bit Mode: SDM S 5.8.8
+Due to historical factors, the Intel architecture has a vast number of
+execution modes, and an intimidating amount of transitions between them. We
+focus on the privilege level switching mechanisms used by modern 64-bit
+software, summarized in Figure~\ref{fig:cpu_ring_switch}.
 
 \begin{figure}[hbt]
   \center
@@ -34,18 +37,31 @@ invariants, just like an OS kernel.
   \label{fig:cpu_ring_switch}
 \end{figure}
 
+
+\subsubsection{System Calls}
+\label{sec:syscalls}
+
+% Fast System Calls in 64-Bit Mode: SDM S 5.8.8
+
 On modern processors, application software uses the \texttt{SYSCALL}
 instruction to invoke ring 0 code, and the kernel uses \texttt{SYSRET} to
 switch the privilege level back to ring 3. \texttt{SYSCALL} jumps into a
 predefined kernel location, which is specified by writing to a pair of
-architectural MSRs (\S~\ref{sec:address_spaces}).  MSRs can only be read or
-written by ring 0 code, so application software cannot modify
-\texttt{SYSCALL}'s MSRs and abuse the \texttt{SYSCALL} instruction to execute
-arbitrary kernel code. The \texttt{SYSRET} instruction switches back to ring 3
-and jumps to the address in RCX, which is set by the \texttt{SYSCALL}
-instruction. The \texttt{SYSCALL} / \texttt{SYSRET} pair is optimized for speed
-by avoiding memory accesses. The design can get away without referencing a
-stack because kernel calls are not recursive.
+architectural MSRs (\S~\ref{sec:address_spaces}).
+
+All MSRs can only be read or written by ring 0 code. This is a crucial security
+property, because it entails that application software cannot modify
+\texttt{SYSCALL}'s MSRs. If that was the case, a rogue application could abuse
+the \texttt{SYSCALL} instruction to execute arbitrary kernel code, potentially
+bypassing security checks.
+
+The \texttt{SYSRET} instruction switches the current privilege level from ring
+0 back to ring 3, and jumps to the address in RCX, which is set by the
+\texttt{SYSCALL} instruction. The \texttt{SYSCALL} / \texttt{SYSRET} pair does
+not perform any memory access, so it out-performs the Intel architecture's
+previous privilege switching mechanisms, which saved state on a stack. The
+design can get away without referencing a stack because kernel calls are not
+recursive.
 
 
 \subsubsection{Faults}
@@ -55,12 +71,12 @@ stack because kernel calls are not recursive.
 % Access Rights: SDM S 4.6
 % Page-Fault Exceptions: SDM S 4.7
 
-The processor also performs a switch from ring 3 to ring 0 when a \textit{
-hardware exception} occurs while executing application code. Some exceptions
-indicate bugs in the application, whereas other exceptions require kernel
-action. A \textit{general protection fault} (\#GP) occurs when software
+The processor also performs a switch from ring 3 to ring 0 when a
+\textit{hardware exception} occurs while executing application code. Some
+exceptions indicate bugs in the application, whereas other exceptions require
+kernel action. A \textit{general protection fault}~(\#GP) occurs when software
 attempts to perform a disallowed action, such as setting the CR3 register from
-ring 3. A \textit{page fault} (\#PF) occurs when address translation encounters
+ring 3. A \textit{page fault}~(\#PF) occurs when address translation encounters
 a page table entry whose P flag is 0, or attempting to use a page in a way
 inconsistent with the access bits in its page table entry, for example
 accessing a page whose S bit is set from ring 3.
@@ -147,15 +163,12 @@ After the exception handler completes, it uses the \texttt{IRET} (interrupt
 return) instruction to load the registers from the on-stack snapshot and switch
 back to ring 3.
 
-The Intel architecture gives the fault handler complete control over the parts
-of the execution context not listed in Table~\ref{fig:fault_stack}. This
-privilege is used by some handlers (e.g., \#GP) to perform context switches
-(\S~\ref{sec:registers}) after a process is terminated due to a bug. However,
-in the SGX threat model, system software is not trusted, and giving it access
-to an enclave's execution context would expose potentially sensitive
-information, and present an opportunity to compromise the enclave's integrity.
-Therefore, SGX cannot use the current fault handling process, and must modify
-it.
+The Intel architecture gives the fault handler complete control over the
+execution context of the software that incurred the fault. This privilege is
+necessary for handlers (e.g., \#GP) that must perform context switches
+(\S~\ref{sec:registers}) as a consequence of terminating a thread that
+encountered a bug. It follows that all fault handlers must be trusted to not
+leak or tamper with the information in an application's execution context.
 
 
 \subsubsection{VMX Privilege Level Switching}
@@ -179,12 +192,12 @@ address translation process encounters an EPT entry with the P flag set to 0,
 the CPU performs a VM exit, and the hypervisor has an opportunity to bring the
 page into RAM.
 
-The VMCS shows a great application of the encapsulation principle
-\cite{liskov1974adt}, which is generally used in high-level software, to
-computer architecture. The Intel architecture specifies that each VMCS resides
-in DRAM and is 4~KB in size. However, the architecture does not specify the
-VMCS format, and instead requires the hypervisor to interact with the VMCS via
-CPU instructions such as \texttt{VMREAD} and \texttt{VMWRITE}.
+The VMCS shows a great application of the encapsulation
+principle~\cite{liskov1974adt}, which is generally used in high-level software,
+to computer architecture. The Intel architecture specifies that each VMCS
+resides in DRAM and is 4~KB in size. However, the architecture does not specify
+the VMCS format, and instead requires the hypervisor to interact with the VMCS
+via CPU instructions such as \texttt{VMREAD} and \texttt{VMWRITE}.
 
 This approach allows Intel to add VMX features that require VMCS format
 changes, without the burden of having to maintain backwards compatibility.
