@@ -3,9 +3,9 @@
 
 Application software targeting the 64-bit Intel architecture uses a variety of
 CPU registers to interact with the processor's features, shown in
-Figure~\ref{fig:cpu_registers} and Table~\label{fig:xsave_state}. The values in
-these registers make up an application thread's state, or
-\textit{execution context}.
+Figure~\ref{fig:cpu_registers} and Table~\ref{fig:xsave_state}. The values in
+these registers make up an application thread's state, or \textit{execution
+context}.
 
 OS kernels multiplex each logical processor (\S~\ref{sec:cpu_core}) between
 multiple software threads by \textit{context switching}, namely saving the

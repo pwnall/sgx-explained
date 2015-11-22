@@ -1,6 +1,31 @@
 \subsection{Software Attacks on Peripherals}
 \label{sec:device_attacks}
 
+Threat models for secure architectures generally only consider software attacks
+that directly target other components in the software stack running on the CPU.
+This assumption results in security arguments with the very desirable property
+of not depending on implementation details, such as the structure of the
+motherboard hosting the processor chip.
+
+The threat models mentioned above must classify attacks from other motherboard
+components as physical attacks. Unfortunately, these models would mis-classify
+all the attacks described in this sub-section, which can be carried out solely
+by executing software on the victim processor. The incorrect classification
+matters in cloud computing scenarios, where physical attacks are significantly
+more expensive than software attacks.
+
+Virtually all motherboards store the firmware used to boot the computer in a
+flash memory chip that can be written by system software. This implementation
+strategy provides an inexpensive avenue for deploying firmware bug fixes. At
+the same time, an attack that compromises the system software can subvert the
+firmware update mechanism to inject malicious code into the firmware. The
+malicious code can be used to carry out a cold boot attack, which is typically
+considered a physical attack. Furthermore, a malicious firmware can modify the
+system software during the boot process
+
+
+the computer firmware checks \cite{wojtczuk2010bios, furtak2014bios}
+
 The SGX trusted computing base includes the processor package, and excludes the
 other hardware in the computer. It follows that SGX must be able to fend off
 attacks from rogue devices, such as the PCIe NIC used to compromise Intel TXT
@@ -25,4 +50,8 @@ against these attacks, most of the firware is signed. For example, the ME
 checks that its firmware was signed by a burned-in Intel public key. However,
 both the computer firmware checks \cite{wojtczuk2010bios, furtak2014bios} and
 the ME firmware checks \cite{tereshkin2009amt} have been subverted in the past.
+
+The SDM and (TODO: Optimization manual? uncore manuals?) describe a vast array
+of temperature sensors that can be used to indirectly measure the power
+consumption of various components of an Intel CPU.
 
