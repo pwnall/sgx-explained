@@ -28,16 +28,6 @@ A computer's components are connected by a printed circuit board called a
 \textit{packages} to the board. The Intel documentation uses the term
 ``package'' to specifically refer to a CPU.
 
-The CPU (described in \S~\ref{sec:cpu_die}) hosts the execution cores that run
-the SMM, hypervisor, operating system, and application software. The
-\textit{Platform Controller Hub}~(PCH) houses (relatively) low-speed I/O
-controllers driving the slower buses in the system, like SATA, used by storage
-devices, and USB, used by input peripherals.  Motherboards also have a flash
-memory chip that hosts firmware which implements the \textit{Unified Extensible
-Firmware Interface}~(UEFI) specification~\cite{forum2015uefi}. The firmware
-contains the boot code and the code that executes in System Management Mode
-(SMM, \S~\ref{sec:rings}).
-
 \begin{figure}[hbt]
   \centering
   \includegraphics[width=85mm]{figures/motherboard.pdf}
@@ -46,6 +36,24 @@ contains the boot code and the code that executes in System Management Mode
   }
   \label{fig:motherboard}
 \end{figure}
+
+The CPU (described in \S~\ref{sec:cpu_die}) hosts the execution cores that run
+the SMM, hypervisor, operating system, and application software. The computer's
+main memory is provided by \textit{Dynamic Random-Access Memory} (DRAM) chips.
+
+The \textit{Platform Controller Hub}~(PCH) houses (relatively) low-speed I/O
+controllers driving the slower buses in the system, like SATA, used by storage
+devices, and USB, used by input peripherals. In most systems, the PCH also
+contains a service processor, called the Intel \textit{Management Engine}
+(ME)~\cite{ruan2014intelme, ververis2010security}. The ME is intended for
+remote system management and troubleshooting, and has tremendous privileges,
+such as direct access to the network and to DRAM. These powers make the ME a
+very high-value attack target (\S~\ref{sec:device_attacks}).
+
+Motherboards also have a non-volatile (flash) memory chip that hosts firmware
+which implements the \textit{Unified Extensible Firmware Interface}~(UEFI)
+specification~\cite{forum2015uefi}. The firmware contains the boot code and the
+code that executes in System Management Mode (SMM, \S~\ref{sec:rings}).
 
 The components we care about are connected by the following buses: the
 \textit{Quick-Path Interconnect}~(QPI~\cite{intel2009qpi}), a network of
@@ -56,17 +64,6 @@ point-to-point links that connect processors, the
 a CPU to peripherals such as a \textit{Network Interface Card}~(NIC), and the
 \textit {Serial Programming Interface}~(SPI) used by the PCH to communicate
 with the flash memory.
-
-In high-end systems, the PCH also contains a service processor, called the
-Intel \textit{Management Engine}
-(ME)~\cite{ruan2014intelme, ververis2010security}. The ME runs firmware stored
-in the same flash memory chip as the UEFI firmware. The Management Engine is
-intended for remote system management and troubleshooting, and has tremendous
-privileges. The ME is running even when the system is in \textit{Soft Off} mode
-(ACPI G2/S5), when the CPU and DRAM are unpowered. Also, the ME can access the
-network via a NIC without CPU support, can read and modify DRAM via DMA
-transfers, and can override the CPU boot vector. The ME's powers make it a very
-high-value attack target~(\S~\ref{sec:device_attacks}).
 
 The PCIe bus is an extended, point-to-point version of the PCI standard, which
 provides a method for any peripheral connected to the bus to perform
