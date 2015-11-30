@@ -29,12 +29,14 @@ The firmware executed by the Intel Management Engine (ME,
 \S~\ref{sec:motherboard}) is stored in the same flash memory chip as the
 firmware that boots the computer. The ME allows system administrators to
 remotely troubleshoot and fix situations such as a corrupted OS installation.
-In order to achieve this, the ME has tremendous powers. The ME has a separate
-service processor that is running even when the system is in \textit{Soft Off}
-mode (ACPI G2/S5), when the CPU and DRAM are unpowered. Furthermote, the ME has
-dedicated paths for accessing a NIC and a display adapter, which do not rely on
-the CPU. The ME can also read and modify DRAM via DMA transfers, and can
-override the CPU boot vector.
+In order to achieve this, the ME has tremendous powers. The ME relies on a
+separate service processor that is not based on the Intel architecture. The
+ME's service processor has dedicated paths for accessing a NIC and a display
+adapter without any software support from the CPU. The ME can also read and
+modify DRAM via DMA transfers, and can override the CPU's boot vector. The ME
+hardware, including the service processor, performs computations even when the
+computer is in \textit{Soft Off} mode (ACPI G2/S5), where the CPU and DRAM are
+unpowered.
 
 To prevent these attacks, most of the firware is signed. For example, the ME
 checks that its firmware was signed by a burned-in Intel public key. However,

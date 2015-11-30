@@ -41,14 +41,14 @@ The CPU (described in \S~\ref{sec:cpu_die}) hosts the execution cores that run
 the SMM, hypervisor, operating system, and application software. The computer's
 main memory is provided by \textit{Dynamic Random-Access Memory} (DRAM) chips.
 
-The \textit{Platform Controller Hub}~(PCH) houses (relatively) low-speed I/O
-controllers driving the slower buses in the system, like SATA, used by storage
-devices, and USB, used by input peripherals. In most systems, the PCH also
-contains a service processor, called the Intel \textit{Management Engine}
-(ME)~\cite{ruan2014intelme, ververis2010security}. The ME is intended for
-remote system management and troubleshooting, and has tremendous privileges,
-such as direct access to the network and to DRAM. These powers make the ME a
-very high-value attack target (\S~\ref{sec:device_attacks}).
+The \textit{Platform Controller Hub}~(PCH), also known as the \textit{chipset}
+houses (relatively) low-speed I/O controllers driving the slower buses in the
+system, like SATA, used by storage devices, and USB, used by input peripherals.
+All recent chipsets also include Intel's \textit{Management Engine}
+(ME)~\cite{ruan2014intelme, ververis2010security}, an embedded computer that
+was initially designed for remote system management and troubleshooting. The
+ME has tremendous privileges, such as direct access to the network and to DRAM,
+and therefore is a very high-value attack target (\S~\ref{sec:device_attacks}).
 
 Motherboards also have a non-volatile (flash) memory chip that hosts firmware
 which implements the \textit{Unified Extensible Firmware Interface}~(UEFI)
