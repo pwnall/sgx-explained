@@ -25,23 +25,19 @@ system software as it is loaded during the boot process, giving the attacker
 capabilities that have traditionally been associated with DRAM bus tapping
 attacks.
 
-The firmware executed by the Intel Management Engine (ME,
-\S~\ref{sec:motherboard}) is stored in the same flash memory chip as the
-firmware that boots the computer. The ME allows system administrators to
-remotely troubleshoot and fix situations such as a corrupted OS installation.
-In order to achieve this, the ME has tremendous powers. The ME relies on a
-separate service processor that is not based on the Intel architecture. The
-ME's service processor has dedicated paths for accessing a NIC and a display
-adapter without any software support from the CPU. The ME can also read and
-modify DRAM via DMA transfers, and can override the CPU's boot vector. The ME
-hardware, including the service processor, performs computations even when the
-computer is in \textit{Soft Off} mode (ACPI G2/S5), where the CPU and DRAM are
-unpowered.
+The Intel Management Engine (ME)~\cite{ruan2014intelme} loads its firmware
+from the same flash memory chip as the main computer, which opens up the
+possibility of compromising its firmware. Due to its vast management
+capabilities (\S~\ref{sec:intel_me}), a compromised ME would bring most of the
+powers that come with installing an active probe on the DRAM bus, the PCI bus,
+the System Management bus (SMBus).
 
 To prevent these attacks, most of the firware is signed. For example, the ME
 checks that its firmware was signed by a burned-in Intel public key. However,
 both the computer firmware checks \cite{wojtczuk2010bios, furtak2014bios} and
 the ME firmware checks \cite{tereshkin2009amt} have been subverted in the past.
+Furthermore, \cite{ververis2010security} found many high-level security issues
+in the ME's flagship Active Management Technology (AMT) application.
 
 
 The SGX trusted computing base includes the processor package, and excludes the

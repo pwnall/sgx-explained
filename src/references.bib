@@ -225,6 +225,23 @@
   month={Mar},
   note={Reference no. 323535-001}
 }
+@manual{ieee8023ethernet,
+  title={IEEE Standard for Ethernet},
+  organization={IEEE Computer Society},
+  year={2012},
+  month={Dec},
+  note={IEEE Std. 802.3-2012}
+}
+
+% Background: Computer Map - Intel Management Engine
+@article{intel2013mefw,
+  title={Intel Manageability Firmware Recovery Agent},
+  author={Hofemeier, Gael},
+  month={Mar},
+  year={2013},
+  howpublished="\url{https://software.intel.com/en-us/blogs/2013/02/06/intel-manageability-firmware-recovery-agent}",
+  note={[Online; accessed 2-Dec-2015]}
+}
 @book{ruan2014intelme,
   title={Platform Embedded Security Technology Revealed},
   author={Ruan, Xiaoyu},
@@ -232,62 +249,54 @@
   publisher={Apress},
   isbn={978-1-4302-6571-9}
 }
-@article{ververis2010security,
-  author={Ververis, Vassilios},
-  title={Security Evaluation of Intel's Active Management Technology},
-  school={KTH Royal Institute of Technology},
-  address={Stockholm, Sweden},
-  year={2010}
-}
-@article{wojtczuk2010bios,
-  title={Attacking Intel{\textregistered} BIOS},
-  author={Wojtczuk, Rafal and Tereshkin, Alexander},
-  journal={Invisible Things Lab},
-  year={2010}
-}
-@article{furtak2014bios,
-  title={BIOS and Secure Boot Attacks Uncovered},
-  author={Furtak, Andrew and Bulygin, Yuriy and Bazhaniuk, Oleksandr and
-          Loucaides, John and Matrosov, Alexander and Gorobets, Mikhail},
-  journal={The 10th ekoparty Security Conference},
-  year={2014},
-  howpublished="\url{http://www.intelsecurity.com/resources/pr-bios-secure-boot-attacks-uncovered.pdf}",
-  note={[Online; accessed 22-October-2015]}
-}
-@mastersthesis{tereshkin2009amt,
-  title={Introducing ring-3 rootkits},
-  author={Tereshkin, Alexander and Wojtczuk, Rafal},
-  journal={Black Hat USA},
-  year={2009}
-}
-@inproceedings{kim2014rowhammer,
-  title={Flipping bits in memory without accessing them: An experimental study
-         of DRAM disturbance errors},
-  author={Kim, Yoongu and Daly, Ross and Kim, Jeremie and Fallin, Chris and
-          Lee, Ji Hye and Lee, Donghyuk and Wilkerson, Chris and Lai, Konrad
-          and Mutlu, Onur},
-  booktitle={Proceeding of the 41st annual International Symposium on Computer
-             Architecuture},
-  pages={361--372},
-  year={2014},
-  organization={IEEE Press}
-}
-@misc{google2015rowhammer,
-  title={Exploiting the DRAM rowhammer bug to gain kernel privileges},
-  author={Seaborn, Mark and Dullien, Thomas},
+@manual{intel2015chipset,
+  title={Intel{\textregistered} 100 Series Chipset Family Platform Controller
+         Hub (PCH) Datasheet - Volume One},
+  organization={Intel Corporation},
   year={2015},
-  month={Mar},
-  publisher={Google Project Zero},
-  howpublished="\url{http://googleprojectzero.blogspot.com/2015/03/exploiting-dram-rowhammer-bug-to-gain.html}",
-  note={[Online; accessed 9-March-2015]}
+  month={Aug},
+  note={Reference no. 332690-001EN},
 }
-@article{gruss2015rowhammer,
-  title={Rowhammer. js: A Remote Software-Induced Fault Attack in JavaScript},
-  author={Gruss, Daniel and Maurice, Cl{\'e}mentine and Mangard, Stefan},
-  journal= {CoRR},
-  volume={abs/1507.06955},
+@manual{intel2015cpuio,
+  title={Mobile 4th Generation Intel{\textregistered} Core{\textregistered}
+         Processor Family I/O Datasheet},
+  organization={Intel Corporation},
   year={2015},
-  url={http://arxiv.org/abs/1507.06955}
+  month={Feb},
+  note={Reference no. 329003-003},
+}
+@misc{purism2014meclock,
+  title={BIOS Freedom Status},
+  organization={Purism},
+  year={2014},
+  month={Nov},
+  howpublished="\url{https://puri.sm/posts/bios-freedom-status/}",
+  note={[Online; accessed 2-Dec-2015]}
+}
+@article{dice2011meclock,
+  title={Booting an Intel Architecture System, Part I: Early Initialization},
+  author={Dice, Pete},
+  journal={Dr. Dobb's},
+  year={2011},
+  month={Dec},
+  howpublished="\url{http://www.drdobbs.com/parallel/booting-an-intel-architecture-system-par/232300699}",
+  note={[Online; accessed 2-Dec-2015]}
+}
+@misc{fitpc2014mehw,
+  title={IPC2 Hardware Specification},
+  organization={fitPC},
+  year={2014},
+  month={Sep},
+  howpublished="\url{http://fit-pc.com/download/intense-pc2/documents/ipc2-hw-specification.pdf}",
+  note={[Online; accessed 2-Dec-2015]}
+}
+@manual{intel2012mebringup,
+  title={Intel{\textregistered} 7 Series Family - Intel{\textregistered}
+         Management Engine Firmware 8.1 - 1.5MB Firmware Bring Up Guide},
+  organization={Intel Corporation},
+  year={2012},
+  month={Jul},
+  note={Revision 8.1.0.1248 - PV Release},
 }
 
 % Background: Computer Map - Processor
@@ -835,6 +844,66 @@
   howpublished="\url{http://www.cvedetails.com/product/47/Linux-Linux-Kernel.html?vendor_id=33}",
   year={2014},
   note={[Online; accessed 27-April-2015]}
+}
+
+% Security Background: Device software attacks 
+
+@article{ververis2010security,
+  author={Ververis, Vassilios},
+  title={Security Evaluation of Intel's Active Management Technology},
+  school={KTH Royal Institute of Technology},
+  address={Stockholm, Sweden},
+  year={2010}
+}
+@article{wojtczuk2010bios,
+  title={Attacking Intel{\textregistered} BIOS},
+  author={Wojtczuk, Rafal and Tereshkin, Alexander},
+  journal={Invisible Things Lab},
+  year={2010}
+}
+@article{furtak2014bios,
+  title={BIOS and Secure Boot Attacks Uncovered},
+  author={Furtak, Andrew and Bulygin, Yuriy and Bazhaniuk, Oleksandr and
+          Loucaides, John and Matrosov, Alexander and Gorobets, Mikhail},
+  journal={The 10th ekoparty Security Conference},
+  year={2014},
+  howpublished="\url{http://www.intelsecurity.com/resources/pr-bios-secure-boot-attacks-uncovered.pdf}",
+  note={[Online; accessed 22-October-2015]}
+}
+@mastersthesis{tereshkin2009amt,
+  title={Introducing ring-3 rootkits},
+  author={Tereshkin, Alexander and Wojtczuk, Rafal},
+  journal={Black Hat USA},
+  year={2009}
+}
+@inproceedings{kim2014rowhammer,
+  title={Flipping bits in memory without accessing them: An experimental study
+         of DRAM disturbance errors},
+  author={Kim, Yoongu and Daly, Ross and Kim, Jeremie and Fallin, Chris and
+          Lee, Ji Hye and Lee, Donghyuk and Wilkerson, Chris and Lai, Konrad
+          and Mutlu, Onur},
+  booktitle={Proceeding of the 41st annual International Symposium on Computer
+             Architecuture},
+  pages={361--372},
+  year={2014},
+  organization={IEEE Press}
+}
+@misc{google2015rowhammer,
+  title={Exploiting the DRAM rowhammer bug to gain kernel privileges},
+  author={Seaborn, Mark and Dullien, Thomas},
+  year={2015},
+  month={Mar},
+  publisher={Google Project Zero},
+  howpublished="\url{http://googleprojectzero.blogspot.com/2015/03/exploiting-dram-rowhammer-bug-to-gain.html}",
+  note={[Online; accessed 9-March-2015]}
+}
+@article{gruss2015rowhammer,
+  title={Rowhammer. js: A Remote Software-Induced Fault Attack in JavaScript},
+  author={Gruss, Daniel and Maurice, Cl{\'e}mentine and Mangard, Stefan},
+  journal= {CoRR},
+  volume={abs/1507.06955},
+  year={2015},
+  url={http://arxiv.org/abs/1507.06955}
 }
 
 % Security Background: Cache timing attacks

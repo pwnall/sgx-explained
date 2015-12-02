@@ -74,12 +74,29 @@ firmware that was used to boot the computer.
 \subsubsection{SEC on Intel Platforms}
 \label{sec:uefi_sec_details}
 
+Right after a computer is powered up, the Intel ME (\S~\ref{sec:intel_me})
+embedded in the PCH starts executing the code in its boot ROM which, in turn,
+sets up SPI bus connected to the flash memory chip (\S~\ref{sec:motherboard})
+that stores both the UEFI firmware and the ME's firmware. The ME then loads its
+firmware from flash memory, which contains the ME's operating system and
+applications.
+
+% ICC Registers Under Intel ME Control: Chipset S 4.5.1
+
+After the Intel ME loads its software, it sets up some of the motherboard's
+hardware, such as the PCH bus clocks, and then kicks off the CPU's bootstrap
+sequence. Most of the details of the ME's involvement in the computer's boot
+process are not publicly available, but setting the clocks is mentioned in a
+few public documents \cite{intel2015cpuio, purism2014meclock, dice2011meclock,
+fitpc2014mehw}, and is made clear in a leaked confidential document
+\cite{intel2012mebringup}.
+
 % Initialization Overview: SDM S 9.1
 
-The SEC phase starts in the CPU's circuitry. Right after a computer is powered
-up, all the logical processors (LPs) on the motherboard undergo
-\textit{hardware initialization}, which invalidates the caches
-(\S~\ref{sec:caching}) and TLBs (\S~\ref{sec:tlbs}), performs a
+The beginning of the CPU's bootstrap sequence is the SEC phase, which is
+implemented in the processor circuitry. All the logical processors (LPs) on the
+motherboard undergo \textit{hardware initialization}, which invalidates the
+caches (\S~\ref{sec:caching}) and TLBs (\S~\ref{sec:tlbs}), performs a
 \textit{Built-In Self Test} (BIST), and sets all the registers
 (\S~\ref{sec:registers}) to pre-specified values.
 
