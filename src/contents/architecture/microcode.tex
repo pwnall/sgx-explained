@@ -370,13 +370,13 @@ firmware (\S~\ref{sec:motherboard}).
 
 The microcode that implements SEC performs MP initialization
 (\S~\ref{sec:uefi_sec_details}), as suggested in the SDM. The microcode then
-places the BSP into Cache-as-RAM (CAR) mode, looks up the PEI Authenticated
-Code Module (ACM) in the Firmware Interface Table (FIT), loads the PEI ACM into
-the cache, and verifies its signature (\S~\ref{sec:uefi_sec_details})
-\cite{datta2010trustedboot, intel2012patching, intel2012uefihypervisor,
-intel2012ltsx, datta2013acm}. Given the structure of ACM signatures, we can
-conclude that Intel's microcode contains implementations of RSA decryption and
-of a variant of SHA hashing.
+places the BSP into Cache-as-RAM (CAR) mode, looks up the PEI
+\textit{Authenticated Code Module}~(ACM) in the Firmware Interface Table (FIT),
+loads the PEI ACM into the cache, and verifies its signature
+(\S~\ref{sec:uefi_sec_details}) \cite{datta2010trustedboot, intel2012patching,
+intel2012uefihypervisor, intel2012ltsx, datta2013acm}. Given the structure of
+ACM signatures, we can conclude that Intel's microcode contains implementations
+of RSA decryption and of a variant of SHA hashing.
 
 The PEI ACM is executed from the CPU's cache, after it is loaded by the
 microcode \cite{datta2010trustedboot, intel2012patching, datta2013acm}. This
