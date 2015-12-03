@@ -30,14 +30,21 @@ from the same flash memory chip as the main computer, which opens up the
 possibility of compromising its firmware. Due to its vast management
 capabilities (\S~\ref{sec:intel_me}), a compromised ME would bring most of the
 powers that come with installing an active probe on the DRAM bus, the PCI bus,
-the System Management bus (SMBus).
+and the System Management bus (SMBus). Thanks to its direct access to the
+motherboard's Ethernet PHY, the probe would be able to communicate with the
+attacker while the computer is in the Soft-Off state, also known as S5, where
+the computer is mostly powered off, but is still connected to a power source.
+The ME has significantly less computational power than probe equipment,
+however, as it uses low-power embedded components, such as a 200-400Mhz
+execution core, and about 600KB of internal RAM.
+
 
 To prevent these attacks, most of the firware is signed. For example, the ME
 checks that its firmware was signed by a burned-in Intel public key. However,
 both the computer firmware checks \cite{wojtczuk2010bios, furtak2014bios} and
 the ME firmware checks \cite{tereshkin2009amt} have been subverted in the past.
 Furthermore, \cite{ververis2010security} found many high-level security issues
-in the ME's flagship Active Management Technology (AMT) application.
+in Intel's Active Management Technology (AMT), the flagship ME application.
 
 
 The SGX trusted computing base includes the processor package, and excludes the

@@ -118,11 +118,21 @@ the motherboard's Ethernet PHY, or an AMT-compatible NIC
   \label{fig:intel_me}
 \end{figure}
 
-The Intel ME's execution core is active even when the host computer is in
-\textit{Soft Off} mode (ACPI G2/S5), where the CPU and DRAM are unpowered. In
-this state, the ME cannot access the DRAM, but it can still use its internal
+% Power and Ground Signals: Series 100 Chipset datasheet S 8
+% PCH and System Power States: Series 100 Chipset datasheet S 26.7.2
+
+The Intel ME is connected to the motherboard's power supply using a power rail
+that stays active even when the host computer is in the \textit{Soft Off} mode
+\cite{intel2015chipset}, known as ACPI G2/S5, where most of the computer's
+components are powered off \cite{intel2010power}, including the CPU and DRAM.
+For all practical purposes, this means that the ME's execution core is active
+as long as the power supply is still connected to a power source.
+
+In S5, the ME cannot access the DRAM, but it can still use its internal
 memories. The ME can also still communicate with a remote party, as it can
-access the motherboard's Ethernet PHY via SMBus.
+access the motherboard's Ethernet PHY via SMBus. This enables applications such
+as AMT's theft prevention, where a laptop equipped with a cellular modem can be
+tracked and permanently disabled as long as it has power and signal.
 
 As the ME remains active in deep power-saving modes, its design must rely on
 low-power components. The execution core is Argonaut RISC Core (ARC) clocked at
