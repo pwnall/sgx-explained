@@ -25,6 +25,14 @@ Cache timing attacks do not access the victim's memory directly, so they are
 \emph{not} prevented by the address translation-based protections
 (\S~\ref{sec:paging}) implemented in today's kernels and hypervisors.
 
+Unfortunately, a cache timing attack can take advantage of the fact that the
+LLC is inclusive and shared among CPU cores (\S~\ref{sec:cache_coherence}).
+This allows an attacker thread to monitor a victim thread that runs on a core
+in the same CPU die. The attacker can evict lines in the target core's cache by
+filling up the L3 cache, and then probe the L3 cache to find out when the
+target causes cache evictions.  The evicted lines disclose some of the bits in
+the memory addresses accessed by the victim.
+
 Cache timing attacks are known to retrieve cryptographic keys used by
 AES~\cite{bonneau2006aes}, RSA~\cite{brumley2005rsa},
 Diffie-Hellman~\cite{kocher1996timing}, and elliptic-curve
@@ -56,6 +64,16 @@ high-resolution performance counter (\texttt{RDTSCP},
 \S~\ref{sec:address_spaces}) \cite{petters1999making} to get information about
 the instructions and memory access patterns of another piece of software that
 is executed on the other logical processor on the same core.
+
+Out-of-order execution (\S~\ref{sec:out_of_order}) can introduce noise in cache
+timing attacks. First, memory accesses may not be performed in program order,
+which can impact the lines selected by the cache eviction algorithms. Second,
+out-of-order execution may result in cache fills that do not correspond to
+executed instructions. For example, a load that follows a faulting instruction
+may be scheduled and executed before the fault is detected. Memory prefetching
+adds further noise to cache timing attacks, as the attacker may observe cache
+fills that don't correspond to instructions in the victim code, even when
+accounting for speculative execution.
 
 Our analysis of SGX concludes that it is vulnerable to cache timing attacks,
 which can be used to obtain high-resolution memory access patterns for the

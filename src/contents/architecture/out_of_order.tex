@@ -5,11 +5,10 @@ CPU cores can execute instructions orders of magnitude faster than DRAM can
 read data. CPU architects attempt to bridge this gap by using hyper-threading
 (\S~\ref{sec:cpu_die}), caching (\S~\ref{sec:caching}), and out-of-order and
 speculative execution. Out-of-order execution can safely be ignored when
-developing a general understanding of SGX, but shows up behind the decision
-decisions in SGX's implementation. Out-of-order and speculative execution can
-also introduce noise in the data obtained from cache timing attacks. This
-section provides an overview of out-of-order and speculative execution that is
-sufficient for reasoning about SGX and cache timing attacks.
+developing a general understanding of an architecture's security mechanisms,
+but must be factored in when analyzing the information leaked from a presumably
+isolated environment. This section summarizes the out-of-order and speculative
+execution concepts used when reasoning about a system's security properties.
 \cite{patterson2013architecture} and \cite{hennessy2012architecture} cover the
 concepts in great depth, while Intel's optimization manual
 \cite{intel2014optimization} provides details specific to Intel CPUs.
@@ -174,13 +173,6 @@ For this reason, out-of-order engines have a \textit{load buffer} and a
 \textit{store buffer} that keep track of in-flight memory operations and are
 used to resolve memory dependencies.
 
-Out-of-order execution can introduce noise in cache timing attacks. First,
-memory accesses may not be performed in program order, which can impact the
-lines selected by the cache eviction algorithms. Second, out-of-order execution
-may result in cache fills that do not correspond to executed instructions. For
-example, a load that follows a faulting instruction may be scheduled and
-executed before the fault is detected.
-
 
 \subsubsection{Speculative Execution}
 
@@ -229,7 +221,3 @@ prefetcher can recognize a particular access pattern, such as squentially
 reading an array's elements. When memory accesses match the pattern that a
 prefetcher was built to recognize, the prefetcher loads the cache line
 corresponding to the next memory access in its pattern.
-
-Prefetching introduces noise in cache timing attacks, as the attacker may
-observe cache fills that don't correspond to instructions in the victim code,
-even when accounting for speculative execution.

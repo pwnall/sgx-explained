@@ -21,7 +21,8 @@ to the DRAM region used by a TXT container \cite{wojtczuk2009txt,
 wojtczuk2009txt2}. In recent Intel CPUs, the memory controller is integrated on
 the CPU die, so the SINIT ACM
 can securely set up the memory controller to reject DMA transfers targeting TXT
-memory.
+memory. An Intel chipset datasheet \cite{intel2015datasheet} documents an
+``Intel TXT DMA Protected Range'' IIO configuration register.
 
 Early TXT implementations did not measure the SINIT ACM. Instead, the microcode
 implementing the TXT launch instruction verified that the code module contained

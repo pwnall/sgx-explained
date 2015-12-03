@@ -9,7 +9,7 @@ DRAM writes. The same memory location might be simultaneously cached by
 different cores' caches, or even by caches on separate chips, so providing the
 TSO guarantees requires a \textit{cache coherence protocol} that keeps the
 cached copies in sync. This section covers some cache coherence implementation
-details that are necessary for understanding SGX.
+details that help reason about cache timing attacks.
 \cite{hennessy2012architecture} provides a good introduction to cache coherence
 principles.
 
@@ -29,14 +29,6 @@ the CPU's uncore, thanks to the fact that cache synchronization can be achieved
 without having to communicate to the lower cache levels that are inside
 execution cores.
 
-Unfortunately, a cache timing attack can take advantage of the fact that the
-LLC is inclusive and shared among CPU cores. This allows an attacker thread
-to monitor a victim thread that runs on a core in the same CPU die. The
-attacker can evict lines in the target core's cache by filling up the L3 cache,
-and then probe the L3 cache to find out when the target causes cache evictions.
-The evicted lines disclose some of the bits in the memory addresses accessed by
-the victim.
-
 The QPI protocol defines \textit{cache agents}, which are connected to the
 last-level cache in a processor, and \textit{home agents}, which are connected
 to memory controllers. Cache agents make requests to home agents for cache line
@@ -44,7 +36,6 @@ data on cache misses, while home agents keep track of cache line ownership, and
 obtain the cache line data from other cache line agents, or from the memory
 controller. The QPI routing layer supports multiple agents per socket, and each
 processor has its own caching agents, and at least one home agent.
-
 
 % Ring Interconnect and Last Level Cache: Optimization S 2.5.5.3
 
@@ -95,8 +86,5 @@ The integration of the memory controller on the CPU brings the ability to
 filter DMA transfers. Accesses from a peripheral connected to the PCIe bus will
 be handled by the integrated I/O controller (IIO) and placed on the ring
 interconnect via the Ubox, then reach the iMC. Therefore, on modern systems,
-DMA transfers go through both the SAD and TAD. Intel TXT takes advantage of
-this to set up a protected DRAM range. For example, \cite{intel2015datasheet}
-documents an ``Intel TXT DMA Protected Range'' IIO configuration register.
-According to Intel's patents, the SGX implementation uses the same mechanism to
-protect enclave memory from outside accesses.
+DMA transfers go through both the SAD and TAD, which can be configured to
+abort DMA transfers targeting protected DRAM ranges.
