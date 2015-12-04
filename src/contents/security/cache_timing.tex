@@ -4,74 +4,58 @@
 % TODO: Figure out how to mention MSR's attacks that collect page fault
 %       addresses. \cite{xu2015pagefaults}
 
-Unfortunately, caches create a dependency between the location of a memory
-access and the time it takes to perform the access. A cache miss requires
-at least one memory access to the next level cache, and might require a second
-memory access if a write-back occurs. The related work presented in
-\cite{banescu2011cache} shows that it is practical to use the timing
-differences between hits and misses to learn the memory access patterns of a
-target thread, as long as an attacker thread shares a cache with the target
-thread. The target's memory access patterns, in turn, can reveal private
-information, such as whether certain bits in an encryption key are set or not.
-
-
 Cache timing attacks~\cite{banescu2011cache} are a powerful class of software
-attacks that can be mounted entirely by application
-(ring 3, \S~\ref{sec:rings}) code. The attacker software measures the latency
-of accesses to its own memory in order to determine whether the accesses caused
-misses in a cache that is shared with a victim program. The memory accesses are
-carefully chosen to reveal the memory access pattern of the victim program.
-Cache timing attacks do not access the victim's memory directly, so they are
-\emph{not} prevented by the address translation-based protections
-(\S~\ref{sec:paging}) implemented in today's kernels and hypervisors.
+attacks that can be mounted entirely by application code running at ring 3
+(\S~\ref{sec:rings}). Cache timing attacks do not learn information by reading
+the victim's memory, so they bypass the address translation-based isolation
+measures (\S~\ref{sec:paging}) implemented in today's kernels and hypervisors.
 
-A cache timing attack that aims at the L2 cache would have to rely on the
-system software to schedule a software thread on a logical processor in the
-same core as the target software, whereas an attack on the L3 cache can be
-performed using any logical processor on the same CPU. This implies that L3
-cache attacks are feasible in an IaaS environment, whereas L2 cache attacks
-become a possibility when running sensitive software on a user's desktop.
+Cache timing attacks exploit the unfortunate dependency between the location of
+a memory access and the time it takes to perform the access. A cache miss
+requires at least one memory access to the next level cache, and might require
+a second memory access if a write-back occurs. On the Intel architecture, the
+latency between a cache hit and a miss can be easily measured by the
+\texttt{RDTSC} and \texttt{RDTSCP} instructions (\S~\ref{sec:address_spaces}),
+which read a high-resolution time-stamp counter. These instructions have been
+designed for benchmarking and optimizing software, so they are available to
+ring 3 software.
 
+The fundamental tool of a cache timing attack is an attacker process that
+measures the latency of accesses to carefully designated memory locations in
+its own address space. The memory locations are chosen so that they map to
+the same cache lines as some interesting memory locations in a victim process,
+in a cache that is shared between the attacker and the victim. This requires
+in-depth knowledge of the shared cache's organization (\S~\ref{sec:cache_org}).
 
-Unfortunately, a cache timing attack can take advantage of the fact that the
-LLC is inclusive and shared among CPU cores (\S~\ref{sec:cache_coherence}).
-This allows an attacker thread to monitor a victim thread that runs on a core
-in the same CPU die. The attacker can evict lines in the target core's cache by
-filling up the L3 cache, and then probe the L3 cache to find out when the
-target causes cache evictions.  The evicted lines disclose some of the bits in
-the memory addresses accessed by the victim.
+Armed with the knowledge of the cache's organization, the attacker process
+sets up the attack by accessing its own memory in such a way that it fills up
+all the ways in the cache sets that would hold the victim's interesting memory
+locations. After the targeted cache sets are full, the attacker allows the
+victim process to execute. When the victim process accesses an interesting
+memory locations in its own address space, the shared cache must evict one of
+the cache lines holding the attacker's memory locations.
 
-Cache timing attacks are known to retrieve cryptographic keys used by
-AES~\cite{bonneau2006aes}, RSA~\cite{brumley2005rsa},
-Diffie-Hellman~\cite{kocher1996timing}, and elliptic-curve
-cryptography~\cite{brumley2011ecc}.
-Early attacks required access to the victim's CPU core, but more sophisticated
-recent attacks~\cite{yarom2013llctiming, liu2015llctiming} are able to use the
-last-level cache (LLC), which is shared by all the cores on a CPU. Recently,
-cache-timing attacks were demonstrated to be mountable via JavaScript code in a
-page visited by a Web browser~\cite{oren2015jstiming}.
+As the victim is executing, the attacker process repeatedly times accesses to
+its own memory locations. When the access times indicate that a location was
+evicted from the cache, the attacker can conclude that the victim accessed an
+interesting memory location in its own cache. Over time, the attacker collects
+the results of many measurements and learns a subset of the victim's memory
+access pattern. If the victim processes sensitive information using
+data-dependent memory fetches, the attacker may be able to deduce the sensitive
+information from the learned memory access pattern.
 
-Given this pattern of vulnerabilities, ignoring cache timing attacks is
-dangerously similar to ignoring the string of demonstrated attacks which led to
-the deprecation of SHA-1~\cite{nist2014sha1policy, google2014sha1deprecation,
-microsoft2014sha1deprecation}.
+Cache timing attacks require control over a software process that shares a
+cache memory with the victim process. Therefore, a cache timing attack that
+aims at the L2 cache would have to rely on the system software to schedule a
+software thread on a logical processor in the same core as the target software,
+whereas an attack on the L3 cache can be performed using any logical processor
+on the same CPU. The latter attacks rely on the fact that the L3 cache is
+inclusive, which greatly simplifies the processor's cache coherence
+implementation (\S~\ref{sec:cache_coherence}).
 
-Alarmingly, {\em cache timing attacks require only unprivileged software
-running on the victim's host computer}, and do not rely on any physical
-access to the machine.
-
-Some MSRs are also
-exposed by instructions accessible to applications. For example, applications
-can read the time-stamp counter with the \texttt{RDTSC} and \texttt{RDTSCP},
-which are very useful for benchmarking and optimizing software, but also for
-mounting timing attacks.
-
-The high level of resource sharing introduced by hyper-threading introduces a
-security vulnerability. Software running on one logical processor can use the
-high-resolution performance counter (\texttt{RDTSCP},
-\S~\ref{sec:address_spaces}) \cite{petters1999making} to get information about
-the instructions and memory access patterns of another piece of software that
-is executed on the other logical processor on the same core.
+The cache sharing requirement implies that L3 cache attacks are feasible in an
+IaaS environment, whereas L2 cache attacks become a significant concern when
+running sensitive software on a user's desktop.
 
 Out-of-order execution (\S~\ref{sec:out_of_order}) can introduce noise in cache
 timing attacks. First, memory accesses may not be performed in program order,
@@ -83,12 +67,35 @@ may be scheduled and executed before the fault is detected.
 Cache timing attacks must account for speculative execution, as mispredicted
 memory accesses can still cause cache fills. Therefore, the attacker may
 observe cache fills that don't correspond to instructions that were actually
-executed by the victim software.
+executed by the victim software. Memory prefetching adds further noise to cache
+timing attacks, as the attacker may observe cache fills that don't correspond
+to instructions in the victim code, even when accounting for speculative
+execution.
 
-Memory prefetching adds further noise to cache timing attacks, as the attacker
-may observe cache fills that don't correspond to instructions in the victim
-code, even when accounting for speculative execution.
+Despite these difficulties, cache timing attacks are known to retrieve
+cryptographic keys used by AES~\cite{bonneau2006aes},
+RSA~\cite{brumley2005rsa}, Diffie-Hellman~\cite{kocher1996timing}, and
+elliptic-curve cryptography~\cite{brumley2011ecc}.
 
-Our analysis of SGX concludes that it is vulnerable to cache timing attacks,
-which can be used to obtain high-resolution memory access patterns for the
-software running inside an SGX enclave.
+Early attacks required access to the victim's CPU core, but more sophisticated
+recent attacks~\cite{yarom2013llctiming, liu2015llctiming} are able to use the
+L3 cache, which is shared by all the cores on a CPU die. L3-based attacks can
+be particularly devastating in cloud computing scenarios, where running
+software on the same computer as a victim application only requires modest
+statistical analysis skills and a small amount of
+money~\cite{ristenpart2009colocation}.
+
+Recently, cache-timing attacks were demonstrated to be mountable via JavaScript
+code in a page visited by a Web browser~\cite{oren2015jstiming}.
+
+Given this pattern of vulnerabilities, ignoring cache timing attacks is
+dangerously similar to ignoring the string of demonstrated attacks which led to
+the deprecation of SHA-1~\cite{nist2014sha1policy, google2014sha1deprecation,
+microsoft2014sha1deprecation}.
+
+The high level of resource sharing introduced by hyper-threading introduces a
+security vulnerability. Software running on one logical processor can use the
+high-resolution performance counter (\texttt{RDTSCP},
+\S~\ref{sec:address_spaces}) \cite{petters1999making} to get information about
+the instructions and memory access patterns of another piece of software that
+is executed on the other logical processor on the same core.
