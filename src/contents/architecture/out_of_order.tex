@@ -1,14 +1,26 @@
 \subsection{Out-of-Order and Speculative Execution}
 \label{sec:out_of_order}
 
+% Outcome: distinguish observed execution order from program order
+
 CPU cores can execute instructions orders of magnitude faster than DRAM can
-read data. CPU architects attempt to bridge this gap by using hyper-threading
-(\S~\ref{sec:cpu_die}), caching (\S~\ref{sec:caching}), and out-of-order and
-speculative execution. Out-of-order execution can safely be ignored when
-developing a general understanding of an architecture's security mechanisms,
-but must be factored in when analyzing the information leaked from a presumably
-isolated environment. This section summarizes the out-of-order and speculative
-execution concepts used when reasoning about a system's security properties.
+read data. Computer architects attempt to bridge this gap by using
+hyper-threading (\S~\ref{sec:cpu_die}), out-of-order and speculative execution,
+and caching, which is described in \S~\ref{sec:caching}. In CPUs that use
+out-of-order execution, the order in which the CPU carries out a program's
+instructions (\textit{execution order}) is not necessarily the same as the
+order in which the instructions would be executed by a sequential evaluation
+system (\textit{program order}).
+
+An analysis of a system's information leakage must take out-of-order execution
+into consideration. Any CPU actions observed by an attacker match the execution
+order, so the attacker may learn some information by comparing the observed
+execution order with a known program order. At the same time, attacks that try
+to infer a victim's program order based on actions taken by the CPU must
+account for out-of-order execution as a source of noise.
+
+This section summarizes the out-of-order and speculative execution concepts
+used when reasoning about a system's security properties.
 \cite{patterson2013architecture} and \cite{hennessy2012architecture} cover the
 concepts in great depth, while Intel's optimization manual
 \cite{intel2014optimization} provides details specific to Intel CPUs.
@@ -204,11 +216,6 @@ retired successfully. The scheduler handles \textit{mispredictions} by
 squashing all the micro-ops following the branch check, and by signaling the
 instruction decoder to flush the micro-op decode queue and start fetching the
 instructions that follow the correct branch.
-
-Cache timing attacks must account for speculative execution, as mispredicted
-memory accesses can still cause cache fills. Therefore, the attacker may
-observe cache fills that don't correspond to instructions that were actually
-executed by the victim software.
 
 % Data Prefetching: Optimization S 2.2.5.4
 

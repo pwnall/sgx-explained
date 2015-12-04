@@ -1,15 +1,11 @@
 \subsection{Software Privilege Levels}
 \label{sec:rings}
 
+% Outcome: enumerate all software actors and their trust relationships
+
 In an Infrastructure-as-a-Service (IaaS) cloud environment, such as Amazon EC2,
 commodity CPUs run software at four different privilege levels, shown in
-Figure~\ref{fig:cpu_rings}. Each privilege level is strictly more powerful than
-the ones below it, so the code running at a given level can freely read and
-modify the code and data at less privileged levels, and can compromise the
-software running at these levels. Therefore, a piece of software implicitly
-trusts all the software running at more privileged levels, and establishing a
-system's security properties can only be done by analyzing the software at all
-privilege levels.
+Figure~\ref{fig:cpu_rings}.
 
 \begin{figure}[hbtp]
   \centering
@@ -20,6 +16,14 @@ privilege levels.
   }
   \label{fig:cpu_rings}
 \end{figure}
+
+Each privilege level is strictly more powerful than the ones below it, so a
+piece of software can freely read and modify the code and data running at less
+privileged levels. Therefore, a software module can be compromised by any piece
+of software running at a higher privilege level. It follows that a software
+module implicitly trusts all the software running at more privileged levels,
+and a system's security analysis must take into account the software at all
+privilege levels.
 
 % System Management Mode: SDM S 34
 

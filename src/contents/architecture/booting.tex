@@ -1,13 +1,23 @@
 \subsection{Platform Initialization (Booting)}
 \label{sec:booting}
 
+% Outcome: analyzing the chain of trust in a hardware/software co-design
+
 When a computer is powered up, it undergoes a \textit{bootstrapping} process,
-also called \textit{booting}, for simplicity. Although many steps in the boot
-process depend on the motherboard and components in a computer, the process
-does follow a high-level structure that is mostly prescribed in the SDM. This
-section provides the details of the booting process needed to analyze SGX's
-security properties. \cite{intel2010booting} provides a good reference on the
-low-level details of the entire booting process.
+also called \textit{booting}, for simplicity. The boot process is a sequence of
+steps that collectively initialize all the computer's hardware components and
+load the system software into DRAM. An analysis of a system's security
+properties must be aware of all the pieces of software executed during the boot
+process, and must account for the trust relationships that are created when a
+software module loads another module.
+
+This section outlines the details of the boot process needed to reason about
+the security of a system based on the Intel architecture.
+\cite{intel2010booting} provides a good reference for many of the booting
+process's low-level details. While some specifics of the boot process depend on
+the motherboard and components in a computer, this section focuses on the
+high-level flow described by Intel's documentation.
+
 
 \subsubsection{The UEFI Standard}
 \label{sec:efi}
@@ -92,7 +102,7 @@ ME's operating system and applications.
 % ICC Registers Under Intel ME Control: Series 100 Chipset datasheet S 4.5.1
 
 After the Intel ME loads its software, it sets up some of the motherboard's
-hardware, such as the PCH bus clocks, and then kicks off the CPU's bootstrap
+hardware, such as the PCH bus clocks, and then it kicks off the CPU's bootstrap
 sequence. Most of the details of the ME's involvement in the computer's boot
 process are not publicly available, but setting the clocks is mentioned in a
 few public documents \cite{intel2015cpuio, purism2014meclock, dice2011meclock,
@@ -183,7 +193,7 @@ Intel-signed ACMs \cite[p. 92]{futral2013servertxt}.
 \cite{intel2010booting} and \cite{coreboot2015manual} describe the
 initialization steps performed by Intel platforms during the PEI phase, from
 the perspective of a firmware programmer. A few steps provide useful context
-for understanding SGX's hardware underpinnings.
+for understanding reasoning about threat models involving the boot process.
 
 % Preventing Caching: SDM S 11.5.3
 

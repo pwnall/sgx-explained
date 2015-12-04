@@ -2,11 +2,20 @@
 \label{sec:interrupts}
 
 Peripherals use \textit{interrupts} to signal the occurrence of an event that
-must be handled by system software. For example, a keyboard issues interrupts
+must be handled by system software. For example, a keyboard triggers interrupts
 when a key is pressed or depressed. System software also relies on interrupts
-to implement preemptive multi-threading. This section presents the details
-needed to understand the concerns and tools that interrupts bring to the SGX
-implementation.
+to implement preemptive multi-threading.
+
+Interrupts are a kind of hardware exceptions (\S~\ref{sec:faults}), and
+therefore receiving an interrupt causes an execution core to perform a
+privilege level switch and start executing the system software's interrupt
+handling code. Therefore, the security concerns in \S~\ref{sec:faults} also
+apply to interrupts, with the added twist that interrupts can occur at any
+time, whereas most faults are explicitly triggered by application software.
+
+Given the importance of interrupts when assessing a system's security, this
+section outlines the interrupt triggering and handling processes described
+in the SDM,.
 
 % Advanced Programmable Interrupt Controller (APIC): SDM S 10
 % Message Signalled Interrupts (MSI): SDM S 10.11
@@ -40,8 +49,8 @@ interrupt handling process.
 % Issuing Interprocessor Interrupts: SDM S 10.6
 % Interrupt Command Register (ICR): SDM S 10.6.1
 
-At the architectural level, interrupt handling reuses many of the mechanisms in
-fault handling (\S~\ref{sec:faults}). The interrupt vector number in the
+At the execution core level, interrupt handling reuses many of the mechanisms
+of fault handling (\S~\ref{sec:faults}). The interrupt vector number in the
 LAPIC's ISR is used to locate an interrupt handler in the IDT, and the handler
 is invoked, possibly after a privilege switch is performed. The interrupt
 handler does the processing that the device requires, and then writes the
@@ -52,11 +61,7 @@ Interrupts are treated like faults, so interrupt handlers have full control
 over the execution environment of the application being interrupted. This is
 used to implement pre-emptive multi-threading, which relies on a clock device
 that generates interrupts periodically, and on an interrupt handler that
-performs context switches. While useful for multi-threading, this aspect of the
-architecture also implies that the SGX design must include changes to the
-interrupt handling process, in order to protect an enclave's execution state
-from an interrupt handler that is invoked while the enclave's code is
-executing.
+performs context switches.
 
 System software can cause an interrupt on any logical processor by writing the
 target processor's APIC ID into the \textit{Interrupt Command Register} (ICR)

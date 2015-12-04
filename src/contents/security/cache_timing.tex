@@ -25,6 +25,14 @@ Cache timing attacks do not access the victim's memory directly, so they are
 \emph{not} prevented by the address translation-based protections
 (\S~\ref{sec:paging}) implemented in today's kernels and hypervisors.
 
+A cache timing attack that aims at the L2 cache would have to rely on the
+system software to schedule a software thread on a logical processor in the
+same core as the target software, whereas an attack on the L3 cache can be
+performed using any logical processor on the same CPU. This implies that L3
+cache attacks are feasible in an IaaS environment, whereas L2 cache attacks
+become a possibility when running sensitive software on a user's desktop.
+
+
 Unfortunately, a cache timing attack can take advantage of the fact that the
 LLC is inclusive and shared among CPU cores (\S~\ref{sec:cache_coherence}).
 This allows an attacker thread to monitor a victim thread that runs on a core
@@ -70,10 +78,16 @@ timing attacks. First, memory accesses may not be performed in program order,
 which can impact the lines selected by the cache eviction algorithms. Second,
 out-of-order execution may result in cache fills that do not correspond to
 executed instructions. For example, a load that follows a faulting instruction
-may be scheduled and executed before the fault is detected. Memory prefetching
-adds further noise to cache timing attacks, as the attacker may observe cache
-fills that don't correspond to instructions in the victim code, even when
-accounting for speculative execution.
+may be scheduled and executed before the fault is detected.
+
+Cache timing attacks must account for speculative execution, as mispredicted
+memory accesses can still cause cache fills. Therefore, the attacker may
+observe cache fills that don't correspond to instructions that were actually
+executed by the victim software.
+
+Memory prefetching adds further noise to cache timing attacks, as the attacker
+may observe cache fills that don't correspond to instructions in the victim
+code, even when accounting for speculative execution.
 
 Our analysis of SGX concludes that it is vulnerable to cache timing attacks,
 which can be used to obtain high-resolution memory access patterns for the

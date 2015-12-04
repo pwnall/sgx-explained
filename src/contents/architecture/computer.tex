@@ -1,6 +1,8 @@
 \subsection{A Computer Map}
 \label{sec:computer_map}
 
+% Outcome: enumerate all the resources in a computer, understand what is shared
+
 This section outlines the hardware components that make up a computer system
 based on the Intel architecture.
 
@@ -34,7 +36,8 @@ A computer's components are connected by a printed circuit board called a
   \centering
   \includegraphics[width=85mm]{figures/motherboard.pdf}
   \caption{
-    The motherboard structures that are most relevant to SGX.
+    The motherboard structures that are most relevant in a system security
+    analysis.
   }
   \label{fig:motherboard}
 \end{figure}
@@ -180,12 +183,13 @@ intel2010datasheet}, and in the overview sections in Intel's uncore performance
 monitoring documentation \cite{intel2014uncore, intel2012uncore,
 intel2010uncore}.
 
-Security extensions to the Intel architecture, such as TXT and SGX, rely on the
-fact that the processor die includes the memory and I/O controller, and thus
-can prevent any device from accessing protected memory areas via
-\textit{Direct Memory Access} (DMA) transfers. \S~\ref{sec:cache_coherence}
-takes a deeper look at the uncore organization and at the machinery used to
-prevent unauthorized DMA transfers.
+Security extensions to the Intel architecture, such as Trusted Execution
+Technology~(TXT)~\cite{grawrock2009txt} and Software Guard
+Extensions~(SGX)~\cite{mckeen2013sgx, anati2013sgx}, rely on the fact that the
+processor die includes the memory and I/O controller, and thus can prevent any
+device from accessing protected memory areas via \textit{Direct Memory Access}
+(DMA) transfers. \S~\ref{sec:cache_coherence} takes a deeper look at the uncore
+organization and at the machinery used to prevent unauthorized DMA transfers.
 
 
 \subsubsection{The Core}
