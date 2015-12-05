@@ -125,6 +125,16 @@ Active Management Technology~(AMT), the flagship ME application, contained an
 assortment of security issues that allowed an attacker to completely take over
 a computer whose ME firmware contained the AMT application.
 
+The attacks described in this section show that a system whose threat model
+assumes no software attacks must be designed with an understanding of all the
+system's buses, the programmable devices that may be attached to them. The
+system's security analysis must argue that the devices will not be used in
+physical-like attacks. The argument will rely on barriers that prevent
+untrusted software running on the CPU from communicating with other
+programmable devices, and on barriers that prevent compromised programmable
+devices from tampering with sensitive buses or DRAM.
+
 Unfortunately, the ME, PCH and DMI are Intel-proprietary and largely
-undocumented, so we cannot assess the impact of an attack that causes the ME
-to load and execute malicious software.
+undocumented, so we cannot assess the security of the measures set in place to
+protect the ME from being compromised, and we cannot reason about the impact
+of a compromised ME that runs malicious software.
