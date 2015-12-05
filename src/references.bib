@@ -939,6 +939,14 @@
   howpublished="\url{http://www.academia.edu/3224323/Cache_Timing_Attacks}",
   note={[Online; accessed 26-January-2014]}
 }
+@incollection{osvik2006aes,
+  title={Cache attacks and countermeasures: the case of AES},
+  author={Osvik, Dag Arne and Shamir, Adi and Tromer, Eran},
+  booktitle={Topics in Cryptology--CT-RSA 2006},
+  pages={1--20},
+  year={2006},
+  publisher={Springer}
+}
 @incollection{bonneau2006aes,
   title={Cache-collision timing attacks against AES},
   author={Bonneau, Joseph and Mironov, Ilya},
@@ -965,10 +973,19 @@
   year={2011},
   publisher={Springer}
 }
-
+@article{yarom2013llctiming,
+  title={Flush+ Reload: a High Resolution, Low Noise, L3 Cache Side-Channel
+         Attack},
+  author={Yarom, Yuval and Falkner, Katrina E},
+  journal={IACR Cryptology ePrint Archive},
+  volume={2013},
+  pages={448},
+  year={2013}
+}
 @inproceedings{liu2015llctiming,
   title={Last-Level Cache Side-Channel Attacks are Practical},
-  author={Liu, Fangfei and Yarom, Yuval and Ge, Qian and Heiser, Gernot and Lee, Ruby B},
+  author={Liu, Fangfei and Yarom, Yuval and Ge, Qian and Heiser, Gernot and
+          Lee, Ruby B},
   booktitle={Security and Privacy (SP), 2015 IEEE Symposium on},
   pages={143--158},
   year={2015},
@@ -976,18 +993,32 @@
 }
 @article{oren2015jstiming,
   title={The Spy in the Sandbox -- Practical Cache Attacks in Javascript},
-  author={Oren, Yossef and Kemerlis, Vasileios P and Sethumadhavan, Simha and Keromytis, Angelos D},
+  author={Oren, Yossef and Kemerlis, Vasileios P and Sethumadhavan, Simha and
+          Keromytis, Angelos D},
   journal={arXiv preprint arXiv:1502.07373},
   year={2015}
 }
-@article{yarom2013llctiming,
-  title={Flush+ Reload: a High Resolution, Low Noise, L3 Cache Side-Channel Attack.},
-  author={Yarom, Yuval and Falkner, Katrina E},
-  journal={IACR Cryptology ePrint Archive},
-  volume={2013},
-  pages={448},
-  year={2013}
+@article{taylor1990coloring,
+ author={Taylor, George and Davies, Peter and Farmwald, Michael},
+ title={The TLB Slice - a Low-cost High-speed Address Translation Mechanism},
+ journal={SIGARCH Computer Architecture News},
+ volume={18},
+ number={2SI},
+ year={1990},
+ pages={355--363},
+ publisher={ACM},
 }
+@incollection{kasper2009aes,
+  title={Faster and timing-attack resistant AES-GCM},
+  author={K{\"a}sper, Emilia and Schwabe, Peter},
+  booktitle={Cryptographic Hardware and Embedded Systems-CHES 2009},
+  pages={1--17},
+  year={2009},
+  publisher={Springer}
+}
+
+% Security Background: Cache Timing Attacks
+
 @inproceedings{xu2015pagefaults,
   author={Yuanzhong Xu and Weidong Cui and Marcus Peinado},
   booktitle={Proceedings of the 36th IEEE Symposium on Security and Privacy (Oakland)},
@@ -1442,9 +1473,11 @@
 }
 
 @inproceedings{petters1999making,
-  title={Making worst case execution time analysis for hard real-time tasks on state of the art processors feasible},
+  title={Making worst case execution time analysis for hard real-time tasks on
+         state of the art processors feasible},
   author={Petters, Stefan M and Farber, Georg},
-  booktitle={Real-Time Computing Systems and Applications, 1999. RTCSA'99. Sixth International Conference on},
+  booktitle={Sixth International Conference on Real-Time Computing Systems and
+             Applications},
   pages={442--449},
   year={1999},
   organization={IEEE}
