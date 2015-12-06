@@ -89,11 +89,11 @@ dangerously similar to ignoring the string of demonstrated attacks which led to
 the deprecation of SHA-1~\cite{nist2014sha1policy, google2014sha1deprecation,
 microsoft2014sha1deprecation}.
 
-Fortunately, invaldating any of the preconditions for cache timing attacks is
+Fortunately, invalidating any of the preconditions for cache timing attacks is
 sufficient for defending against them. The easiest precondition to focus on is
 that the attacker must have access to memory locations that map to the same
 sets in a cache as the victim's memory. This assumption can be invalidated by
-the judicios use of a cache partitioning scheme.
+the judicious use of a cache partitioning scheme.
 
 Performance concerns aside, the main difficulty associated with cache
 partitioning schemes is that they must be implemented by a trusted party. When

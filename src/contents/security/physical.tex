@@ -60,7 +60,7 @@ For example, the flash chip that stores the computer's firmware is connected to
 the PCH via an SPI bus (\S~\ref{sec:motherboard}), which is simpler and much
 slower than the DDR bus connecting DRAM to the CPU. Consequently, tapping the
 SPI bus is much cheaper than tapping the DDR bus. For this reason, systems
-whose security relies on a cryptographiic hash of the firmware will first copy
+whose security relies on a cryptographic hash of the firmware will first copy
 the firmware into DRAM, hash the DRAM copy of the firmware, and then execute
 the firmware from DRAM.
 
@@ -100,7 +100,7 @@ The cost of chip attacks is dominated by the required equipment, although the
 reverse-engineering involved is also non-trivial. This cost grows very rapidly
 as the size of the circuitry's components decreases. At the time of this
 writing, the latest Intel CPUs have a 14nm feature size, which requires ion
-beam microscopy (TODO: look up the details for all this)
+beam microscopy (TODO: look up the details for all this).
 
 The least expensive class of chip attacks are destructive, and therefore only
 require imaging the chip's circuitry. These attacks rely on a microscope
@@ -136,7 +136,7 @@ develops a process for accessing a module without destroying the chip's
 circuitry, the attacker can use the same process for both passive and active
 attacks.
 
-At the architectural level, we cannot protect from physical attacks against the
+At the architectural level, we cannot protect against physical attacks against the
 CPU's chip package. Active attacks on the CPU change the computer's execution
 semantics, leaving us without any hardware that can be trusted to make security
 decisions. Passive attacks can read the private data that the CPU is
