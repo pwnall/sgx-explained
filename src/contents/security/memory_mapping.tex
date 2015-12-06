@@ -1,7 +1,16 @@
-\subsection{Memory Mapping Attacks}
+\subsection{Address Translation Attacks}
+\label{sec:paging_attacks}
+
+TODO: Explain that these attacks are only relevant when the system software is
+not trusted, i.e. when reasoning about application-level isolation containers.
+
+\subsubsection{Passive Attacks}
+\label{sec:fault_tracking_attacks}
+
+TODO: Explan \cite{xu2015pagefaults}
+
+\subsubsection{Active Attacks}
 \label{sec:memory_mapping_attacks}
-
-
 
 Figure~\ref{fig:sgx_mapping_attack} shows a hypothetical memory mapping attack.
 Understanding this type of attack
@@ -40,9 +49,3 @@ The SGX security mechanisms, explained throughout the rest of this paper,
 prevent enclave code execution if a memory mapping attack occurs. Therefore,
 SGX prevents malicious system software from directly obtaining sensitive
 information via memory mapping attacks.
-
-
-% TODO: Figure out how to mention MSR's attacks that collect page fault
-%       addresses. \cite{xu2015pagefaults}
-
-

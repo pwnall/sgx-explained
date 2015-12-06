@@ -221,10 +221,17 @@ other uncore components. The execution cores are connected to the ring by
 \textit{CBoxes}, which route their LLC accesses. The routing is static, as the
 LLC is divided into same-size slices (common slice sizes are 1.5~MB and
 2.5~MB), and an undocumented hashing scheme maps each possible physical address
-to exactly one LLC slice. Intel's documentation states that the hashing scheme
-was designed to avoid having a slice become a hotspot. The hashing scheme is
-the reason why the L3 cache is documented as having a ``complex'' indexing
-scheme, as opposed to the direct indexing used in the L1 and L2 caches.
+to exactly one LLC slice.
+
+Intel's documentation states that the hashing scheme mapping physical addresses
+to LLC slices was designed to avoid having a slice become a hotspot, but stops
+short of providing any technical details. Fortunately, independent researches
+have reversed-engineered the hash functions for recent processors
+\cite{inci2015rsachannel, maurice2015intelhash, yarom2015intelhash}.
+
+The hashing scheme described above is the reason why the L3 cache is documented
+as having a ``complex'' indexing scheme, as opposedto the direct indexing used
+in the L1 and L2 caches.
 
 \begin{figure}[hbt]
   \centering
@@ -255,8 +262,10 @@ On recent Intel processors, the uncore also contains at least one memory
 controller. Each integrated memory controller (iMC or MBox in Intel's
 documentation) is connected to the ring by a \textit{home agent} (HA or
 \textit{BBox} in Intel's datasheets). Each home agent contains a
-\textit{Target Address Decoder} (TAD), which maps each physical DRAM address to
-a specific DRAM channel.
+\textit{Target Address Decoder} (TAD), which maps each DRAM address to an
+address suitable for use by the DRAM chips, namely a DRAM channel, bank, rank,
+and a DIMM address. The mapping in the TAD is not documented by Intel, but it
+has been reverse-engineered~\cite{pessil2015dramaddressing}.
 
 The integration of the memory controller on the CPU brings the ability to
 filter DMA transfers. Accesses from a peripheral connected to the PCIe bus will
@@ -460,13 +469,12 @@ address translation, so that the L1 set lookup can be done in parallel with the
 TLB lookup. This is critical for achieving a low latency when both the L1 TLB
 and the L1 cache are hit.
 
-Given a page size $P = 2^{p}$ bytes, the requirement
-above translates to $l + s \le p$. In the Intel architecture, $p = 12$, and all
-recent processors have 64-byte cache lines ($l = 6$) and 64 sets ($s = 6$) in
-the L1 caches, as shown in Figure~\ref{fig:caching_and_paging}.
-The L2 and L3 caches are only accessed if the L1 misses, so the physical
-address for the memory access is known at that time, and can be used for
-indexing.
+Given a page size $P = 2^{p}$ bytes, the requirement above translates to
+$l + s \le p$. In the Intel architecture, $p = 12$, and all recent processors
+have 64-byte cache lines ($l = 6$) and 64 sets ($s = 6$) in the L1 caches, as
+shown in Figure~\ref{fig:caching_and_paging}. The L2 and L3 caches are only
+accessed if the L1 misses, so the physical address for the memory access is
+known at that time, and can be used for indexing.
 
 \begin{figure}[hbt]
   \centering
