@@ -1,13 +1,37 @@
 \subsection{Address Translation Attacks}
 \label{sec:paging_attacks}
 
-TODO: Explain that these attacks are only relevant when the system software is
-not trusted, i.e. when reasoning about application-level isolation containers.
+\S~\ref{sec:system_software_attacks} argues that today's system software is
+virtually guaranteed to have security vulnerabilities. This suggests that a
+cautious secure architecture shoild avoid having the system software in the
+TCB.
+
+Removing the system software from the TCB means that the architecture must
+provide a method for running application code inside a container that is
+isolated from the untrusted system software. One of the more difficult problems
+these designs must solve is that application software relies on the memory
+management services provided by the system software, which is now untrusted.
+
+Intel's SGX~\cite{mckeen2013sgx, anati2013sgx}, which was inspired by
+Bastion~\cite{champagne2010bastion}, leaves the system software in charge of
+setting up the page tables (\S~\ref{sec:paging}) used by address translation,
+but instates access checks that prevent the system software from directly
+accessing the isolated container's memory.
+
+This section discusses some attacks that become relevant when the application
+software does not trust the system software which in charge of the page tables.
+Understanding these attacks is a prerequisite to reasoning about the security
+properties of architectures with this threat model. For example, a large amount
+of the mechanisms in SGX are aimed at dealing with a subset of the attacks
+described here.
+
 
 \subsubsection{Passive Attacks}
 \label{sec:fault_tracking_attacks}
 
+
 TODO: Explan \cite{xu2015pagefaults}
+
 
 \subsubsection{Active Attacks}
 \label{sec:memory_mapping_attacks}
