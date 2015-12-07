@@ -11,12 +11,16 @@ translation features that are most relevant when establishing a system's
 security properties, and refer the reader to \cite{jacob1998virtual} for a more
 general presentation of address translation concepts and its other uses.
 
+
+\subsubsection{Address Translation Concepts}
+
 From a systems perspective, address translation is a layer of indirection
-between the \textit{virtual addresses}, which are used by a program's memory
-load and store instructions, and the \textit{physical addresses}, which
-reference the physical address space (\S~\ref{sec:address_spaces}). The mapping
-between virtual and physical addresses is defined by \textit{page tables},
-which are set up by system software.
+(shown in Figure~\ref{fig:address_translation}) between the
+\textit{virtual addresses}, which are used by a program's memory load and store
+instructions, and the \textit{physical addresses}, which reference the physical
+address space (\S~\ref{sec:address_spaces}). The mapping between virtual and
+physical addresses is defined by \textit{page tables}, which are managed by the
+system software.
 
 \begin{figure}[hbt]
   \centering
@@ -43,8 +47,10 @@ The address translation mode used by 64-bit operating systems, called
 IA-32e by Intel's documentation, maps 48-bit \textit{virtual addresses} to
 \textit{physical addresses} of at most 52 bits\footnote{The size of a
 physical address is CPU-dependent, and is 40 bits for recent desktop CPUs and
-44 bits for recent high-end server CPUs.}. Figure~\ref{fig:os_paging}
-illustrates the process used to map a virtual address to a physical address.
+44 bits for recent high-end server CPUs.}. The translation process, illustrated
+in Figure~\ref{fig:os_paging}, is carried out by dedicated hardware in the CPU,
+which is referred to as the \textit{address translation unit} or the
+\textit{memory management unit} (MMU).
 
 \begin{figure}[hbt]
   \centering
@@ -65,6 +71,50 @@ physical addresses of the next-level children as well as some flags. The
 physical address of the root node is stored in the CR3 register. The arrays in
 the last-level nodes contain the physical addresses that are the result of the
 address translation.
+
+The address translation function, which does not change the bottom bits of
+addresses, partitions the memory address space into \textit{pages}. A page is
+the set of all memory locations that only differ in the bottom bits which are
+not impacted by address translation, so all the memory addresses in a virtual
+page translate to corresponding addresses in the same physical page. From this
+perspective, the address translation function can be seen as a mapping between
+\textit{Virtual Page Numbers} (VPN) and \textit{Physical Page Numbers} (PPN),
+as shown in Figure~\ref{fig:address_translation_bits}.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/address_translation_bits.pdf}
+  \caption{
+    Address translation can be seen as a mapping between virtual page numbers
+    and physical page numbers.
+  }
+  \label{fig:address_translation_bits}
+\end{figure}
+
+In addition to isolating application processes, operating systems also use the
+address translation feature to run applications whose collective memory
+demands exceed the amount of DRAM installed in the computer. The OS evicts
+infrequently used memory pages from DRAM to a larger (but slower) memory, such
+as a hard disk drive (HDD) or solid-state drive (SSD).
+
+The OS ability to over-commit DRAM is often called \textit{page swapping}, for
+the following reason. When an application process attempts to access a page
+that has been evicted, the OS ``steps in'' and reads the missing page back into
+DRAM. In order to do this, the OS might have to evict a different page from
+DRAM, effectively swapping the contents of a page in DRAM with a page in the
+slower memory. The details behind this high-level description are covered in
+the following sections.
+
+The CPU's address translation is also referred to as ``paging'', which is a
+shorthand for ``page swapping'', or ``virtual memory''. This writing prefers
+the explicit form ``address translation'' because virtual memory has been used
+in reference to both address translation processor feature and the page
+swapping feature on top of it, so historical reasons have rendered the term
+``virtual memory'' ambiguous.
+
+
+\subsubsection{Address Translation and Virtualization}
+\label{sec:vmx_paging}
 
 % VMX Support for Address Translation: SDM S 4.11
 
@@ -114,25 +164,37 @@ translation process in the presence of hardware virtualization.
   \label{fig:vmx_paging}
 \end{figure}
 
-Each entry in the page tables has some Boolean flags, in addition to the
-pointer to the next level. The following flags are particularly interesting for
-our goals. The \textit{present}~(P) flag is set to 0 to indicate unused parts
-of the address space, which do not have physical memory associated with them,
-or pages that have been evicted from RAM to a cheaper and slower storage
-medium.  The \textit{accessed}~(A) flag is set to 1 by the CPU whenever the
-address translation machinery reads a page table entry, and the
-\textit{dirty}~(D) flag is set to 1 by the CPU when an entry is accessed by a
-memory write operation. The A and D flags give the hypervisor and kernel
-insight into application memory access patterns, providing the input for the
-algorithms that select which pages get to be evicted from RAM.
+
+\subsubsection{Page Table Attributes}
+\label{sec:page_table_attributes}
+
+Each page table entry contains a physical address, as shown in
+Figure~\ref{fig:os_paging}, and some Boolean values that are referred to as
+\textit{flags} or \textit{attributes}. The following attributes are used to
+implement page swapping and software isolation.
+
+The \textit{present}~(P) flag is set to 0 to indicate unused parts
+of the address space, which do not have physical memory associated with them.
+The system software also sets the P flag to 0 for pages that are evicted from
+DRAM. When the address translation unit encounters a zero P flag, it aborts the
+translation process and issues a hardware exception, as described in
+\S~\ref{sec:faults}. This hardware exception gives system software an
+opportunity to step in and bring an evicted page back into DRAM.
+
+The \textit{accessed}~(A) flag is set to 1 by the CPU whenever the address
+translation machinery reads a page table entry, and the \textit{dirty}~(D) flag
+is set to 1 by the CPU when an entry is accessed by a memory write operation.
+The A and D flags give the hypervisor and kernel insight into application
+memory access patterns and inform the algorithms that select the pages that get
+evicted from RAM.
 
 % Page-Level Protection: SDM S 5.11, S 5.11.{1,2,3,4}
 
-Page table entries have flags that provide access control, in addition to the
-flags supporting page swapping. The interesting flags are the
-\textit{writable}~(W) flag, which can be set to 0 to prohibit\footnote{Writes
-to non-writable pages result in \#GP exceptions (\S~\ref{sec:faults}).} memory
-writes to a page, the \textit{disable execution}~(XD) flag, which can be set to
-1 to prevent instruction fetches from a page, and the \textit{supervisor}~(S)
-flag, which can be set to 1 to prohibit accesses from application software
-running at ring 3.
+The main attributes supporting software isolation are the
+\textit{writable}~(W) flag, which can be set to 0 to
+prohibit\footnote{Writes to non-writable pages result in \#GP exceptions
+(\S~\ref{sec:faults}).} writes to any memory location inside a page, the
+\textit{disable execution}~(XD) flag, which can be set to 1 to prevent
+instruction fetches from a page, and the \textit{supervisor}~(S) flag, which
+can be set to 1 to prohibit any accesses from application software running at
+ring 3.

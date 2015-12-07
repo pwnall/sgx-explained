@@ -29,8 +29,30 @@ described here.
 \subsubsection{Passive Attacks}
 \label{sec:fault_tracking_attacks}
 
+System software uses the the CPU's address translation feature
+(\S~\ref{sec:paging}) to implement page swapping, where infrequently used
+memory pages are evicted from DRAM to a slower storage medium. Page swapping
+relies the accessed (A) and dirty (D) page table entry attributes
+(\S~\ref{sec:page_table_attributes}) to identify the DRAM pages to be evicted,
+and on a page fault handler (\S~\ref{sec:faults}) to bring evicted pages back
+into DRAM when they are accessed.
 
-TODO: Explan \cite{xu2015pagefaults}
+Unfortunately, the features that support efficient page swapping turn into a
+security liability, when the system software managing the page tables is not
+trusted by the application software using the page tables. The system software
+can be prevented from reading the application's memory directly by placing the
+application in an isolated container. However, the untrusted system software
+can still infer partial information about the application's memory access
+patterns, by observing the application's page faults and page table attributes.
+
+We consider this class of attacks to be passive attacks that exploit the CPU's
+address translation feature. It may seem that the page-level memory access
+patterns provided by these attacks are not very useful. However,
+\cite{xu2015pagefaults} describes how this attack can be carried out against
+Intel's SGX, and implements the attack in a few practical settings. In one
+scenario, which is particularly concerning for medical image processing,
+the outline of a JPEG image is inferred while the image is decompressed inside
+a container protected by SGX's isolation guarantees.
 
 
 \subsubsection{Active Attacks}

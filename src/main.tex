@@ -31,9 +31,12 @@
 \usepackage{hypcap}
 % Settings for the listings package.
 \lstset{
-  numbers=left, frame=lines, tabsize=2, captionpos=b, numberstyle=\tiny,
-  columns=fullflexible, showstringspaces=false, basicstyle=\footnotesize\ttfamily,
-  extendedchars=true, breaklines=true
+  numbers=left, frame=lines, tabsize=2, captionpos=b, keepspaces=true,
+  commentstyle=\color[rgb]{0.5, 0.5, 0.5},
+  keywordstyle=\bfseries\color[rgb]{0, 0, 1},
+  numberstyle=\color[rgb]{0.75, 0.75, 0.75},
+  columns=fullflexible, showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily, extendedchars=true, breaklines=true
 }
 
 \setlength{\columnsep}{.25in}

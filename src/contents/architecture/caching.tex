@@ -340,8 +340,8 @@ The MTRRs were intended to be configurd by the computer's firmware during the
 boot sequence. Fixed MTRRs cover pre-determined ranges of memory, such as the
 areas that had special meaning in the computers using 16-bit Intel processors.
 The ranges covered by \textit{variable MTRRs} can be configured by system
-software. We describe the method used to specify these ranges, because the
-principles behind it are also used by SGX.
+software. The representation used to specify the ranges is described below, as
+it has some interesting properties that have proven useful in other systems.
 
 % Variable Range MTRRs: SDM S 11.11.2.3
 % Range Size and Alignment Requirement: SDM S 11.11.4
@@ -369,11 +369,32 @@ Figure~\ref{fig:mtrr_match}.
 Each variable memory type range must have a size that is an integral power of
 two, and a starting address that is a multiple of its size, so it can be
 described using the base / mask representation described above. A range's
-starting address is its base, and the range's size is one plus its mask. No
-memory type range can partially cover a 4~KB page, which implies that the range
-base must be a multiple of 4~KB, and the bottom 12 bits of range mask must be
-set. This simplifies the interactions between memory type ranges and address
-translation, described in \S~\ref{sec:tlbs}.
+starting address is its base, and the range's size is one plus its mask.
+
+Another advantage of this range representation is that the base and the mask
+can be easily validated, as shown in Listing~\ref{fig:mtrr_checks}. The range
+is aligned with respect to its size if and only if the bitwise AND between the
+base and the mask is zero. The range's size is a power of two if and only if
+the bitwise AND between the mask and one plus the mask is zero. According to
+the SDM, the MTRRs are not validated, but setting them to invalid values
+results in undefined behavior.
+
+\begin{lstlisting}[language={[11]C++}, numbers=none, label={fig:mtrr_checks},
+    caption={The checks that validate the base and mask of a memory-type range
+             can be implemented very easily.}]
+constexpr bool is_valid_range(
+    size_t base, size_t mask) {
+  // Base is aligned to size.
+  return (base & mask) == 0 &&
+      // Size is a power of two.
+      (mask & (mask + 1)) == 0;
+}
+\end{lstlisting}
+
+No memory type range can partially cover a 4~KB page, which implies that the
+range base must be a multiple of 4~KB, and the bottom 12 bits of range mask
+must be set. This simplifies the interactions between memory type ranges and
+address translation, described in \S~\ref{sec:tlbs}.
 
 The PAT is intended to allow the operating system or hypervisor to tweak the
 caching behaviors specified in the MTRRs by the computer's firmware. The PAT
