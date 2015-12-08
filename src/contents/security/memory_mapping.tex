@@ -41,9 +41,10 @@ Unfortunately, the features that support efficient page swapping turn into a
 security liability, when the system software managing the page tables is not
 trusted by the application software using the page tables. The system software
 can be prevented from reading the application's memory directly by placing the
-application in an isolated container. However, the untrusted system software
-can still infer partial information about the application's memory access
-patterns, by observing the application's page faults and page table attributes.
+application in an isolated container. However, potentially malicious system
+software can still infer partial information about the application's memory
+access patterns, by observing the application's page faults and page table
+attributes.
 
 We consider this class of attacks to be passive attacks that exploit the CPU's
 address translation feature. It may seem that the page-level memory access
@@ -57,6 +58,10 @@ a container protected by SGX's isolation guarantees.
 
 \subsubsection{Active Attacks}
 \label{sec:memory_mapping_attacks}
+
+We define active address translation attacks to be the class of attacks where
+malicious system software modifies the page tables used by an application in
+a way that breaks the virtual memory abstraction.
 
 Figure~\ref{fig:sgx_mapping_attack} shows a hypothetical memory mapping attack.
 Understanding this type of attack

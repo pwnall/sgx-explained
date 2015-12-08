@@ -32,13 +32,30 @@ system software.
   \label{fig:address_translation}
 \end{figure}
 
-This mechanism lets the operating system multiplex DRAM among multiple
-application processes, isolate the processes from each other, and prevent
-application code from accessing memory-mapped devices directly. The latter two
-protection measures prevent an application's bugs from impacting other
-applications or the OS kernel itself. Hypervisors also use address translation,
-to divide the DRAM among operating systems that run concurrently, and to
-virtualize memory-mapped devices.
+Operating systems use address translation to implement the \textit{virtual
+memory} abstraction, illustrated by Figure~\ref{fig:virtual_memory}, which
+gives each process its own virtual address space that acts as if the process
+owned the entire computer's memory.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=80mm]{figures/virtual_memory.pdf}
+  \caption{
+    The virtual memory abstraction gives each process its own virtual address
+    space. The operating system multiplexes the computer's DRAM between the
+    processes, while application developers build software as if it owns the
+    entire computer's memory.
+  }
+  \label{fig:virtual_memory}
+\end{figure}
+
+Address translation is used by the operating system to multiplex DRAM among
+multiple application processes, isolate the processes from each other, and
+prevent application code from accessing memory-mapped devices directly. The
+latter two protection measures prevent an application's bugs from impacting
+other applications or the OS kernel itself. Hypervisors also use address
+translation, to divide the DRAM among operating systems that run concurrently,
+and to virtualize memory-mapped devices.
 
 % Canonical Addressing: SDM vol1 S 3.3.7.1
 % IA-32e Paging: SDM S 4.5
@@ -106,11 +123,7 @@ slower memory. The details behind this high-level description are covered in
 the following sections.
 
 The CPU's address translation is also referred to as ``paging'', which is a
-shorthand for ``page swapping'', or ``virtual memory''. This writing prefers
-the explicit form ``address translation'' because virtual memory has been used
-in reference to both address translation processor feature and the page
-swapping feature on top of it, so historical reasons have rendered the term
-``virtual memory'' ambiguous.
+shorthand for ``page swapping''.
 
 
 \subsubsection{Address Translation and Virtualization}
