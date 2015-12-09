@@ -4,19 +4,19 @@
 A computer's main resources~(\S~\ref{sec:resources}) are \textit{memory} and
 \textit{processors}. On Intel computers, DRAM
 chips~(\S~\ref{sec:motherboard}) implements the memory, and one or more CPU
-chips offer \textit{virtual processors}~(\S~\ref{sec:cpu_core}). The software
+chips offer \textit{logical processors}~(\S~\ref{sec:cpu_core}). The software
 that manages these resources is called \textit{system software}. An Intel
 computer typically runs two kinds of system software, namely operating systems
 and hypervisors.
 
 The Intel architecture was designed to support runsning multiple application
 software instances, called \textit{processes}. An
-textit{operating system}~(\S~\ref{sec:rings}), assigns the computer's resources
-to the running processes. Server computers, especially in cloud environments,
-may run multiple operating system instances at the same time. This is
-accomplished by having a \textit{hypervisor}~(\S~\ref{sec:rings}) partition the
-computer's resources between the operating system instances running on the
-computer.
+\textit{operating system}~(\S~\ref{sec:rings}), allocates the computer's
+resources to the running processes. Server computers, especially in cloud
+environments, may run multiple operating system instances at the same time.
+This is accomplished by having a \textit{hypervisor}~(\S~\ref{sec:rings})
+partition the computer's resources between the operating system instances
+running on the computer.
 
 System software uses virtualization techniques to isolate each piece of
 software that it manages (process or operating system) from the rest of the
@@ -26,8 +26,8 @@ developers to focus on their software, and ignore the interactions with other
 software that may run on the computer.
 
 A key component of virtualization is address translation (\S~\ref{sec:paging}),
-which gives software the impression that it owns all the memory on the
-computer. The other key component is the software privilege levels
+which is used to give software the impression that it owns all the memory on
+the computer. The other key component is the software privilege levels
 (\S~\ref{sec:rings}) enforced by the CPU. Hardware privilege separation ensures
 that buggy or malicious software cannot damage other software directly or
 indirectly, by interfering with the system software managing it.

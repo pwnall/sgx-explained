@@ -4,9 +4,9 @@
 This section pieces together a highly simplified model for a computer that
 implements the Intel architecture, illustrated in
 Figure~\ref{fig:computer_model}. The simplified model is intended to help the
-reader's intuition process the concepts that the rest of the paper will build
-on. The following sections gradually replace the simplified model with a more
-accurate description of the Intel architecture.
+reader's intuition process the fundamental concepts used by the rest of the
+paper. The following sections gradually replace the simplified model with a
+more accurate description of the Intel architecture.
 
 \begin{figure}[hbt]
   \centering
@@ -22,13 +22,13 @@ accurate description of the Intel architecture.
 
 The building blocks for the model presented here come from
 \cite{saltzer2009systemdesign}, which introduces the key abstractions in a
-computer system then focuses on the techniques used to build software systems
-on top of these abstractions
+computer system, and  then focuses on the techniques used to build software
+systems on top of these abstractions.
 
 The memory is an array of storage cells, addressed using natural numbers
 starting from 0, and implements the abstraction depicted in
 Figure~\ref{fig:memory_abstraction}. Its salient feature is that the result of
-reading the memory cell at an address must equal the most value written to that
+reading a memory cell at an address must equal the most value written to that
 memory cell.
 
 \begin{figure}[hbt]
@@ -47,7 +47,7 @@ memory cell.
   \label{fig:memory_abstraction}
 \end{figure}
 
-A logical processor repeatedly fetches \textit{instructions} from the
+A logical processor repeatedly reads \textit{instructions} from the
 computer's memory and executes them, according to the flowchart in
 Figure~\ref{fig:processor_execution}.
 
@@ -66,6 +66,11 @@ The processor has an internal memory, referred to as the
 \textit{registers}, make up the \textit{execution context} used to execute
 instructions.
 
+An instruction performs a simple computation on its inputs and stores the
+result in an output location. For example, \texttt{ADD RDX, RAX, RBX} performs
+an integer addition, where the inputs are the registers RAX and RBX, and the
+result is stored in the output register RDX.
+
 The registers mentioned in Figure~\ref{fig:processor_execution} are the
 \textit{instruction pointer}~(RIP), which stores the memory  address of the
 next instruction to be executed by the processor, and the
@@ -74,19 +79,21 @@ element in the call stack used by the processor's procedural programming
 support. The other execution context registers are described in
 \S~\ref{sec:address_spaces} and \S~\ref{sec:registers}.
 
-Under normal circumstances, the processor repeatedly reads the instruction at
-the address in RIP, executes it, and updates RIP to point to the instruction
-following the executed instruction. Unlike many RISC architectures, the Intel
+Under normal circumstances, the processor repeatedly reads an instruction from
+the memory address stored in RIP, executes the instruction, and updates RIP to
+point to the following instruction. Unlike many RISC architectures, the Intel
 architecture uses a variable-size instruction encoding, so the size of an
-instruction is not known until the instruction has been fully read.
+instruction is not known until the instruction has been read from memory.
 
-Some times, the processor encounters an exceptional conditions, called
-\textit{faults}, while executing an instruction. For example, an integer
-division instruction \texttt{DIV} where the divisor is zero does not have a
-well-defined result, so its result is a Division Fault (\#DIV).
+While executing an instruction, the processor may encounter a \textit{fault},
+which is a situation where the instruction's preconditions are not met. When
+a fault occurs, the instruction does not store a result in the output location.
+Instead, the instruction's result is considered to be the fault that occurred.
+For example, an integer division instruction \texttt{DIV} where the divisor is
+zero results in a Division Fault (\#DIV).
 
-When executing an instruction results in a fault, the processor stops its
-normal execution flow, and performs the fault handler process documented in
+When an instruction results in a fault, the processor stops its normal
+execution flow, and performs the fault handler process documented in
 \S~\ref{sec:faults}. In a nutshell, the processor first looks up the address of
 the code that will handle the fault, based on the fault's nature, and sets up
 the execution environment in preparation to execute the fault handler.
@@ -116,7 +123,9 @@ abstraction in Figure~\ref{fig:bus_abstraction}.
 
 During each clock cycle, at most one of the devices connected to the system bus
 can send a message, which is received by all the other devices connected to the
-bus.
+bus. Each device attached to the bus decodes the operation codes and addresses
+of all the messages sent on the bus and ignores the messages that do not
+require its involvement.
 
 For example, when the processor wishes to read a memory location, it sends a
 message with the operation code \textsc{read-request} and the bus address
@@ -134,4 +143,5 @@ processor of outside events, such as the user pressing a key on a keyboard.
 
 Interrupt triggering is discussed in \S~\ref{sec:interrupts}. On modern
 systems, devices send interrupt requests by issuing writes to special bus
-addresses. The processor handles interrupt requests using
+addresses. Interrupts are considered to be \textit{hardware exceptions}, just
+like faults, and are handled in a similar manner.
