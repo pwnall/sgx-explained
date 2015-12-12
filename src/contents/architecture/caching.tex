@@ -279,13 +279,22 @@ abort DMA transfers targeting protected DRAM ranges.
 \label{sec:memory_io}
 \label{sec:cacheability_config}
 
-The Intel architecture provides a few methods for specifying the cache behavior
-for various ranges of the memory address space (\S~\ref{sec:address_spaces}).
-This is used for memory mapped to devices, such as a graphics unit's
-framebuffer. Caching framebuffer memory is indesirable, because the delay
-between the time when a write is issued and the time when the corresponding
-cache lines are evicted and written back to memory could lead to visual
-artifacts on the user's display.
+Caches rely on the assumption that the underlying memory implements the memory
+abstraction in \S~\ref{sec:resources}. However, the physical addresses that map
+to memory-mapped I/O devices usually deviate from the memory abstraction. For
+example, some devices expose command registers that trigger certain operations
+when written, and always return a zero value. Caching addresses that map to
+such memory-mapped I/O devices will lead to incorrect behavior.
+
+Furthermore, even when the memory-mapped devices follow the memory abstraction,
+caching their memory is sometimes undesirable. For example, caching a graphic
+unit's framebuffer could lead to visual artifacts on the user's display,
+because of the delay between the time when a write is issued and the time when
+the corresponding cache lines are evicted and written back to memory.
+
+In order to work around these problems, the Intel architecture provides a few
+methods for specifying the cache behavior for various ranges of the memory
+address space (\S~\ref{sec:address_spaces}).
 
 % Memory-Mapped I/O: SDM vol1 S 16.3.1
 % Methods of Caching Available: SDM S 11.3

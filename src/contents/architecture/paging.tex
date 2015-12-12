@@ -33,9 +33,12 @@ system software.
 \end{figure}
 
 Operating systems use address translation to implement the \textit{virtual
-memory} abstraction, illustrated by Figure~\ref{fig:virtual_memory}, which
-gives each process its own virtual address space that acts as if the process
-owned the entire computer's memory.
+memory} abstraction, illustrated by Figure~\ref{fig:virtual_memory}. The
+virtual memory abstraction exposes the same interface as the memory abstraction
+in \S~\ref{sec:resources}, but each process uses a separate virtual address
+space that only addresses the processor's memory. For application developers,
+this looks as if each process runs on a separate computer, and has its own
+DRAM.
 
 \begin{figure}[hbt]
   \centering
