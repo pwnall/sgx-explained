@@ -43,8 +43,8 @@ it cheap to check if an address belongs to the PRM in hardware, as described in
 
 The PRM and PRM range registers (PRMRR) are described in the SGX
 manuals~\cite{intel2013sgxmanual, intel2014sgx2manual} and in one of the SGX
-papers~\cite{mckeen2013sgx}. The SDM mostly mirrors the SGX manuals, but lacks
-most of the sections mentioning the PRM.
+papers~\cite{mckeen2013sgx}. The SDM generally mirrors the SGX manuals, but
+lacks most of the sections mentioning the PRM.
 
 
 \subsubsection{The Enclave Page Cache (EPC)}
@@ -72,8 +72,8 @@ memory, which allows the EPC to be over-committed, just like evicting DRAM
 pages to disk (swapping) allows the main memory to be over-committed.
 
 
-\subsubsection{Memory Mapping Attacks}
-\label{sec:mapping_attacks}
+\subsubsection{The Enclave Page Cache Map (EPCM)}
+\label{sec:epcm}
 
 % Access Control Requirements: SDM S 38.3
 
@@ -88,22 +88,17 @@ application code that uses pointers into SGX enclaves.
 
 Under SGX, the operating system and hypervisor are still in full control of the
 page tables and EPTs. This minimizes the amount of changes required to add SGX
-support to existing system software. However, it also gives system software the
-ability to attack an enclave by setting up its virtual address space in a way
-that was not intended by the enclave's author.
-
-
-
-\subsubsection{The Enclave Page Cache Map (EPCM)}
-\label{sec:epcm}
+support to existing system software. At the same time, having the page tables
+managed by untrusted system software opens up SGX to the address translation
+attacks described in \S~\ref{sec:paging_attacks}.
 
 % Enclave Page Cache Map (EPCM): SDM S 37.5.1, SDM S 38.19
 % SECINFO.FLAGS: SDM S 38.11.1
 % PAGE_TYPE Field Definition: SDM S 38.11.2
 
-SGX prevents memory mapping attacks using the \textit{Enclave Page Cache Map}
-(EPCM), which has an entry for each EPC page, containing the security metadata
-shown in Table~\ref{fig:epcm_entry}.
+SGX prevents direct active address translation attacks using the
+\textit{Enclave Page Cache Map}~(EPCM), which has an entry for each EPC page,
+containing the security metadata shown in Table~\ref{fig:epcm_entry}.
 
 \begin{table}[hbt]
   \centering
