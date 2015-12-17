@@ -6,16 +6,17 @@ must be handled by system software. For example, a keyboard triggers interrupts
 when a key is pressed or depressed. System software also relies on interrupts
 to implement preemptive multi-threading.
 
-Interrupts are a kind of hardware exceptions (\S~\ref{sec:faults}), and
-therefore receiving an interrupt causes an execution core to perform a
-privilege level switch and start executing the system software's interrupt
-handling code. Therefore, the security concerns in \S~\ref{sec:faults} also
-apply to interrupts, with the added twist that interrupts can occur at any
-time, whereas most faults are explicitly triggered by application software.
+Interrupts are a kind of hardware exception (\S~\ref{sec:faults}). Receiving an
+interrupt causes an execution core to perform a privilege level switch and to
+start executing the system software's interrupt handling code. Therefore, the
+security concerns in \S~\ref{sec:faults} also apply to interrupts, with the
+added twist that interrupts occur independently of the instructions executed by
+the interrupted code, whereas most faults are triggered by the actions of the
+application software that incurs them.
 
 Given the importance of interrupts when assessing a system's security, this
 section outlines the interrupt triggering and handling processes described
-in the SDM,.
+in the SDM.
 
 % Advanced Programmable Interrupt Controller (APIC): SDM S 10
 % Message Signalled Interrupts (MSI): SDM S 10.11
@@ -33,9 +34,9 @@ The IOAPIC routes interrupt signals to one or more \textit{Local Advanced
 Programmable Interrupt Controllers} (LAPICs). As shown in
 Figure~\ref{fig:cpu_die}, each logical CPU has a LAPIC that can receive
 interrupt signals from the IOAPIC. The IOAPIC routing process assigns each
-interrupt to an 8-bit \textit{interrupt vector}, used to identify the interrupt
-sources, and a 32-bit \textit{APIC ID} used to identify the LAPIC that receives
-the interrupt.
+interrupt to an 8-bit \textit{interrupt vector} that is used to identify the
+interrupt sources, and to a 32-bit \textit{APIC ID} that is used to identify
+the LAPIC that receives the interrupt.
 
 % Handling Interrupts: SDM S 10.8
 

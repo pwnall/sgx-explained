@@ -3,7 +3,7 @@
 
 This section pieces together a highly simplified model for a computer that
 implements the Intel architecture, illustrated in
-Figure~\ref{fig:computer_model}. The simplified model is intended to help the
+Figure~\ref{fig:computer_model}. This simplified model is intended to help the
 reader's intuition process the fundamental concepts used by the rest of the
 paper. The following sections gradually refine the simplified model into a
 detailed description of the Intel architecture.
@@ -62,14 +62,16 @@ Figure~\ref{fig:processor_execution}.
 \end{figure}
 
 The processor has an internal memory, referred to as the
-\textit{register file}. The register file's memory cells, generally known as
-\textit{registers}, make up the \textit{execution context} used to execute
-instructions.
+\textit{register file}. The register file consists of \textit{Static Random
+Access Memory}~(SRAM) cells, generally known as \textit{registers}, which are
+significantly faster than DRAM cells, but also a lot more expensive.
 
 An instruction performs a simple computation on its inputs and stores the
-result in an output location. For example, \texttt{ADD RDX, RAX, RBX} performs
-an integer addition, where the inputs are the registers RAX and RBX, and the
-result is stored in the output register RDX.
+result in an output location. The processor's registers make up an
+\textit{execution context} that provides the inputs and stores the outputs for
+most instructions. For example, \texttt{ADD RDX, RAX, RBX} performs an integer
+addition, where the inputs are the registers RAX and RBX, and the result is
+stored in the output register RDX.
 
 The registers mentioned in Figure~\ref{fig:processor_execution} are the
 \textit{instruction pointer}~(RIP), which stores the memory  address of the

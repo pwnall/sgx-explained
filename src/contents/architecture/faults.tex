@@ -74,12 +74,16 @@ recursive.
 The processor also performs a switch from ring 3 to ring 0 when a
 \textit{hardware exception} occurs while executing application code. Some
 exceptions indicate bugs in the application, whereas other exceptions require
-kernel action. A \textit{general protection fault}~(\#GP) occurs when software
-attempts to perform a disallowed action, such as setting the CR3 register from
-ring 3. A \textit{page fault}~(\#PF) occurs when address translation encounters
-a page table entry whose P flag is 0, or attempting to use a page in a way
-inconsistent with the access bits in its page table entry, for example
-accessing a page whose S bit is set from ring 3.
+kernel action.
+
+A \textit{general protection fault}~(\#GP) occurs when software attempts to
+perform a disallowed action, such as setting the CR3 register from ring 3.
+
+A \textit{page fault}~(\#PF) occurs when address translation encounters a page
+table entry whose P flag is 0, or when the memory inside a page is accessed in
+way that is inconsistent with the access bits in the page table entry. For
+example, when ring 3 softare accesses the memory inside a page whose S bit is
+set, the result of the memory access is \#PF.
 
 % Interrupt Descriptor Table (IDT): SDM S 6.10
 
@@ -180,8 +184,8 @@ leak or tamper with the information in an application's execution context.
 Intel systems that take advantage of the hardware virtualization support to run
 multiple operating systems at the same time use a hypervisor that manages the
 VMs. The hypervisor creates a \textit{Virtual Machine Control Structure} (VMCS)
-for each operating system instance that it wishes to run, and assigns a VM to a
-logical processor by executing the \texttt{VMENTER} instruction.
+for each operating system instance that it wishes to run, and uses the
+\texttt{VMENTER} instruction to assign a logical processor to the VM.
 
 % VM Exists: SDM S 27
 % EP{T_Induced VM Exits: SDM S 28.2.3

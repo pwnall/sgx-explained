@@ -4,7 +4,7 @@
 At the time of this writing, CPU cores can process data $\approx 200\times$
 faster than DRAM can supply it. This gap is bridged by an hierarchy of cache
 memories, which are orders of magnitude smaller and an order of magnitude
-faster than DRAM. While caching are transparent to application software, the
+faster than DRAM. While caching is transparent to application software, the
 system software is responsible for managing and coordinating the caches that
 store address translation (\S~\ref{sec:paging}) results.
 
@@ -113,13 +113,13 @@ Intel architecture includes an assortment of instructions that give
 performance-sensitive applications some control over the caching of their
 working sets. \texttt{PREFETCH} instructs the CPU's prefetcher to cache a
 specific memory address, in preparation for a future memory access. The memory
-writes performed by the \texttt{MOVNT} family bypass the cache if a fill would
-be required. \texttt{CLFLUSH} evicts any cache lines storing a specific
-address from the entire cache hierarchy.
+writes performed by the \texttt{MOVNT} instruction family bypass the cache if a
+fill would be required. \texttt{CLFLUSH} evicts any cache lines storing a
+specific address from the entire cache hierarchy.
 
 The methods mentioned above are available to software running at all privilege
 levels, because they were designed for high-performance workloads with large
-working sets, which are usually executed at ring 3 (\S~\ref{sec:rings}). By
+working sets, which are usually executed at ring 3 (\S~\ref{sec:rings}). For
 comparison, the instructions used by system software to manage the address
 translation caches, described in \S~\ref{sec:tlbs} below, can only be executed
 at ring 0.
@@ -137,7 +137,7 @@ in memory.
 The \textit{cache line} is the atomic unit of cache organization. A cache line
 has \textit{data}, a copy of a continuous range of DRAM, and a \textit{tag},
 identifying the memory address that the data comes from. Fills and evictions
-are performed on entire lines.
+operate on entire lines.
 
 The cache line size is the size of the data, and is always a power of two.
 Assuming $n$-bit memory addresses and a cache line size of $2^{l}$ bytes, the
@@ -186,8 +186,8 @@ DRAM writes.
 
 The same memory location might be simultaneously cached by different cores'
 caches, or even by caches on separate chips, so providing the TSO guarantees
-requires a \textit{cache coherence protocol} that keeps the cached copies in
-sync.
+requires a \textit{cache coherence protocol} that synchronizes all the cache
+lines in a computer that reference the same memory address.
 
 The cache coherence mechanism is not visible to software, so it is only briefly
 mentioned in the SDM. Fortunately, Intel's optimization reference
@@ -230,7 +230,7 @@ have reversed-engineered the hash functions for recent processors
 \cite{inci2015rsachannel, maurice2015intelhash, yarom2015intelhash}.
 
 The hashing scheme described above is the reason why the L3 cache is documented
-as having a ``complex'' indexing scheme, as opposedto the direct indexing used
+as having a ``complex'' indexing scheme, as opposed to the direct indexing used
 in the L1 and L2 caches.
 
 \begin{figure}[hbt]
@@ -268,11 +268,11 @@ and a DIMM address. The mapping in the TAD is not documented by Intel, but it
 has been reverse-engineered~\cite{pessil2015dramaddressing}.
 
 The integration of the memory controller on the CPU brings the ability to
-filter DMA transfers. Accesses from a peripheral connected to the PCIe bus will
-be handled by the integrated I/O controller (IIO) and placed on the ring
-interconnect via the Ubox, then reach the iMC. Therefore, on modern systems,
-DMA transfers go through both the SAD and TAD, which can be configured to
-abort DMA transfers targeting protected DRAM ranges.
+filter DMA transfers. Accesses from a peripheral connected to the PCIe bus are
+handled by the integrated I/O controller (IIO), placed on the ring interconnect
+via the UBox, and then reach the iMC. Therefore, on modern systems, DMA
+transfers go through both the SAD and TAD, which can be configured to abort DMA
+transfers targeting protected DRAM ranges.
 
 
 \subsubsection{Caching and Memory-Mapped Devices}
@@ -292,18 +292,19 @@ unit's framebuffer could lead to visual artifacts on the user's display,
 because of the delay between the time when a write is issued and the time when
 the corresponding cache lines are evicted and written back to memory.
 
-In order to work around these problems, the Intel architecture provides a few
-methods for specifying the cache behavior for various ranges of the memory
-address space (\S~\ref{sec:address_spaces}).
+In order to work around these problems, the Intel architecture implements a few
+caching behaviors, described below, and provides a method for partitioning the
+memory address space (\S~\ref{sec:address_spaces}) into regions, and for
+assigning a desired caching behavior to each region.
 
 % Memory-Mapped I/O: SDM vol1 S 16.3.1
 % Methods of Caching Available: SDM S 11.3
 % Ordering I/O: SDM vol1 S 16.6
 
-\textit{Uncacheable} (UC) memory has the same semantics the I/O address space
-(\S~\ref{sec:address_spaces}). UC memory is useful when a device's behavior is
-dependent on the order of memory reads and writes, such as in the case of
-memory-mapped command and data registers for a PCIe NIC
+\textit{Uncacheable} (UC) memory has the same semantics as the I/O address
+space (\S~\ref{sec:address_spaces}). UC memory is useful when a device's
+behavior is dependent on the order of memory reads and writes, such as in the
+case of memory-mapped command and data registers for a PCIe NIC
 (\S~\ref{sec:motherboard}). The out-of-order execution engine
 (\S~\ref{sec:out_of_order}) does not reorder UC memory accesses, and does not
 issue speculative reads to UC memory.
@@ -322,15 +323,15 @@ and is subject to operation reordering.
 
 DRAM is represented as \textit{Write Back} (WB) memory, which is optimized
 under the assumption that all the devices that need to observe the memory
-operations participate in the cache coherence protocol. WB memory is cached as
+operations implement the cache coherence protocol. WB memory is cached as
 described in \S~\ref{sec:caching}, receives speculative reads, and operations
 targeting it are subject to reordering.
 
 \textit{Write Protected} (WP) memory is similar to WB memory, with the
 exception that every write is propagated to the system bus. It is intended for
 memory-mapped buffers, where the order of operations does not matter, but the
-devices that need to observe the writes cannot participate in the cache
-coherence protocol.
+devices that need to observe the writes do not implement the cache coherence
+protocol, in order to reduce hardware costs.
 
 % Cache Control Registers and Bits: SDM S 11.5.1
 % Memory Type Range Registers (MTRRs): SDM S 11.11
@@ -347,10 +348,11 @@ entries, namely Page-level Cache Disable (PCD) and Page-level Write-Through
 
 The MTRRs were intended to be configurd by the computer's firmware during the
 boot sequence. Fixed MTRRs cover pre-determined ranges of memory, such as the
-areas that had special meaning in the computers using 16-bit Intel processors.
-The ranges covered by \textit{variable MTRRs} can be configured by system
-software. The representation used to specify the ranges is described below, as
-it has some interesting properties that have proven useful in other systems.
+memory areas that had special semantics in the computers using 16-bit Intel
+processors. The ranges covered by \textit{variable MTRRs} can be configured by
+system software. The representation used to specify the ranges is described
+below, as it has some interesting properties that have proven useful in other
+systems.
 
 % Variable Range MTRRs: SDM S 11.11.2.3
 % Range Size and Alignment Requirement: SDM S 11.11.4
@@ -513,8 +515,10 @@ known at that time, and can be used for indexing.
     Virtual addresses from the perspective of cache lookup and address
     translation. The bits used for the L1 set index and line offset are not
     changed by address translation, so the page tables do not impact L1 cache
-    placement. Page tables do impact L2 and L3 cache placement. Using large
-    pages (2~MB or 1~GB) makes cache placement independent of page tables.
+    placement. The page tables do impact L2 and L3 cache placement. Using large
+    pages (2~MB or 1~GB) is not sufficient to make L3 cache placement
+    independent of the page tables, because of the LLC slice hashing fuction
+    (\S~\ref{sec:cache_coherence}).
   }
   \label{fig:caching_and_paging}
 \end{figure}

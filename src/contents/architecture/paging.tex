@@ -36,9 +36,9 @@ Operating systems use address translation to implement the \textit{virtual
 memory} abstraction, illustrated by Figure~\ref{fig:virtual_memory}. The
 virtual memory abstraction exposes the same interface as the memory abstraction
 in \S~\ref{sec:resources}, but each process uses a separate virtual address
-space that only addresses the processor's memory. For application developers,
-this looks as if each process runs on a separate computer, and has its own
-DRAM.
+space that only references the memory allocated to that process. From an
+application developer standpoint, virtual memory can be modeled by pretending
+that each process runs on a separate computer and has its own DRAM.
 
 \begin{figure}[hbt]
   \centering

@@ -68,6 +68,8 @@ implementation also uses the snapshot to restore the computer's state, such as
 the DRAM contents, and then directly executes the operating system's wake-up
 handler.
 
+%%% TODO(pwnall): move the paragraph below to the security section
+
 On a system that uses secure boot or attestation, the SEC implementation is the
 system's root of trust. Each platform initialization phase is responsible for
 verifying or measuring the firmware that implements the next phase. For
@@ -77,8 +79,8 @@ hold the system's measurement, which are the Platform Configuration Registers
 then stores the PEI's measurement (cryptographic hash) into a measurement
 register. In turn, the PEI implementation measures the DXE firmware and updates
 the measurement register that stores the PEI hash to account for the DXE hash.
-When the OS is booted, the hash in measurement register accounts for all the
-firmware that was used to boot the computer.
+When the OS is booted, the hash in the measurement register accounts for all
+the firmware that was used to boot the computer.
 
 
 \subsubsection{SEC on Intel Platforms}
@@ -108,7 +110,7 @@ process are not publicly available, but setting the clocks is mentioned in a
 few public documents \cite{intel2015cpuio, purism2014meclock, dice2011meclock,
 fitpc2014mehw}, and is made clear in firmware bringup guides, such as the
 leaked confidential guide \cite{intel2012mebringup} documenting firmware
-bringup for the Series 7 chipset.
+bringup for Intel's Series 7 chipset.
 
 % Initialization Overview: SDM S 9.1
 

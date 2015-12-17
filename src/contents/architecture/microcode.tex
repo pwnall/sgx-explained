@@ -41,8 +41,8 @@ The 4 micro-ops limitation can be used to guess intelligently whether an
 architectural feature is implemented in microcode. For example, it is safe to
 assume that \texttt{XSAVE} (\S~\ref{sec:registers}), which was takes over 200
 micro-ops on recent CPUs \cite{fog2014microops}, is most likely performed in
-microcode, whereas simple arithmetic and memory access is handled directly by
-hardware.
+microcode, whereas simple arithmetic and memory accesses are handled directly
+by hardware.
 
 % Assists: Optimization S B.3.5.2
 
@@ -66,7 +66,7 @@ describes microcode updates from the perspective of an OS kernel and
 hypervisor. Each core can be updated independently, and the updates must be
 reapplied on each boot cycle. A core can be updated multiple times, but each
 update must have a bigger version than the core's current version. The latest
-SDM at the time of this writing states that a microcode update is up to 16 kB
+SDM at the time of this writing states that a microcode update is up to 16 KB
 in size.
 
 Processor engineers prefer to build new architectural features as microcode

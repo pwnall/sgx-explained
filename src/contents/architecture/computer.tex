@@ -43,8 +43,10 @@ A computer's components are connected by a printed circuit board called a
 \end{figure}
 
 The CPU (described in \S~\ref{sec:cpu_die}) hosts the execution cores that run
-the SMM, hypervisor, operating system, and application software. The computer's
-main memory is provided by \textit{Dynamic Random-Access Memory} (DRAM) chips.
+the software stack shown in Figure~\ref{fig:cpu_rings} and described in
+\S~\ref{sec:rings}, namely the SMM code, the hypervisor, operating systems, and
+application processes. The computer's main memory is provided by
+\textit{Dynamic Random-Access Memory} (DRAM) chips.
 
 The \textit{Platform Controller Hub}~(PCH) houses (relatively) low-speed I/O
 controllers driving the slower buses in the system, like SATA, used by storage
@@ -77,7 +79,7 @@ assigned range.
 
 Network interfaces consist of a \textit{physical} (PHY) module that converts
 the analog signals on the network media to and from digital bits, and a
-\textit{Media Access Control} (MAC) module that implements a network-level
+\textit{Media Access Control}~(MAC) module that implements a network-level
 protocol. Modern Intel-based motherboards forego a full-fledged NIC, and
 instead include an Ethernet~\cite{ieee8023ethernet} PHY module.
 
@@ -105,7 +107,7 @@ troubleshooting effectively thanks to an array of abilities that include
 overriding the CPU's boot vector and a DMA engine that can access the
 computer's DRAM. The ME provides remote access to the computer without any CPU
 support because it can use the \textit{System Management bus} (SMBus) to access
-the motherboard's Ethernet PHY, or an AMT-compatible NIC
+the motherboard's Ethernet PHY or an AMT-compatible NIC
 \cite{intel2015chipset}.
 
 \begin{figure}[hbt]
@@ -131,16 +133,16 @@ components are powered off \cite{intel2010power}, including the CPU and DRAM.
 For all practical purposes, this means that the ME's execution core is active
 as long as the power supply is still connected to a power source.
 
-In S5, the ME cannot access the DRAM, but it can still use its internal
+In S5, the ME cannot access the DRAM, but it can still use its own internal
 memories. The ME can also still communicate with a remote party, as it can
 access the motherboard's Ethernet PHY via SMBus. This enables applications such
 as AMT's theft prevention, where a laptop equipped with a cellular modem can be
 tracked and permanently disabled as long as it has power and signal.
 
 As the ME remains active in deep power-saving modes, its design must rely on
-low-power components. The execution core is Argonaut RISC Core (ARC) clocked at
-200-400MHz, which is typically used in low-power embedded designs. On a very
-recent PCH \cite{intel2015chipset}, the internal SRAM has 640KB, and is shared
+low-power components. The execution core is an Argonaut RISC Core (ARC) clocked
+at 200-400MHz, which is typically used in low-power embedded designs. On a very
+recent PCH~\cite{intel2015chipset}, the internal SRAM has 640KB, and is shared
 with the Integrated Sensor Hub (ISH)'s core. The SMBus runs at 1MHz and,
 without CPU support, the motherboard's Ethernet PHY runs at 10Mpbs.
 
@@ -150,14 +152,14 @@ stack from the same flash chip that stores the host computer's firmware. The
 ME accesses the flash memory chip an embedded SPI controller.
 
 
-\subsubsection{The Processor}
+\subsubsection{The Processor Die}
 \label{sec:cpu_die}
 
 An Intel processor's die, illustrated in Figure~\ref{fig:cpu_die}, is divided
 into two broad areas: the \textit{core area} implements the instruction
 execution pipeline typically associated with CPUs, while the \textit{uncore}
 provides functions that were traditionally hosted on separate chips, but are
-currently integrated on the CPU die to save power and improve latency.
+currently integrated on the CPU die to reduce latency and power consumption.
 
 \begin{figure}[hbt]
   \centering
@@ -204,8 +206,8 @@ Most Intel CPUs feature \textit{hyper-threading}, which means that a core
 (shown in Figure~\ref{fig:cpu_core}) has two copies of the register files
 backing the execution context described in \S~\ref{sec:registers}, and can
 execute two separate streams of instructions simultaneously. Hyper-threading
-increases the utilization of the shared fetch, decode and execution units, in
-the presence of memory stalls.
+reduces the impact of memory stalls on the utilization of the fetch, decode and
+execution units.
 
 \begin{figure}[hbt]
   \centering

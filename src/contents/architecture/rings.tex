@@ -30,10 +30,11 @@ privilege levels.
 \textit{System Management Mode} (SMM) is intended for use by the motherboard
 manufacturers to implement features such as fan control and deep sleep, and/or
 to emulate missing hardware. Therefore, the bootstrapping software
-(\S~\ref{sec:booting}) in the computer's firmware is expected to load all the
-SMM code inside a special continuous subset of DRAM, called the \textit{System
-Management RAM} (SMRAM), and is expected to set up hardware protections
-preventing less privileged software from accessing the SMRAM.
+(\S~\ref{sec:booting}) in the computer's firmware is responsible for setting up
+a continuous subset of DRAM as \textit{System Management RAM}~(SMRAM), and for
+loading all the code that needs to run in SMM mode into SMRAM. The SMRAM
+enjoys special hardware protections that prevent less privileged software from
+accessing the SMM code.
 
 IaaS cloud providers allow their customers to run their operating system of
 choice in a virtualized environment. Hardware
