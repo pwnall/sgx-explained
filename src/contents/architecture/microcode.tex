@@ -62,9 +62,9 @@ hardware, and issue microcode assists for larger arrays.
 % Responsibilities of the BIOS: SDM 9.11.8.1
 
 Modern Intel processors implement a microcode update facility. The SDM
-describes microcode updates from the perspective of an OS kernel and
-hypervisor. Each core can be updated independently, and the updates must be
-reapplied on each boot cycle. A core can be updated multiple times, but each
+describes the process of applying microcode updates from the perspective of
+system software. Each core can be updated independently, and the updates must
+be reapplied on each boot cycle. A core can be updated multiple times, but each
 update must have a bigger version than the core's current version. The latest
 SDM at the time of this writing states that a microcode update is up to 16 KB
 in size.
@@ -399,8 +399,8 @@ cryptographic hash, but before it is executed.
 On motherboards compatible with LaGrande Server Extensions (LT-SX, also known
 as Intel TXT for servers), the firmware implementing PEI verifies that each CPU
 connected to motherboard supports LT-SX, and powers off the CPU sockets that
-don't have processors with LT-SX in them \cite{intel2012ltsx}. This prevents an
-attacker from tampering with a TXT-protected VM by hot-plugging a CPU in a
+don't hold processors that implement LT-SX \cite{intel2012ltsx}. This prevents
+an attacker from tampering with a TXT-protected VM by hot-plugging a CPU in a
 running computer that is inside TXT mode. When a hot-plugged CPU passes
 security tests, a hypervisor is notified that a new CPU is available. The
 hypervisor updates its internal state, and sends the new CPU a SIPI. The new

@@ -57,8 +57,9 @@ PEI hands off control to the \textit{Driver eXecution Environment phase} (DXE).
 In DXE, a loader locates and starts firmware drivers for the various components
 in the computer. DXE is followed by a Boot Device Selection (BDS) phase, which
 is followed by a Transient System Load (TSL) phase, where an EFI application
-loads the operating system selected in BDS. Last, the OS loader passes control
-to the operating system's kernel, entering the Run Time (RT) phase.
+loads the operating system selected in the BDS phase. Last, the OS loader
+passes control to the operating system's kernel, entering the Run Time (RT)
+phase.
 
 When waking up from sleep, the PEI implementation first initializes the
 non-volatile storage containing the system snapshot saved while entering the
@@ -73,14 +74,14 @@ handler.
 On a system that uses secure boot or attestation, the SEC implementation is the
 system's root of trust. Each platform initialization phase is responsible for
 verifying or measuring the firmware that implements the next phase. For
-example, in a TPM / TXT system, SEC firmware initializes the TPM registers that
-hold the system's measurement, which are the Platform Configuration Registers
-(PCRs) for the Static Root of Trust Measurement (SRTM). The SEC implementation
-then stores the PEI's measurement (cryptographic hash) into a measurement
-register. In turn, the PEI implementation measures the DXE firmware and updates
-the measurement register that stores the PEI hash to account for the DXE hash.
-When the OS is booted, the hash in the measurement register accounts for all
-the firmware that was used to boot the computer.
+example, in a TPM / TXT system, the SEC firmware initializes the TPM registers
+that hold the system's measurement, which are the Platform Configuration
+Registers (PCRs) for the Static Root of Trust Measurement (SRTM). The SEC
+implementation then stores the PEI's measurement (cryptographic hash) into a
+measurement register. In turn, the PEI implementation measures the DXE firmware
+and updates the measurement register that stores the PEI hash to account for
+the DXE hash.  When the OS is booted, the hash in the measurement register
+accounts for all the firmware that was used to boot the computer.
 
 
 \subsubsection{SEC on Intel Platforms}
@@ -106,11 +107,11 @@ ME's operating system and applications.
 After the Intel ME loads its software, it sets up some of the motherboard's
 hardware, such as the PCH bus clocks, and then it kicks off the CPU's bootstrap
 sequence. Most of the details of the ME's involvement in the computer's boot
-process are not publicly available, but setting the clocks is mentioned in a
-few public documents \cite{intel2015cpuio, purism2014meclock, dice2011meclock,
-fitpc2014mehw}, and is made clear in firmware bringup guides, such as the
-leaked confidential guide \cite{intel2012mebringup} documenting firmware
-bringup for Intel's Series 7 chipset.
+process are not publicly available, but initializing the clocks is mentioned in
+a few public documents~\cite{intel2015cpuio, purism2014meclock,
+dice2011meclock, fitpc2014mehw}, and is made clear in firmware bringup guides,
+such as the leaked confidential guide~\cite{intel2012mebringup} documenting
+firmware bringup for Intel's Series 7 chipset.
 
 % Initialization Overview: SDM S 9.1
 
@@ -195,7 +196,7 @@ Intel-signed ACMs \cite[p. 92]{futral2013servertxt}.
 \cite{intel2010booting} and \cite{coreboot2015manual} describe the
 initialization steps performed by Intel platforms during the PEI phase, from
 the perspective of a firmware programmer. A few steps provide useful context
-for understanding reasoning about threat models involving the boot process.
+for reasoning about threat models involving the boot process.
 
 % Preventing Caching: SDM S 11.5.3
 
@@ -212,10 +213,11 @@ firmware implementations use Intel's \textit{Memory Reference Code} (MRC) for
 this task.
 
 After DRAM becomes available, the PEI code is copied into DRAM and the BSP is
-taken out of CAR mode. The BSP's LAPIC is initialized and used to send a
-broadcast \textit{Startup Inter-Processor Interrupt} (SIPI) to wake up the
-APs. The interrupt vector in a SIPI indicates the memory address of the AP
-initialization code in the PEI implementation.
+taken out of CAR mode. The BSP's LAPIC (\S~\ref{sec:interrupts}) is initialized
+and used to send a broadcast
+\textit{Startup Inter-Processor Interrupt}~(SIPI,~\S~\ref{sec:interrupts})
+to wake up the APs. The interrupt vector in a SIPI indicates the memory address
+of the AP initialization code in the PEI implementation.
 
 % Typical AP Initialization Sequence: SDM S 8.4.4.2
 

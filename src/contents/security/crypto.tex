@@ -1,0 +1,124 @@
+\subsection{Cryptographic Primitives}
+
+This section overviews the cryptosystems used by secure architectures. We are
+interested in cryptographic primitives that guarantee privacy, integrity, and
+freshness, and we treat these primitives as black boxes, focusing on their use
+in larger systems. [] describes the mathematics behind the cryptography.
+
+A message whose \textit{privacy} is protected can be transmitted over an
+insecure medium without an adversary being able to obtain the information in
+the message. When \textit{integrity} protection is used, the receiver is
+guaranteed to either obtain a message that was transmitted by the sender, or to
+notice that an attacker tampered with the message's content.
+
+When multiple messages get transmitted over an untrusted medium, a
+\textit{freshness} guarantee assures the receiver that she will obtain the
+latest message coming from the sender, or will notice an attack. A freshness
+guarantee is stronger than the equivalent integrity guarantee, because the
+latter does not protect against \textit{replay attacks} where the attacker
+replaces a newer message with an older message coming from the same sender.
+
+
+\subsubsection{Cryptographic Keys}
+
+All cryptographic primitives that we describe here rely on \textit{keys}, which
+are small pieces of information that must only be disclosed according to
+specific rules. A large part of a system's security analysis focuses on
+ensuring that the keys used by the underlying cryptographic primitives are
+produced and handled according to the primitives' assumptions.
+
+Each cryptographic primitive has an associated \textit{key generation
+algorithm} that uses random data to produce a unique key. The random data is
+produced by a \textit{cryptographically strong pseudo-random number generator}
+(CSPRNG) that expands a small amount of \textit{random seed} data into a much
+larger amount of data, which is computationally indistinguishable from true
+random data. The random seed must be obtained from a true source of randomness
+whose output cannot be predicted by an adversary, such as the least-significant
+bits of the readings coming from a hardware temperature sensor.
+
+\textit{Symmetric key} cryptography requires that all the parties in the system
+establish a shared \textit{secret key}, which is usually referred to as ``the
+key''. Typically, one party executes the key generation algorithm, and securely
+transmits the resulting key to the other parties. The channel used to
+distribute the key must provide privacy and integrity guarantees, which is a
+non-trivial logistical burden. The symmetric key primitives mentioned here do
+not make any assumption about the key, so the key generation algorithm simply
+grabs a fixed number of bits from the CSPRNG.
+
+The salient feature of \textit{asymmetric key} cryptography is that it does not
+require a private channel for key distribution. Each party executes the key
+generation algorithm, which produces a \textit{private key} and a
+\textit{public key} that are mathematically related. Each party's public key
+is distributed to the other parties over a channel with integrity guarantees.
+Asymmetric key primitives are more flexible than their symmetric key
+counterparts, but are more complicated and consume more computational
+resources.
+
+
+\subsubsection{Privacy}
+
+Privacy guarantees are obtained by applying an \textit{encryption algorithm} to
+the sensitive information. The original information can be recovered from the
+encrypted output by running a \textit{decryption algorithm} with the proper
+key. The information is hidden in the encrypted output in such a way that an
+adversary cannot obtain it without the decryption key. Symmetric key encryption
+schemes use the same secret key for encryption and decryption, while asymmetric
+key encryption schemes use the public key for encryption, and the corresponding
+private key for decryption.
+
+At the time of this writing, the most popular choice of symmetric encryption
+algorithm is the \textit{American Encryption Standard} (AES, []), which
+operates on 128-bit keys. The most deployed asymmetric encryption cryptosystem
+is based on the \textit{Rivest-Shamir-Adelman} (RSA, []) algorithm. RSA has
+variable key sizes, and 2048-bit key pairs are considered to provide the same
+security as 128-bit AES keys. Recently, elliptic curve cryptography has gained
+a surge in popularty, thanks to its smaller key sizes. For example, a 256-bit
+ECC key is considered to have the same security as a 2048-bit RSA key.
+
+
+\subsubsection{Integrity}
+
+Many cryptosystems that provide integrity guarantees are built upon
+\textit{cryptographically strong hashing} functions. These hash functions
+operate on an unbounded amount of input data and produce a small fixed-size
+output. cryptographically strong hash functions have a few guarantees, such as
+\textit{pre-image resistance}, which states that an adversary cannot produce
+input data corresponding to a given hash output. The most popular cryptographic
+hash function at the time of this writing is the
+\textit{Secure Hashing Algorithm} (SHA, [])
+
+In the symmetric key setting, integrity guarantees are typically obtained using
+an \textit{Hash Message Authentication Code} (HMAC, []) construction that
+combines a symmetric encryption algorithm, like AES, with a cryptographically
+secure hash function, such as SHA. The message sender runs the HMAC algorithm
+and sends the output HMAC value along with the original message. The message
+receiver verifies that the received HMAC value is the same as the output of
+running the HMAC algorithm on the message. HMAC algorithms inherit the
+pre-image resistance property from their underlying cryptographic hash
+functions, and have the additional property that an adversary cannot produce
+the correct HMAC for a message without the secret key.
+
+Asymmetric key primitives that provide integrity guarantees are known as
+\textit{signatures}. The message sender provides the private key to a
+\textit{signing} algorithm, and sends the output signature along with the
+message. The message receiver feeds the public key and the signature to a
+\textit{signature verification} algorithm, which returns \textsc{true} if the
+message matches the signature, and \textsc{false} if the message has been
+tampered with.
+
+Signing algorithms can only operate on small messages and are computationally
+expensive. Therefore, in practice, the message to be transmitted is first ran
+through a cryptographically strong hash function, and the hash is provided as
+the input to the signing algorithm.
+
+At the time of this writing, the most popular choice for providing encryption
+in shared secret settings is a SHA-based HMAC function, and the most popular
+signature algorithm is based on the RSA algorithm.
+
+
+\subsubsection{Freshness}
+
+In the network setting, freshness is ensured by adding unique pieces of
+information to each message, which can be used by the receiver to detect replay
+attacks. The unique information is either sequence numbers or \textit{nonces},
+which are single-use random numbers.
