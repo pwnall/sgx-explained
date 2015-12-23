@@ -13,16 +13,24 @@ while it is active. This is accomplished by a secure initialization
 authenticated code module (SINIT ACM) that effectively performs a warm system
 reset before starting the container's VM.
 
+TXT requires a TPM chip with an extended register set. The registers used by
+the measured boot process described in \S~\ref{sec:tpm} are considered to make
+up the platform's Static Root of Trust Measurement (SRTM). When a TXT VM is
+initialized, it updates TPM registers that make up the Dynamic Root of Trust
+Measurement (DRTM). While the TPM's SRTM registers only reset at the start of a
+boot cycle, the DRTM registers are reset by the SINIT ACM, every time a TXT VM
+is launched.
+
 TXT does not implement DRAM encryption or HMACs, and therefore is vulnerable to
 physical DRAM attacks, just like TPM-based designs. Furthermore, early TXT
 implementations were vulnerable to attacks where a malicious operating system
 would program a device, such as a network card, to perform DMA transfers
 to the DRAM region used by a TXT container \cite{wojtczuk2009txt,
 wojtczuk2009txt2}. In recent Intel CPUs, the memory controller is integrated on
-the CPU die, so the SINIT ACM
-can securely set up the memory controller to reject DMA transfers targeting TXT
-memory. An Intel chipset datasheet \cite{intel2015datasheet} documents an
-``Intel TXT DMA Protected Range'' IIO configuration register.
+the CPU die, so the SINIT ACM can securely set up the memory controller to
+reject DMA transfers targeting TXT memory. An Intel chipset
+datasheet~\cite{intel2015datasheet} documents an ``Intel TXT DMA Protected
+Range'' IIO configuration register.
 
 Early TXT implementations did not measure the SINIT ACM. Instead, the microcode
 implementing the TXT launch instruction verified that the code module contained

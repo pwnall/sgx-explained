@@ -6,11 +6,15 @@ virtually guaranteed to have security vulnerabilities. This suggests that a
 cautious secure architecture shoild avoid having the system software in the
 TCB.
 
-Removing the system software from the TCB means that the architecture must
-provide a method for running application code inside a container that is
-isolated from the untrusted system software. One of the more difficult problems
-these designs must solve is that application software relies on the memory
-management services provided by the system software, which is now untrusted.
+However, removing the system software from the TCB requires that the
+architecture provides a method for isolating sensitive application code from
+the untrusted system software. This is typically accomplished by a designing a
+mechanism for loading application code in isolated containers whose contents
+can be certified via software
+attestation~(\S~\ref{sec:generic_software_attestation}). One of the more
+difficult problems faced by these designes is that application software relies
+on the memory management services provided by the system software, which is now
+untrusted.
 
 Intel's SGX~\cite{mckeen2013sgx, anati2013sgx}, which was inspired by
 Bastion~\cite{champagne2010bastion}, leaves the system software in charge of

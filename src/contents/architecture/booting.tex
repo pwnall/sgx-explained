@@ -41,10 +41,18 @@ described below.
 The computer powers up, reboots, or resumes from sleep in the
 \textit{Security phase} (SEC). The SEC implementation is responsible for
 establishing a temporary memory store and loading the next stage of the
-firmware into it. The SEC implementation also performs any security-related
-tasks, such as measuring (computing a cryptographic hash of) the next firmware
-stage, and potentially aborting if the firmware is not signed by a pre-approved
-key.
+firmware into it. As the first piece of software that executes on the computer,
+the SEC implementation is the system's root of trust, and performs the first
+steps towards establishing the system's desired security properties.
+
+For example, in a measured boot system (also known as trusted boot), all the
+software involved in the boot process is measured (cryptographically hashed,
+and the measurement is made available to third parties, as described in
+\S~\ref{sec:generic_software_attestation}). In such a system, the SEC
+implementation takes the first steps in establishing the system's measurement,
+namely resetting the special register that stores the measurement result,
+measuring the  PEI implementation, and storing the measurement in the special
+register.
 
 SEC is followed by the \textit{Pre-EFI Initialization phase} (PEI), which
 initializes the computer's DRAM, copies itself from the temporary memory
@@ -68,20 +76,6 @@ re-initialization processes, based on the snapshot contents. The DXE
 implementation also uses the snapshot to restore the computer's state, such as
 the DRAM contents, and then directly executes the operating system's wake-up
 handler.
-
-%%% TODO(pwnall): move the paragraph below to the security section
-
-On a system that uses secure boot or attestation, the SEC implementation is the
-system's root of trust. Each platform initialization phase is responsible for
-verifying or measuring the firmware that implements the next phase. For
-example, in a TPM / TXT system, the SEC firmware initializes the TPM registers
-that hold the system's measurement, which are the Platform Configuration
-Registers (PCRs) for the Static Root of Trust Measurement (SRTM). The SEC
-implementation then stores the PEI's measurement (cryptographic hash) into a
-measurement register. In turn, the PEI implementation measures the DXE firmware
-and updates the measurement register that stores the PEI hash to account for
-the DXE hash.  When the OS is booted, the hash in the measurement register
-accounts for all the firmware that was used to boot the computer.
 
 
 \subsubsection{SEC on Intel Platforms}

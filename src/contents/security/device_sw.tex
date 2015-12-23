@@ -9,17 +9,17 @@ motherboard hosting the processor chip.
 
 The threat models mentioned above must classify attacks from other motherboard
 components as physical attacks. Unfortunately, these models would mis-classify
-all the attacks described in this sub-section, which can be carried out solely
-by executing software on the victim processor. The incorrect classification
+all the attacks described in this section, which can be carried out solely by
+executing software on the victim processor. The incorrect classification
 matters in cloud computing scenarios, where physical attacks are significantly
 more expensive than software attacks.
 
 The PCIe bus~(\S~\ref{sec:motherboard}) allows any device connected to the bus
 to perform \textit{Direct Memory Access}~(DMA), reading from and writing to
 the computer's DRAM without the involvement of a CPU core. Each device is
-assigned a DRAM range via a standard PCI configuration mechanism, but the bus
-does not restrict a device from performing DMA targeting DRAM outside its
-assigned range.
+assigned a range of DRAM addresses via a standard PCI configuration mechanism,
+but the bus does not restrict a device from performing DMA targeting DRAM
+addresses outside its assigned range.
 
 Without any additonal protection mechanism, an attacker that compromises system
 software can take advantage of programmable devices to access any DRAM region,
@@ -77,10 +77,10 @@ deploying firmware bug fixes. At the same time, an attack that compromises the
 system software can subvert the firmware update mechanism to inject malicious
 code into the firmware. The malicious code can be used to carry out a cold boot
 attack, which is typically considered a physical attack. Furthermore, malicious
-firmware can run code at in System Management Mode (SMM, \S~\ref{sec:rings}),
-the highest software privilege level. Last, malicious firmware can modify the
-system software as it is loaded during the boot process. These avenues give the
-attacker capabilities that have traditionally been associated with DRAM bus
+firmware can run code at the highest software privilege level, System
+Management Mode (SMM, \S~\ref{sec:rings}). Last, malicious firmware can modify
+the system software as it is loaded during the boot process. These avenues give
+the attacker capabilities that have traditionally been associated with DRAM bus
 tapping attacks.
 
 The Intel Management Engine (ME)~\cite{ruan2014intelme} loads its firmware

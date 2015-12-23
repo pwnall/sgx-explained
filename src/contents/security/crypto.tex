@@ -147,14 +147,14 @@ resources.
 \subsubsection{Privacy}
 
 Privacy guarantees are obtained by applying an \textit{encryption algorithm} to
-the sensitive information, as shown in Figure~\ref{fig:symmetric_encryption}.
-The original information can be recovered from the encrypted output by running
-a \textit{decryption algorithm} with the proper key. The information is hidden
-in the encrypted output in such a way that an adversary cannot obtain it
-without the decryption key. Symmetric key encryption schemes use the same
-secret key for encryption and decryption, while asymmetric key encryption
-schemes use the public key for encryption, and the corresponding private key
-for decryption.
+the sensitive information, as shown in Figures~\ref{fig:symmetric_encryption}
+and~\ref{fig:asymmetric_encryption}. The original information can be recovered
+from the encrypted output by running a \textit{decryption algorithm} with the
+proper key. The information is hidden in the encrypted output in such a way
+that an adversary cannot obtain it without the decryption key. Symmetric key
+encryption schemes use the same secret key for encryption and decryption, while
+asymmetric key encryption schemes use the public key for encryption, and the
+corresponding private key for decryption.
 
 \begin{figure}[hbt]
   \centering
@@ -166,14 +166,27 @@ for decryption.
   \label{fig:symmetric_encryption}
 \end{figure}
 
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/asymmetric_encryption.pdf}
+  \caption{
+    In the asymmetric key setting, the encryption algorithm operates on a
+    public key, and the decryption algorithm uses the corresponding private
+    key.
+  }
+  \label{fig:asymmetric_encryption}
+\end{figure}
+
 At the time of this writing, the most popular choice of symmetric encryption
-algorithm is the \textit{American Encryption Standard} (AES, []), which
-operates on 128-bit keys. The most deployed asymmetric encryption cryptosystem
-is based on the \textit{Rivest-Shamir-Adelman} (RSA, []) algorithm. RSA has
-variable key sizes, and 2048-bit key pairs are considered to provide the same
-security as 128-bit AES keys. Recently, elliptic curve cryptography has gained
-a surge in popularty, thanks to its smaller key sizes. For example, a 256-bit
-ECC key is considered to have the same security as a 2048-bit RSA key.
+algorithm is the
+\textit{American Encryption Standard}~(AES)~\cite{daemen1999aes}, which
+operates on 128-bit keys. The most deployed asymmetric encryption system is
+based on the \textit{Rivest-Shamir-Adelman}~(RSA)~\cite{rivest1978rsa}
+algorithm. RSA has variable key sizes, and 2048-bit key pairs are considered to
+provide the same security as 128-bit AES keys. Recently, elliptic curve
+cryptography~\cite{koblitz1987ecc} has gained a surge in popularity, thanks to
+its smaller key sizes. For example, a 256-bit ECC key is considered to have the
+same security as a 2048-bit RSA key.
 
 
 \subsubsection{Integrity}
@@ -185,26 +198,52 @@ output. cryptographically strong hash functions have a few guarantees, such as
 \textit{pre-image resistance}, which states that an adversary cannot produce
 input data corresponding to a given hash output. The most popular cryptographic
 hash function at the time of this writing is the
-\textit{Secure Hashing Algorithm} (SHA, [])
+\textit{Secure Hashing Algorithm}~(SHA)~\cite{eastlake2001sha1}.
 
 In the symmetric key setting, integrity guarantees are typically obtained using
-an \textit{Hash Message Authentication Code} (HMAC, []) construction that
-combines a symmetric encryption algorithm, like AES, with a cryptographically
-secure hash function, such as SHA. The message sender runs the HMAC algorithm
-and sends the output HMAC value along with the original message. The message
-receiver verifies that the received HMAC value is the same as the output of
-running the HMAC algorithm on the message. HMAC algorithms inherit the
-pre-image resistance property from their underlying cryptographic hash
-functions, and have the additional property that an adversary cannot produce
-the correct HMAC for a message without the secret key.
+an \textit{Hash Message Authentication Code}~(HMAC)~\cite{krawczyk1997hmac}
+construction that combines a symmetric encryption algorithm, like AES, with a
+cryptographically secure hash function, such as SHA. The message sender runs
+the HMAC algorithm and sends the output HMAC value along with the original
+message, as shown in Figure~\ref{fig:symmetric_hmac}. The message receiver
+verifies that the received HMAC value is the same as the output of running the
+HMAC algorithm on the message. HMAC algorithms inherit the pre-image resistance
+property from their underlying cryptographic hash functions, and have the
+additional property that an adversary cannot produce the correct HMAC for a
+message without the secret key.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/symmetric_hmac.pdf}
+  \caption{
+    In the symmetric key setting, integrity is assured by computing a
+    Hash-bassed Message Authentication Code (HMAC) and transmitting it over the
+    network along the message. The receiver re-computes the HMAC and compares
+    it against the version received from the network.
+  }
+  \label{fig:symmetric_hmac}
+\end{figure}
 
 Asymmetric key primitives that provide integrity guarantees are known as
 \textit{signatures}. The message sender provides the private key to a
-\textit{signing} algorithm, and sends the output signature along with the
-message. The message receiver feeds the public key and the signature to a
-\textit{signature verification} algorithm, which returns \textsc{true} if the
-message matches the signature, and \textsc{false} if the message has been
-tampered with.
+\textit{signing} algorithm, and transmits the output signature along with the
+message, as shown in Figure~\ref{fig:asymmetric_signing}. The message receiver
+feeds the public key and the signature to a \textit{signature verification}
+algorithm, which returns \textsc{true} if the message matches the signature,
+and \textsc{false} if the message has been tampered with.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/asymmetric_signing.pdf}
+  \caption{
+    In the symmetric key setting, integrity is assured by computing a
+    Hash-bassed Message Authentication Code (HMAC) and transmitting it over the
+    network along the message. The receiver re-computes the HMAC and compares
+    it against the version received from the network.
+  }
+  \label{fig:asymmetric_signing}
+\end{figure}
+
 
 Signing algorithms can only operate on small messages and are computationally
 expensive. Therefore, in practice, the message to be transmitted is first ran

@@ -4,13 +4,14 @@
 Physical attacks are generally classified according to their cost, which
 factors in the equipment needed to carry out the attack and the attack's
 complexity. Joe Grand's DefCon presentation~\cite{grand2004physicalattacks}
-provides a good overview with a large number of intuition-building pictures.
+provides a good overview with a large number of intuition-building figures and
+photos.
 
 The simplest type of physical attack is a denial of service attack performed by
 disconnecting the victim computer's power supply or network cable. The threat
 models of most secure architectures ignore this attack, because denial of
-service can also be achieved by software attacks that compromise the computer's
-system software, such as the hypervisor.
+service can also be achieved by software attacks that compromise system
+software such as the hypervisor.
 
 
 \subsubsection{Port Attacks}
@@ -64,10 +65,10 @@ whose security relies on a cryptographic hash of the firmware will first copy
 the firmware into DRAM, hash the DRAM copy of the firmware, and then execute
 the firmware from DRAM.
 
-Although the DDR bus's speed makes tapping it very difficult, there are
+Although the speed of the DDR bus makes tapping very difficult, there are
 well-publicized records of successful attempts. The original Xbox console's
 booting process was reverse-engineered thanks to a passive tap on the DRAM
-bus~\cite{huang2003xbox} that showed that the firmware used to boot the
+bus~\cite{huang2003xbox}, which showed that the firmware used to boot the
 console was partially stored in its southbridge. The protection mechanisms of
 the PlayStation 3 hypervisor were subverted by an active tap on its memory
 bus~\cite{hotz2010ps3} that targeted the hypervisor's page tables.
@@ -102,11 +103,10 @@ as the size of the circuitry's components decreases. At the time of this
 writing, the latest Intel CPUs have a 14nm feature size, which requires ion
 beam microscopy (TODO: look up the details for all this).
 
-The least expensive class of chip attacks are destructive, and therefore only
-require imaging the chip's circuitry. These attacks rely on a microscope
-capable of capturing the necessary details in each layer, and equipment for
-mechanically removing each layer and exposing the layer below it to the
-microscope.
+The least expensive class of chip attacks are destructive, and only require
+imaging the chip's circuitry. These attacks rely on a microscope capable of
+capturing the necessary details in each layer, and equipment for mechanically
+removing each layer and exposing the layer below it to the microscope.
 
 Imaging attacks generally target global secrets shared by all the chips in a
 family, such as ROM masks that store global encryption keys or secret boot
@@ -131,12 +131,12 @@ reverse-engineer complex circuits.
 Surprisingly, active attacks are not significantly more expensive to carry out
 than passive non-destructive attacks. This is because the tools used to measure
 the voltage across specific components are not very different from the tools
-that can tamper with the chip's electric structure. Therefore, once an attacker
+that can tamper with the chip's electric circuits. Therefore, once an attacker
 develops a process for accessing a module without destroying the chip's
 circuitry, the attacker can use the same process for both passive and active
 attacks.
 
-At the architectural level, we cannot protect against physical attacks against the
+At the architectural level, we cannot address physical attacks against the
 CPU's chip package. Active attacks on the CPU change the computer's execution
 semantics, leaving us without any hardware that can be trusted to make security
 decisions. Passive attacks can read the private data that the CPU is

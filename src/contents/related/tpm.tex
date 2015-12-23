@@ -1,4 +1,5 @@
 \subsection{The Trusted Platform Module (TPM)}
+\label{sec:tpm}
 
 The Trusted Platform Module (TPM) \cite{grawrock2003tpm} introduced the
 software attestation model described at the beginning of this section. The TPM
@@ -49,6 +50,17 @@ from the measurement.
   }
   \label{fig:tpm_measurement}
 \end{figure}
+
+For example, the firmware on most modern computers implement the platform
+initialization process in the Unified Extensible Firmware Interface (UEFI)
+specification~\cite{forum2015uefi}. Each platform initialization phase is
+responsible for verifying or measuring the firmware that implements the next
+phase. The SEC firmware initializes the TPM PCR, and then stores the PEI's
+measurement into a measurement register. In turn, the PEI implementation
+measures the DXE firmware and updates the measurement register that stores the
+PEI hash to account for the DXE hash. When the OS is booted, the hash in the
+measurement register accounts for all the firmware that was used to boot the
+computer.
 
 Unfortunately, the security of the whole measurement scheme hinges on the
 requirement that the first hash sent to the TPM must reflect the software that

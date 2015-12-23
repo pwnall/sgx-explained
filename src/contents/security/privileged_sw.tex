@@ -9,7 +9,7 @@ inside Intel computers, and outlines the security implications of compromising
 the software running it.
 
 SMM, the most privileged execution level, is only used to handle a specific
-kind of interrupt (\S~\ref{sec:interrupts}), namely
+kind of interrupts (\S~\ref{sec:interrupts}), namely
 \textit{System Management Interrupts} (SMI). SMIs were initially designed
 exclusively for hardware use, and were only triggered by asserting a dedicated
 pin (SMI\#) in the CPU's chip package. However, in modern systems, system
@@ -17,18 +17,17 @@ software can generate an SMI by using the LAPIC's IPI mechanism. This opens up
 the avenue for SMM-based software exploits.
 
 The SMM handler is stored in  \textit{System Management RAM} (SMRAM) which, in
-theory, is not readable or writable when the processor isn't running in SMM.
-However, its protection mechanisms were bypassed multiple
-times~\cite{duflot2006smm, rutkowska2008remap, wojtczuk2009smm,
-kallenberg2014smm}, and SMM-based rootkits~\cite{wecherowski2009smm,
-embleton2010smm} have been demonstrated. Compromising the SMM grants an
-attacker access to all the software on the computer, as SMM is the most
-privileged execution mode.
+theory, is not accessible when the processor isn't running in SMM. However, its
+protection mechanisms were bypassed multiple times~\cite{duflot2006smm,
+rutkowska2008remap, wojtczuk2009smm, kallenberg2014smm}, and SMM-based
+rootkits~\cite{wecherowski2009smm, embleton2010smm} have been demonstrated.
+Compromising the SMM grants an attacker access to all the software on the
+computer, as SMM is the most privileged execution mode.
 
 Xen \cite{zhang2008xen} is a very popular representative of the family of
-hypervisors that run in VMX root mode and use hardware virtualization. Xen's
-codebase has 150,000 lines of code~\cite{xen2015loc}, which is relatively
-small, especially when compared to a kernel. However, Xen still has had over 40
+hypervisors that run in VMX root mode and use hardware virtualization. At
+150,000 lines of code~\cite{xen2015loc}, Xen's codebase is relatively small,
+especially when compared to a kernel. However, Xen still has had over 40
 security vulnerabilities patched in \textbf{each} of the last three years
 (2012-2014) \cite{cvedetails2014xen}.
 
@@ -37,9 +36,9 @@ with Intel TXT's dynamic root of trust for measurement (DRTM) to implement
 trusted execution. \cite{vasudevan2010requirements} argues that a dynamic root
 of trust mechanism, like Intel TXT, is necessary to ensure a hypervisor's
 integrity.  Unfortunately, the TXT design requires an implementation complex
-enough that security vulnerabilities have been found \cite{wojtczuk2009txt2}
-\cite{wojtczuk2011txt}. Furthermore, any SMM attack can be used to compromise
-TXT \cite{wojtczuk2009txt}.
+enough that exploitable security vulnerabilities have creeped in
+\cite{wojtczuk2009txt2, wojtczuk2011txt}. Furthermore, any SMM attack can be
+used to compromise TXT \cite{wojtczuk2009txt}.
 
 The monolithic kernel design leads to many opportunities for security
 vulnerabilities in kernel code. Linux is by far the most popular kernel for
