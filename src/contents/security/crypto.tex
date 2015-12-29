@@ -20,13 +20,13 @@ guarantee is stronger than the equivalent integrity guarantee, because the
 latter does not protect against \textit{replay attacks} where the attacker
 replaces a newer message with an older message coming from the same sender.
 
-These concepts might be better illustrated by the following example. Suppose
-Alice is a wealthy investor who wishes to either \textbf{buy} or \textbf{sell}
-an item every day. Alice cannot trade directly, and must relay her orders to
-her broker, Bob, over a network connection owned by Eve.
+The following example further illustrates these concepts. Suppose Alice is a
+wealthy investor who wishes to either \textsc{buy} or \textsc{sell} an item
+every day. Alice cannot trade directly, and must relay her orders to her
+broker, Bob, over a network connection owned by Eve.
 
 A communication system with privacy guarantees would prevent Eve from
-distinguishing between a \textbf{buy} and a \textbf{sell} order, as illustrated
+distinguishing between a \textsc{buy} and a \textsc{sell} order, as illustrated
 in Figure~\ref{fig:privacy_attack}. Without privacy, Eve would know Alice's
 order before it is is placed by Bob, so Eve would presumably gain a financial
 advantage at Alice's expense.
@@ -45,7 +45,7 @@ advantage at Alice's expense.
 A system with integrity guarantees would prevent Eve from replacing Alice's
 message with a false order, as shown in Figure~\ref{fig:integrity_attack}. In
 this example, without integrity guarantees, Eve could replace Alice's message
-with a \textbf{sell-everything} order, and buy Alice's assets at a very low
+with a \textsc{sell-everything} order, and buy Alice's assets at a very low
 price.
 
 \begin{figure}[hbt]
@@ -65,7 +65,7 @@ cannot perform the replay attack pictured in Figure~\ref{fig:freshness_attack},
 where she would replace Alice's message with an older message. Without
 freshness guarantees, Eve could mount the following attack, which bypasses
 both privacy and integrity guarantees. Over a few days, Eve would copy and
-store Alice's messages from the network. As each order would reaches Bob, Eve
+store Alice's messages from the network. When an order would reach Bob, Eve
 would observe the market and determine if the order was \textsc{buy} or
 \textsc{sell}. After building up a database of messages labeled \textsc{buy} or
 \textsc{sell}, Eve would replace Alice's message with an old message of her
@@ -98,8 +98,8 @@ produced by a \textit{cryptographically strong pseudo-random number generator}
 (CSPRNG) that expands a small amount of \textit{random seed} data into a much
 larger amount of data, which is computationally indistinguishable from true
 random data. The random seed must be obtained from a true source of randomness
-whose output cannot be predicted by an adversary, such as the least-significant
-bits of the readings coming from a hardware temperature sensor.
+whose output cannot be predicted by an adversary, such as the least significant
+bits of the temperature readings coming from a hardware sensor.
 
 \textit{Symmetric key} cryptography requires that all the parties in the system
 establish a shared \textit{secret key}, which is usually referred to as ``the
@@ -147,14 +147,14 @@ resources.
 \subsubsection{Privacy}
 
 Privacy guarantees are obtained by applying an \textit{encryption algorithm} to
-the sensitive information, as shown in Figures~\ref{fig:symmetric_encryption}
-and~\ref{fig:asymmetric_encryption}. The original information can be recovered
-from the encrypted output by running a \textit{decryption algorithm} with the
-proper key. The information is hidden in the encrypted output in such a way
-that an adversary cannot obtain it without the decryption key. Symmetric key
-encryption schemes use the same secret key for encryption and decryption, while
-asymmetric key encryption schemes use the public key for encryption, and the
-corresponding private key for decryption.
+the sensitive information, as shown in Figure~\ref{fig:symmetric_encryption}.
+The original information can be recovered from the encrypted output by running
+a \textit{decryption algorithm} with the proper key. The information is hidden
+in the encrypted output in such a way that an adversary cannot obtain it
+without the decryption key. Symmetric key encryption schemes use the same
+secret key for encryption and decryption, while asymmetric key encryption
+schemes use the public key for encryption, and the corresponding private key
+for decryption.
 
 \begin{figure}[hbt]
   \centering
@@ -166,27 +166,39 @@ corresponding private key for decryption.
   \label{fig:symmetric_encryption}
 \end{figure}
 
+Asymmetric encryption algorithms have much higher computational requirements
+than symmetric encryption algorithms. Therefore, when non-trivial quantities of
+data is encrypted, the sender generates a single-use secret key that is used
+to encrypt the data, and encrypts the secret key with the receiver's public
+key, as shown in Figure~\ref{fig:asymmetric_encryption}.
+
 \begin{figure}[hbt]
   \centering
   \includegraphics[width=87mm]{figures/asymmetric_encryption.pdf}
   \caption{
     In the asymmetric key setting, the encryption algorithm operates on a
     public key, and the decryption algorithm uses the corresponding private
-    key.
+    key. Asymmetric key encryption is generally used to bootstrap a symmetric
+    key encryption scheme.
   }
   \label{fig:asymmetric_encryption}
 \end{figure}
 
-At the time of this writing, the most popular choice of symmetric encryption
-algorithm is the
-\textit{American Encryption Standard}~(AES)~\cite{daemen1999aes}, which
-operates on 128-bit keys. The most deployed asymmetric encryption system is
-based on the \textit{Rivest-Shamir-Adelman}~(RSA)~\cite{rivest1978rsa}
-algorithm. RSA has variable key sizes, and 2048-bit key pairs are considered to
-provide the same security as 128-bit AES keys. Recently, elliptic curve
-cryptography~\cite{koblitz1987ecc} has gained a surge in popularity, thanks to
-its smaller key sizes. For example, a 256-bit ECC key is considered to have the
-same security as a 2048-bit RSA key.
+The most popular choice of symmetric encryption algorithm at the time of this
+writing is the
+\textit{American Encryption Standard}~(AES)~\cite{daemen1999aes, fips2001aes},
+with two variants that operate on 128-bit keys and 256-bits. Recently, the
+United States National Security Agency (NSA) required the use of 256-bit AES
+keys for protecting sensitive information~\cite{nsa2015suiteb}.
+
+The most deployed asymmetric encryption system is based on the
+\textit{Rivest-Shamir-Adelman}~(RSA)~\cite{rivest1978rsa} algorithm. RSA has
+variable key sizes, and 3072-bit key pairs are considered to provide the same
+security as 128-bit AES keys~\cite{fips2012keysize}. Recently, elliptic curve
+cryptography (ECC)~\cite{koblitz1987ecc} has gained a surge in popularity,
+thanks to its smaller key sizes. For example, a 384-bit ECC key is considered
+to have the same security as a 3072-bit RSA
+key~\cite{fips2012keysize, nsa2015suiteb}.
 
 
 \subsubsection{Integrity}
@@ -194,7 +206,7 @@ same security as a 2048-bit RSA key.
 Many cryptosystems that provide integrity guarantees are built upon
 \textit{cryptographically strong hashing} functions. These hash functions
 operate on an unbounded amount of input data and produce a small fixed-size
-output. cryptographically strong hash functions have a few guarantees, such as
+output. Cryptographically strong hash functions have a few guarantees, such as
 \textit{pre-image resistance}, which states that an adversary cannot produce
 input data corresponding to a given hash output. The most popular cryptographic
 hash function at the time of this writing is the
@@ -236,14 +248,14 @@ and \textsc{false} if the message has been tampered with.
   \centering
   \includegraphics[width=87mm]{figures/asymmetric_signing.pdf}
   \caption{
-    In the symmetric key setting, integrity is assured by computing a
-    Hash-bassed Message Authentication Code (HMAC) and transmitting it over the
-    network along the message. The receiver re-computes the HMAC and compares
-    it against the version received from the network.
+    Signature schemes guarantee integrity in the asymmetric key setting.
+    Signatures are created using the sender's private key, and are verified
+    using the corresponding public key. A cryptographically secure hash
+    function is usually employed to reduce large messages to small hashes,
+    which are then signed.
   }
   \label{fig:asymmetric_signing}
 \end{figure}
-
 
 Signing algorithms can only operate on small messages and are computationally
 expensive. Therefore, in practice, the message to be transmitted is first ran
@@ -252,7 +264,9 @@ the input to the signing algorithm.
 
 At the time of this writing, the most popular choice for providing encryption
 in shared secret settings is a SHA-based HMAC function, and the most popular
-signature algorithm is based on the RSA algorithm.
+signature algorithm is based on the RSA algorithm. The NSA requires the
+Digital Signature Standard (DSS)\cite{fips2013dss}, which specifies schemes
+based on RSA and on ECC.
 
 
 \subsubsection{Freshness}
