@@ -146,25 +146,62 @@ resources.
 
 \subsubsection{Privacy}
 
-Privacy guarantees are obtained by applying an \textit{encryption algorithm} to
-the sensitive information, as shown in Figure~\ref{fig:symmetric_encryption}.
-The original information can be recovered from the encrypted output by running
-a \textit{decryption algorithm} with the proper key. The information is hidden
-in the encrypted output in such a way that an adversary cannot obtain it
-without the decryption key. Symmetric key encryption schemes use the same
-secret key for encryption and decryption, while asymmetric key encryption
-schemes use the public key for encryption, and the corresponding private key
-for decryption.
+Many cryptosystems that provide integrity guarantees are built upon
+\textit{secure permutations}, also known as \textit{block ciphers}. The sender
+computes the permutation using an \textit{encryption} algorithm, and the
+receiver inverts the permutation using a \textit{decryption} algorithm.
+Symmetric key encryption algorithms use the same secret key for encryption and
+decryption, while asymmetric key block ciphers use the public key for
+encryption, and the corresponding private key for decryption. Secure
+permutation functions have the property that an adversary cannot compute the
+permutation's inverse without the key used for decryption.
+
+The most popular secure permutation based on symmetric keys at the time of this
+writing is the
+\textit{American Encryption Standard}~(AES)~\cite{daemen1999aes, fips2001aes},
+with two variants that operate on 128-bit blocks using 128-bit keys or 256-bit
+keys. Recently, the United States \textit{National Security Agency}~(NSA)
+required the use of 256-bit AES keys for protecting sensitive
+information~\cite{nsa2015suiteb}.
+
+The most deployed asymmetric key secure permutation is the
+\textit{Rivest-Shamir-Adelman}~(RSA)~\cite{rivest1978rsa} algorithm. RSA has
+variable key sizes, and 3072-bit key pairs are considered to provide the same
+security as 128-bit AES keys~\cite{fips2012keysize}. Recently, elliptic curve
+cryptography (ECC)~\cite{koblitz1987ecc} has gained a surge in popularity,
+thanks to its smaller key sizes. For example, a 384-bit ECC key is considered
+to have the same security as a 3072-bit RSA
+key~\cite{fips2012keysize, nsa2015suiteb}.
+
+A cryptographically secure permutation is not enough to ensure privacy. An easy
+to see issue is that in our previous example, a permutation would encrypt all
+of Alice's \textsc{buy} orders to the same value. Furthermore, each secure
+permutation algorithm has its own assumptions that can lead to subtle
+vulnerabilities if the algorithm is used directly.
+
+Symmetric key secure permutations are combined with operating modes to form
+symmetric encryption schemes. Most operating modes require a random
+\textit{initialization vector} (IV) to be used for each message, as shown in
+Figure~\ref{fig:symmetric_encryption}. When analyzing the security of systems
+based on these cryptosystems, an understanding of the IV generation process is
+as important as ensuring the confidentiality of the encryption key. Counter
+(CTR) and Cipher Block Chaining (CBC) are examples of operating modes
+recommended~\cite{fips2001ctr} by the United States \textit{National Institute
+of Standards and Technology}~(NIST), which informs the NSA's requirements.
 
 \begin{figure}[hbt]
   \centering
-  \includegraphics[width=87mm]{figures/symmetric_encryption.pdf}
+  \includegraphics[width=85mm]{figures/symmetric_encryption.pdf}
   \caption{
     In a symmetric key encryption scheme, the same secret key must be provided
-    to both the encryption and the decryption algorithm.
+    to both the encryption and the decryption algorithm. A random
+    initialization vector (IV) must be generated for each message.
   }
   \label{fig:symmetric_encryption}
 \end{figure}
+
+
+
 
 Asymmetric encryption algorithms have much higher computational requirements
 than symmetric encryption algorithms. Therefore, when non-trivial quantities of
@@ -184,21 +221,7 @@ key, as shown in Figure~\ref{fig:asymmetric_encryption}.
   \label{fig:asymmetric_encryption}
 \end{figure}
 
-The most popular choice of symmetric encryption algorithm at the time of this
-writing is the
-\textit{American Encryption Standard}~(AES)~\cite{daemen1999aes, fips2001aes},
-with two variants that operate on 128-bit keys and 256-bits. Recently, the
-United States National Security Agency (NSA) required the use of 256-bit AES
-keys for protecting sensitive information~\cite{nsa2015suiteb}.
 
-The most deployed asymmetric encryption system is based on the
-\textit{Rivest-Shamir-Adelman}~(RSA)~\cite{rivest1978rsa} algorithm. RSA has
-variable key sizes, and 3072-bit key pairs are considered to provide the same
-security as 128-bit AES keys~\cite{fips2012keysize}. Recently, elliptic curve
-cryptography (ECC)~\cite{koblitz1987ecc} has gained a surge in popularity,
-thanks to its smaller key sizes. For example, a 384-bit ECC key is considered
-to have the same security as a 3072-bit RSA
-key~\cite{fips2012keysize, nsa2015suiteb}.
 
 
 \subsubsection{Integrity}
@@ -263,15 +286,33 @@ through a cryptographically strong hash function, and the hash is provided as
 the input to the signing algorithm.
 
 At the time of this writing, the most popular choice for providing encryption
-in shared secret settings is a SHA-based HMAC function, and the most popular
-signature algorithm is based on the RSA algorithm. The NSA requires the
-Digital Signature Standard (DSS)\cite{fips2013dss}, which specifies schemes
-based on RSA and on ECC.
+in shared secret settings is a SHA-based HMAC function.
+
+A symmetric key primitive that has been gaining popularity is AES-GCM, which
+offers both privacy and integrity guarantees by combining the AES encryption
+algorithm with the \textit{Galois/Counter operation
+mode}~(GCM)~\cite{mcgrew2004gcm}. AES-GCM has earned NIST's
+recommendation~\cite{fips2017gcm}.
+
+The most popular signature algorithm is based on the RSA algorithm. The NSA
+requires the Digital Signature Standard (DSS)\cite{fips2013dss}, which
+specifies schemes based on RSA and on ECC.
 
 
 \subsubsection{Freshness}
 
-In the network setting, freshness is ensured by adding unique pieces of
-information to each message, which can be used by the receiver to detect replay
-attacks. The unique information is either sequence numbers or \textit{nonces},
-which are single-use random numbers.
+Freshness guarantees are typically built on top of a system that already offers
+integrity guarantees, by adding a unique piece of information to each message.
+The main challenge in freshness schemes comes down to economically maintaining
+the state needed to generate the unique pieces of information on the sender
+side, and verify their uniqueness on the receiver side.
+
+A popular solution for gaining freshness guarantees relies on \textit{nonces},
+single-use random numbers. The attractiveness of nonces is that the sender does
+not need to maintain any state, but the downside is that the receiver must
+store the nonces of all received messages.
+
+Nonces are often combined with a message timestamping and expiration scheme.
+This can greatly reduce the receiver's storage requirement, as the nonces for
+expired messages can be safely discarded.
+

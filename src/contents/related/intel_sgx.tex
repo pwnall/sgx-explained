@@ -9,12 +9,15 @@ containers. SGX introduces an approach to solving some of the issues brought by
 multi-core processors with a shared, coherent last-level cache.
 
 SGX does not extend caches or TLBs with container identity bits, and does not
-require any security checks during normal memory accesses. Instead, SGX always
-ensures that a core's TLBs only contain entries for the container that it is
-executing. Like Bastion, SGX implements a TLB miss handler that relies on an
-inverted page map (the EPCM) to reject address translations for memory that
-does not belong to the current container. This approach requires flushing a
-core's TLBs on every container switch.
+require any security checks during normal memory accesses. As suggested in the
+TrustZone documentation, SGX always ensures that a core's TLBs only contain
+entries for the container that it is executing, which requires flushing the CPU
+core's TLBs when context-switching between containers and untrusted software.
+
+SGX follows Bastion's approach of having the untrusted OS manage the page
+tables used by secure containers. The containers' security is preserved by a
+TLB miss handler that relies on an inverted page map (the EPCM) to reject
+address translations for memory that does not belong to the current container.
 
 Like Bastion, SGX allows the untrusted operating system to evict secure
 container pages, in a controlled fashion. After the OS initiates a container

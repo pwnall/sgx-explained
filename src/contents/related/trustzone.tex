@@ -70,14 +70,20 @@ cache line, which effectively provides completely different views of the memory
 space to the software running in different worlds. This design assumes that
 memory space is partitioned between the two worlds, so no aliasing can occur.
 
+The TrustZone documentation describes two TLB configurations. If many context
+switches between worlds are expected, the TLB IP blocks can be configured to
+include the secure bit in the address tag. Alternatively, the secure bit can be
+ommitted from the TLBs, as long as the monitor flushes the TLBs while
+performing a context switch between the two worlds.
+
 The hardware modules that do not consume TrustZone's address bit are expected
-to be connected to the AXI bus via IP cores that implement simple
-partitioning techniques. For example, the TrustZone Memory Adapter (TZMA) can
-be used to partition an on-chip ROM or SRAM into a secure region and a normal
-region, and the TrustZone Address Space Controller (TZASC) partitions the
-memory space provided by a DRAM controller into secure and normal regions. A
-TrustZone-aware DMA controller rejects DMA transfers from the normal world that
-reference secure world addresses.
+to be connected to the AXI bus via IP cores that implement simple partitioning
+techniques. For example, the TrustZone Memory Adapter (TZMA) can be used to
+partition an on-chip ROM or SRAM into a secure region and a normal region, and
+the TrustZone Address Space Controller (TZASC) partitions the memory space
+provided by a DRAM controller into secure and normal regions. A TrustZone-aware
+DMA controller rejects DMA transfers from the normal world that reference
+secure world addresses.
 
 It follows that analyzing the security properties of a TrustZone system
 requires a precise understanding of the behavior and configuration of all the
