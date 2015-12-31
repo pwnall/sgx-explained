@@ -147,24 +147,50 @@ resources.
 \subsubsection{Privacy}
 
 Many cryptosystems that provide integrity guarantees are built upon
-\textit{secure permutations}, also known as \textit{block ciphers}. The sender
-computes the permutation using an \textit{encryption} algorithm, and the
-receiver inverts the permutation using a \textit{decryption} algorithm.
-Symmetric key encryption algorithms use the same secret key for encryption and
-decryption, while asymmetric key block ciphers use the public key for
-encryption, and the corresponding private key for decryption. Secure
-permutation functions have the property that an adversary cannot compute the
-permutation's inverse without the key used for decryption.
+\textit{block ciphers} that operate on fixed-size message blocks. The sender
+transforms a block using an \textit{encryption} algorithm, and the receiver
+inverts the transformation using a \textit{decryption} algorithm. The
+encryption algorithms in block ciphers obfuscate the message block's content in
+the output, so that an adversary who does not have the decryption key cannot
+obtain the original message block from the encrypted output.
 
-The most popular secure permutation based on symmetric keys at the time of this
+Symmetric key encryption algorithms use the same secret key for encryption and
+decryption, as shown in Figure~\ref{fig:symmetric_block_cipher}, while
+asymmetric key block ciphers use the public key for encryption, and the
+corresponding private key for decryption, as shown in
+Figure~\ref{fig:asymmetric_block_cipher}.
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/symmetric_block_cipher.pdf}
+  \caption{
+    In a symmetric key secure permutation (block cipher), the same secret key
+    must be provided to both the encryption and the decryption algorithm.
+  }
+  \label{fig:symmetric_block_cipher}
+\end{figure}
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/asymmetric_block_cipher.pdf}
+  \caption{
+    In an asymmetric key block cipher, the encryption algorithm operates on a
+    public key, and the decryption algorithm uses the corresponding private
+    key.
+  }
+  \label{fig:asymmetric_block_cipher}
+\end{figure}
+
+
+The most popular block cipher based on symmetric keys at the time of this
 writing is the
 \textit{American Encryption Standard}~(AES)~\cite{daemen1999aes, fips2001aes},
 with two variants that operate on 128-bit blocks using 128-bit keys or 256-bit
-keys. Recently, the United States \textit{National Security Agency}~(NSA)
-required the use of 256-bit AES keys for protecting sensitive
-information~\cite{nsa2015suiteb}.
+keys. AES is a \textit{secure permutation} function, as it can transform any
+128-bit block into another 128-bit block. Recently, the United States
+\textit{National Security Agency}~(NSA) required the use of 256-bit AES keys
+for protecting sensitive information~\cite{nsa2015suiteb}.
 
-The most deployed asymmetric key secure permutation is the
+The most deployed asymmetric key block cipher is the
 \textit{Rivest-Shamir-Adelman}~(RSA)~\cite{rivest1978rsa} algorithm. RSA has
 variable key sizes, and 3072-bit key pairs are considered to provide the same
 security as 128-bit AES keys~\cite{fips2012keysize}. Recently, elliptic curve
@@ -173,14 +199,15 @@ thanks to its smaller key sizes. For example, a 384-bit ECC key is considered
 to have the same security as a 3072-bit RSA
 key~\cite{fips2012keysize, nsa2015suiteb}.
 
-A cryptographically secure permutation is not enough to ensure privacy. An easy
-to see issue is that in our previous example, a permutation would encrypt all
-of Alice's \textsc{buy} orders to the same value. Furthermore, each secure
-permutation algorithm has its own assumptions that can lead to subtle
-vulnerabilities if the algorithm is used directly.
+A block cipher does not necessarily guarantee privacy, when used  on its own.
+An easy to see issue is that in our previous example, a block cipher would
+generate the same encrypted output for any of Alice's \textsc{buy} orders, as
+they all have the same content. Furthermore, each block cipher has its own
+assumptions that can lead to subtle vulnerabilities if the cipher is used
+directly.
 
-Symmetric key secure permutations are combined with operating modes to form
-symmetric encryption schemes. Most operating modes require a random
+Symmetric key block ciphers are combined with operating modes to form symmetric
+encryption schemes. Most operating modes require a random
 \textit{initialization vector} (IV) to be used for each message, as shown in
 Figure~\ref{fig:symmetric_encryption}. When analyzing the security of systems
 based on these cryptosystems, an understanding of the IV generation process is
@@ -193,14 +220,12 @@ of Standards and Technology}~(NIST), which informs the NSA's requirements.
   \centering
   \includegraphics[width=85mm]{figures/symmetric_encryption.pdf}
   \caption{
-    In a symmetric key encryption scheme, the same secret key must be provided
-    to both the encryption and the decryption algorithm. A random
-    initialization vector (IV) must be generated for each message.
+    Symmetric key block ciphers are combined with operating modes. Most
+    operating modes require a random initialization vector (IV) to be generated
+    for each encrypted message.
   }
   \label{fig:symmetric_encryption}
 \end{figure}
-
-
 
 
 Asymmetric encryption algorithms have much higher computational requirements
@@ -213,15 +238,11 @@ key, as shown in Figure~\ref{fig:asymmetric_encryption}.
   \centering
   \includegraphics[width=87mm]{figures/asymmetric_encryption.pdf}
   \caption{
-    In the asymmetric key setting, the encryption algorithm operates on a
-    public key, and the decryption algorithm uses the corresponding private
-    key. Asymmetric key encryption is generally used to bootstrap a symmetric
+    Asymmetric key encryption is generally used to bootstrap a symmetric
     key encryption scheme.
   }
   \label{fig:asymmetric_encryption}
 \end{figure}
-
-
 
 
 \subsubsection{Integrity}
