@@ -1,11 +1,40 @@
 \subsection{Cryptographic Primitives}
+\label{sec:crypto_primitives}
 
 This section overviews the cryptosystems used by secure architectures. We are
 interested in cryptographic primitives that guarantee privacy, integrity, and
 freshness, and we treat these primitives as black boxes, focusing on their use
 in larger systems. \cite{katz2014crypto} covers the mathematics behind
 cryptography, while \cite{ferguson2011crypto} covers the topic of building
-systems out of cryptographic primitives.
+systems out of cryptographic primitives. Table~\ref{fig:crypto_primitives}
+summarizes the primitives covered in this section.
+
+\begin{table}[hbt]
+  \centering
+  \begin{tabular}{| l | l | l |}
+  \hline
+  \textbf{Guarantee} & \textbf{Symmetric} & \textbf{Asymmetric} \\
+                     & \textbf{Keys} & \textbf{Keys} \\
+  \hline
+  Privacy & \textit{Encryption} & \textit{Encryption} \\
+          & AES-GCM, & RSA with \\
+          & AES-CTR  & PKCS \#1 v2.0 \\
+  \hline
+  Integrity & \textit{HMAC},   & \textit{Signatures} \\
+            & \textit{Authenticated} & \\
+            & \textit{encryption} & \\
+            & HMAC-AES-SHA & DSS-RSA, \\
+            & AES-GCM & DSS-ECC \\
+  \hline
+  Freshness & \textit{Nonces} + & \textit{Nonces} + \\
+            & integrity & integrity \\
+  \hline
+  \end{tabular}
+  \caption{
+    Summary of cryptographic primitives
+  }
+  \label{fig:crypto_primitives}
+\end{table}
 
 A message whose \textit{privacy} is protected can be transmitted over an
 insecure medium without an adversary being able to obtain the information in
@@ -180,7 +209,6 @@ Figure~\ref{fig:asymmetric_block_cipher}.
   \label{fig:asymmetric_block_cipher}
 \end{figure}
 
-
 The most popular block cipher based on symmetric keys at the time of this
 writing is the
 \textit{American Encryption Standard}~(AES)~\cite{daemen1999aes, fips2001aes},
@@ -193,11 +221,7 @@ for protecting sensitive information~\cite{nsa2015suiteb}.
 The most deployed asymmetric key block cipher is the
 \textit{Rivest-Shamir-Adelman}~(RSA)~\cite{rivest1978rsa} algorithm. RSA has
 variable key sizes, and 3072-bit key pairs are considered to provide the same
-security as 128-bit AES keys~\cite{fips2012keysize}. Recently, elliptic curve
-cryptography (ECC)~\cite{koblitz1987ecc} has gained a surge in popularity,
-thanks to its smaller key sizes. For example, a 384-bit ECC key is considered
-to have the same security as a 3072-bit RSA
-key~\cite{fips2012keysize, nsa2015suiteb}.
+security as 128-bit AES keys~\cite{fips2012keysize}.
 
 A block cipher does not necessarily guarantee privacy, when used  on its own.
 An easy to see issue is that in our previous example, a block cipher would
@@ -211,10 +235,7 @@ encryption schemes. Most operating modes require a random
 \textit{initialization vector} (IV) to be used for each message, as shown in
 Figure~\ref{fig:symmetric_encryption}. When analyzing the security of systems
 based on these cryptosystems, an understanding of the IV generation process is
-as important as ensuring the confidentiality of the encryption key. Counter
-(CTR) and Cipher Block Chaining (CBC) are examples of operating modes
-recommended~\cite{fips2001ctr} by the United States \textit{National Institute
-of Standards and Technology}~(NIST), which informs the NSA's requirements.
+as important as ensuring the confidentiality of the encryption key.
 
 \begin{figure}[hbt]
   \centering
@@ -227,6 +248,26 @@ of Standards and Technology}~(NIST), which informs the NSA's requirements.
   \label{fig:symmetric_encryption}
 \end{figure}
 
+Counter (CTR) and Cipher Block Chaining (CBC) are examples of operating modes
+recommended~\cite{fips2001ctr} by the United States \textit{National Institute
+of Standards and Technology}~(NIST), which informs the NSA's requirements.
+Combining a block cipher, such as AES, with an operating mode, such as CTR,
+results in an encryption method, such as AES-CTR, which can be used to add
+privacy guarantees.
+
+In the asymmetric key setting, there is no concept equivalent to operating
+modes. Each block cipher has its own assumptions, and requires a specialized
+scheme for general-purpose usage.
+
+The RSA algorithm is used in conjunction with \textit{padding methods}, the
+most popular of which are the methods described in the \textit{Public-Key
+Cryptography Standard} (PKCS) \#1 versions 1.5~\cite{kaliski1998pkcs1v15} and
+2.0~\cite{kaliski1998pkcs1v2}. A security analysis of a system that uses
+RSA-based encryption must take the padding method into consideration. For
+example, the padding in PKCS \#1 v1.5 can leak the private key under certain
+circumstances~\cite{bleichenbacher1998pkcs1v15cca}. While PKCS \#1 v2.0 solves
+this issue, it is complex enough that some implementations have their own
+security issues~\cite{manger2001pkcs1v20attack}.
 
 Asymmetric encryption algorithms have much higher computational requirements
 than symmetric encryption algorithms. Therefore, when non-trivial quantities of
@@ -248,25 +289,23 @@ key, as shown in Figure~\ref{fig:asymmetric_encryption}.
 \subsubsection{Integrity}
 
 Many cryptosystems that provide integrity guarantees are built upon
-\textit{cryptographically strong hashing} functions. These hash functions
-operate on an unbounded amount of input data and produce a small fixed-size
-output. Cryptographically strong hash functions have a few guarantees, such as
-\textit{pre-image resistance}, which states that an adversary cannot produce
-input data corresponding to a given hash output. The most popular cryptographic
-hash function at the time of this writing is the
-\textit{Secure Hashing Algorithm}~(SHA)~\cite{eastlake2001sha1}.
+\textit{secure hashing} functions. These hash functions operate on an unbounded
+amount of input data and produce a small fixed-size output. Secure hash
+functions have a few guarantees, such as \textit{pre-image resistance}, which
+states that an adversary cannot produce input data corresponding to a given
+hash output. The most popular secure hashing function at the time of this
+writing is the \textit{Secure Hashing Algorithm}~(SHA)~\cite{eastlake2001sha1}.
 
 In the symmetric key setting, integrity guarantees are typically obtained using
-an \textit{Hash Message Authentication Code}~(HMAC)~\cite{krawczyk1997hmac}
-construction that combines a symmetric encryption algorithm, like AES, with a
-cryptographically secure hash function, such as SHA. The message sender runs
-the HMAC algorithm and sends the output HMAC value along with the original
-message, as shown in Figure~\ref{fig:symmetric_hmac}. The message receiver
-verifies that the received HMAC value is the same as the output of running the
-HMAC algorithm on the message. HMAC algorithms inherit the pre-image resistance
-property from their underlying cryptographic hash functions, and have the
-additional property that an adversary cannot produce the correct HMAC for a
-message without the secret key.
+a \textit{Hash Message Authentication Code}~(HMAC)~\cite{krawczyk1997hmac}
+construction built on top of a secure hash function, such as SHA. The message
+sender runs the HMAC algorithm and sends the output \textit{HMAC tag} along
+with the original message, as shown in Figure~\ref{fig:symmetric_hmac}. The
+message receiver verifies that the received HMAC value is the same as the
+output of running the HMAC algorithm on the message. HMAC algorithms inherit
+the pre-image resistance property from their underlying secure hash functions,
+and have the additional property that an adversary cannot produce the correct
+HMAC for a message without the secret key.
 
 \begin{figure}[hbt]
   \centering
@@ -281,12 +320,12 @@ message without the secret key.
 \end{figure}
 
 Asymmetric key primitives that provide integrity guarantees are known as
-\textit{signatures}. The message sender provides the private key to a
+\textit{signatures}. The message sender provides her private key to a
 \textit{signing} algorithm, and transmits the output signature along with the
 message, as shown in Figure~\ref{fig:asymmetric_signing}. The message receiver
-feeds the public key and the signature to a \textit{signature verification}
-algorithm, which returns \textsc{true} if the message matches the signature,
-and \textsc{false} if the message has been tampered with.
+feeds the sender's public key and the signature to a \textit{signature
+verification} algorithm, which returns \textsc{true} if the message matches the
+signature, and \textsc{false} if the message has been tampered with.
 
 \begin{figure}[hbt]
   \centering
@@ -306,18 +345,24 @@ expensive. Therefore, in practice, the message to be transmitted is first ran
 through a cryptographically strong hash function, and the hash is provided as
 the input to the signing algorithm.
 
-At the time of this writing, the most popular choice for providing encryption
-in shared secret settings is a SHA-based HMAC function.
+At the time of this writing, the most popular choice for guaranteeing integrity
+in shared secret settings is HMAC-SHA, an HMAC function that uses SHA for
+hashing.
 
-A symmetric key primitive that has been gaining popularity is AES-GCM, which
-offers both privacy and integrity guarantees by combining the AES encryption
-algorithm with the \textit{Galois/Counter operation
-mode}~(GCM)~\cite{mcgrew2004gcm}. AES-GCM has earned NIST's
-recommendation~\cite{fips2017gcm}.
+\textit{Authenticated encryption}, which combines a block cipher with an
+operating mode that offers both privacy and integrity guarantees, is often an
+attractive alternative to HMAC. The most popular authenticated encryption
+operating mode is \textit{Galois/Counter operation
+mode}~(GCM)~\cite{mcgrew2004gcm}, which has earned NIST's
+recommendation~\cite{fips2017gcm} when combined with AES to form AES-GCM.
 
-The most popular signature algorithm is based on the RSA algorithm. The NSA
-requires the Digital Signature Standard (DSS)\cite{fips2013dss}, which
-specifies schemes based on RSA and on ECC.
+The most popular signature algorithm is based on the RSA algorithm. Recently,
+elliptic curve cryptography (ECC)~\cite{koblitz1987ecc} has gained a surge in
+popularity, thanks to its smaller key sizes. For example, a 384-bit ECC key is
+considered to have the same security as a 3072-bit RSA
+key~\cite{fips2012keysize, nsa2015suiteb}. The NSA requires the Digital
+Signature Standard~(DSS)\cite{fips2013dss}, which specifies schemes based on
+RSA and on ECC.
 
 
 \subsubsection{Freshness}
@@ -333,7 +378,32 @@ single-use random numbers. The attractiveness of nonces is that the sender does
 not need to maintain any state, but the downside is that the receiver must
 store the nonces of all received messages.
 
-Nonces are often combined with a message timestamping and expiration scheme.
-This can greatly reduce the receiver's storage requirement, as the nonces for
-expired messages can be safely discarded.
+Nonces are often combined with a message timestamping and expiration scheme, as
+shown in Figure~\ref{fig:timestamped_nonces}. An expiration can greatly reduce
+the receiver's storage requirement, as the nonces for expired messages can be
+safely discarded. However, the scheme depends on the sender and receiver having
+synchronized clocks. The message expiration time is a compromise between the
+desire to reduce storage costs and the need to tolerate clock skew and
+message transmission and processing delays.
 
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/timestamped_nonces.pdf}
+  \caption{
+    Freshness guarantees can be obtained by adding timestamped nonces on top
+    of a system that already offers integrity guarantees. The sender and the
+    receiver use synchronized clocks to timestamp each message and discard
+    unreasonably old messages. The receiver must check the nonce in each new
+    message against a database of the nonces in all the unexpired messages that
+    it has seen.
+  }
+  \label{fig:timestamped_nonces}
+\end{figure}
+
+Alternatively, nonces can be used in challenge-response protocols, in a manner
+that removes the storage overhead concerns. The challenger generates a nonce
+and embeds it in the challenge message. The response to the challenge includes
+an acknowledgement of the embedded nonce, so the challenger can distinguish
+between a fresh response and a replay attack. The nonce is only stored by the
+challenger, and is small in comparison to the rest of the state needed to
+validate the response.
