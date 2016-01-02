@@ -7,6 +7,7 @@ rest of this work.
 
 
 \subsubsection{Certificate Authorities}
+\label{sec:certificates}
 
 Asymmetric key cryptographic primitives assume that each party has the correct
 public keys for the other parties. This assumption is critical, as the entire
@@ -136,5 +137,88 @@ designed to deter tampering and prevent counterfeiting .
 
 
 \subsubsection{Key Agreement Protocols}
+\label{sec:key_agreement}
+
+The initial design of symmetric key primitives, introduced in
+\S~\ref{sec:crypto_primitives}, assumed that when two parties wish to interact,
+one party generates a secret key and shares it with the other party using a
+communication channel with privacy and integrity guarantees. In practice, a
+pre-existing secure communication channel is rarely available.
+
+\textit{Key agreement protocols} are used by two parties to establish a shared
+secret key, and only require a communication channel with integrity guarantees.
+Figure~\ref{fig:dh_key_exchange} outlines the Diffie-Hellman Key
+Exchange~(DKE)~\cite{diffie1976keyexchange} protocol, which should give the
+reader an intuition for how key agreement protocols work.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=80mm]{figures/dh_key_exchange.pdf}
+  \caption{
+    In the Diffie-Hellman Key Exchange (DKE) protocol, Alice and Bob
+    agree on a shared secret key $K = g^{AB} \mod p$. An adversary that
+    observes $g^{A} \mod p$ and $g^{B} \mod p$ cannot compute $K$.
+  }
+  \label{fig:dh_key_exchange}
+\end{figure}
+
+This work is interested in using key agreement protocols to build larger
+systems, so we will neither explain the mathematic details in DKE, nor prove
+its correctness. We note that both Alice and Bob derive the same shared secret
+key, $K = g^{AB} \mod p$, without ever transmitting $K$. Furthermore, the
+messages transmitted in DKE, namely $g^{A} \mod p$ and $g^{B} \mod p$, are not
+sufficient for an eavesdropper Eve to determine $K$, because efficiently
+solving for $x$ in $g^{x} \mod p$ is an open problem assumed to be very
+difficult.
+
+Key agreement protocols require a communication channel with integrity
+guarantees. If an active adversary Eve can tamper with the messages transmitted
+by Alice and Bob, she can perform a \textit{man-in-the-middle} (MITM) attack,
+as illustrated in Figure~\ref{fig:key_agreement_mitm}.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/key_agreement_mitm.pdf}
+  \caption{
+    Any key agreement protocol is vulnerable to a man-in-the-middle (MITM)
+    attack. The active attacker performs key agreements and establishes shared
+    secrets with both parties. The attacker can then forward messages between
+    the victims, in order to observe their communication. The attacker can also
+    send its own messages to either, impersonating the other victim.
+  }
+  \label{fig:key_agreement_mitm}
+\end{figure}
+
+In a MITM attack, Eve intercepts Alice's first key exchange message, and sends
+Bob her own message. Eve then intercepts Bob's response and replaces it with
+her own, which she sends to Alice. Eve effectively performs key exchanges with
+both Alice and Bob, establishing a shared secret with each of them, without
+either Bob or Alice being aware of her presence.
+
+After establishing shared keys with both Alice and Bob, Eve can choose to
+observe the communication between Alice and Bob, by forwarding messages between
+them. For example, when Alice transmits a message, Eve can decrypt it using K1,
+the shared key between herself and Alice. Eve can then encrypt the message with
+K2, the key established between Bob and herself. While Bob still receives
+Alice's message, Eve has been able to see its contents.
+
+Furthermore, Eve can impersonate either party in the communication. For
+example, Eve can create a message, encrypt it with K2, and then send it to Bob.
+As Bob thinks that K2 is a shared secret key established between himself and
+Alice, he will believe that Eve's message comes from Alice.
+
+The MITM attack on key agrement protocols can be solved by authenticating the
+party who sends the last message in the protocol (in our examples, Bob) and
+having it sign the key agreement messages. When a CA system is in place, Bob
+uses his public key to sign the messages in the key agreement and also sends
+Alice his certificate, along with the certificates for any intermediate CAs.
+Alice validates Bob's certificate, ensures that the subject identified by the
+certificate is who she expects (Bob), and verifies that the key agreement
+messages exchanged between her and Bob match the signature provided by Bob.
+
+In conclusion, a key agreement protocol can be used to bootstrap symmetric key
+primitives from an asymmetric key signing scheme, where only one party needs to
+be able to sign messages.
+
 
 \subsubsection{Cryptography for Storage}
