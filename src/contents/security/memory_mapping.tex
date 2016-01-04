@@ -134,12 +134,13 @@ legitimate page swapping activity, with the exception of the I/O operations
 that exchange the disk bytes that store evicted pages.
 
 The subtle attack described above can be defeated by cryptographically
-associating the contents of each page that is evicted from DRAM with the
-virtual address that the page should be mapped to. The cryptographic primitive
-used by the association must obiously guarantee integrity. Furthermore, it must
-also guarantee freshness, in order to foil replay attacks where the system
-software ``undoes'' an application's writes by evicting one of its DRAM pages
-to disk and bringing in an older version of the same page.
+binding the contents of each page that is evicted from DRAM to the virtual
+address that the page should be mapped to. The cryptographic primitive
+(\S~\ref{sec:sec:crypto_primitives}) used to perform the binding must obiously
+guarantee integrity. Furthermore, it must also guarantee freshness, in order
+to foil replay attacks where the system software ``undoes'' an application's
+writes by evicting one of its DRAM pages to disk and bringing in an older
+version of the same page.
 
 Today's multi-core architectures can be subjected to an even more subtle active
 attack, illustrated in Figure~\ref{fig:tlb_mapping_attack}, which can bypass

@@ -1,7 +1,7 @@
 \subsection{Cryptographic Constructs}
 \label{sec:crypto_constructs}
 
-This section summarizes three constructs that are built on the cryptographic
+This section summarizes two constructs that are built on the cryptographic
 primitives described in \S~\ref{sec:crypto_primitives}, and are used in the
 rest of this work.
 
@@ -207,7 +207,7 @@ example, Eve can create a message, encrypt it with K2, and then send it to Bob.
 As Bob thinks that K2 is a shared secret key established between himself and
 Alice, he will believe that Eve's message comes from Alice.
 
-The MITM attack on key agrement protocols can be solved by authenticating the
+MITM attacks on key agrement protocols can be foiled by authenticating the
 party who sends the last message in the protocol (in our examples, Bob) and
 having it sign the key agreement messages. When a CA system is in place, Bob
 uses his public key to sign the messages in the key agreement and also sends
@@ -221,4 +221,4 @@ primitives from an asymmetric key signing scheme, where only one party needs to
 be able to sign messages.
 
 
-\subsubsection{Cryptography for Storage}
+%\subsubsection{Cryptography for Storage}

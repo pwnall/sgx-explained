@@ -3,16 +3,16 @@
 
 The security of systems that employ trusted processors hinges on
 \textit{software attestation}. The software running inside an \textit{isolated
-container} established by trusted hardware can ask the hardware to sign a
-small piece of \textit{attestation data}, producing an
-\textit{attestation signature}. Asides from the attestation data, the signature
-includes a \textit{measurement} that uniquely identifies the software inside
-the container. Therefore, an attestation signature can be used to convince a
-\textit{verifier} that the attestation data was produced by a specific piece
-of software, which is hosted inside a container that is isolated from outside
-interference by trusted hardware.
+container} established by trusted hardware can ask the hardware to
+sign~(\S~\ref{sec:integrity_crypto}) a small piece of \textit{attestation
+data}, producing an \textit{attestation signature}. Asides from the attestation
+data, the signed message includes a \textit{measurement} that uniquely
+identifies the software inside the container. Therefore, an attestation
+signature can be used to convince a \textit{verifier} that the attestation data
+was produced by a specific piece of software, which is hosted inside a
+container that is isolated by trusted hardware from outside interference.
 
-Each hardware platforms discussed in this section uses a slightly different
+Each hardware platform discussed in this section uses a slightly different
 software attestation scheme. Platforms differ by the amount of software that
 executes inside an isolated container, by the isolation guarantees provided to
 the software inside a container, and by the process used to obtain a
@@ -21,12 +21,14 @@ trusted hardware platform follow directly from the design choices outlined
 above, so a good understanding of attestation is a prerequisite to discussing
 the differences between existing platforms.
 
-Software attestation can be used to authenticate one party in a key exchange
-protocol. The resulting protocol can assure a verifier that it is communicating
-over a secure channel with a specific piece of software, hosted inside an
-isolated container created by trusted hardware. The next paragraph outlines the
-augmented protocol, using Diffie-Hellman Key Exchange (DKE)
-\cite{diffie1976keyexchange} as an example key exchange protocol.
+Software attestation can be combined with a key agreement
+protocol~(\S~\ref{sec:key_agreement}), as software attestation provides the
+authentication required the key agreement protocol. The resulting protocol can
+assure a verifier that it has established a shared secret with a specific piece
+of software, hosted inside an isolated container created by trusted hardware.
+The next paragraph outlines the augmented protocol, using Diffie-Hellman Key
+Exchange~(DKE)~\cite{diffie1976keyexchange} as an example key exchange
+protocol.
 
 The verifier starts executing the key exchange protocol, and sends the first
 message, $g^{A}$, to the software inside the secure container. The software
@@ -52,19 +54,18 @@ of trust shown in Figure~\ref{fig:generic_attestation_chain}.
 
 The chain of trust used in software attestation is rooted at a signing key
 owned by the hardware manufacturer, which must be trusted by the verifier. The
-manufacturer acts as a Certificate Authority (CA), and provisions each secure
-processor that it produces with a unique \textit{attestation key}, which is
-used to produce \textit{attestation signatures}. The manufacturer also
-generates an \textit{endorsement certificate} for each secure processor,
-by signing the public part of the processor's attestation key with the
-manufacturer \textit{root key}. When the verifier receives a valid endorsement
-certificate signed by a manufacturer key that it trusts, the verifier is
-assured that the private part of the attestation key in the certificate is
-stored in tamper-resistant hardware, and is only used for producing attestation
-signatures, under the rules set by the trusted manufacturer.
+manufacturer acts as a Certificate Authority (CA, \S~\ref{sec:certificates}),
+and provisions each secure processor that it produces with a unique
+\textit{attestation key}, which is used to produce
+\textit{attestation signatures}. The manufacturer also
+issues an \textit{endorsement certificate} for each secure processor's
+attestation key. The certificate indicates that the key is meant to be used for
+software attestation. The certification policy generally states, at a minimum,
+that the private part of the attestation key is stored in tamper-resistant
+hardware, and is only used for producing attestation signatures.
 
 A secure processor identifies each isolated container by storing a
-cryptographic hash of the code executed inside the container. When the
+cryptographic hash of the code and data loaded inside the container. When the
 processor is asked to sign a piece of attestation data, it uses the
 cryptographic hash associated with the container as the measurement in the
 attestation signature. After a verifier validates the processor's attestation

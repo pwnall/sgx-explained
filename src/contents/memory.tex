@@ -3,7 +3,8 @@
 
 The central concept of SGX is the \textit{enclave}, a protected environment
 that contains the code and data pertaining to a security-sensitive computation.
-This section provides an overview of the data structures used by an enclave.
+This section provides an overview of the memory model and  data structures used
+by an enclave.
 
 
 \subsection{Enclaves in DRAM}
@@ -17,17 +18,6 @@ The enclaves' code and data is stored in \textit{Processor Reserved Memory}
 software and SMM code. The CPU's integrated memory controllers
 (\S~\ref{sec:cpu_die}) also reject DMA transfers targeting the PRM, thus
 protecting it from access by other peripherals.
-
-\begin{figure}[hbt]
-  \centering
-  \includegraphics[width=87mm]{figures/sgx_epc.pdf}
-  \caption{
-    Enclave data is stored into the EPC, which is a subset of the PRM. The
-    PRM is a contiguous range of DRAM that cannot be accessed by system
-    software or peripherals.
-  }
-  \label{fig:sgx_epc}
-\end{figure}
 
 % EPC and Management of EPC Pages: SGX2 S 3.5
 % Interactions with Memory Configuration: SGX2 S 6.11
@@ -44,7 +34,7 @@ it cheap to check if an address belongs to the PRM in hardware, as described in
 The PRM and PRM range registers (PRMRR) are described in the SGX
 manuals~\cite{intel2013sgxmanual, intel2014sgx2manual} and in one of the SGX
 papers~\cite{mckeen2013sgx}. The SDM generally mirrors the SGX manuals, but
-lacks most of the sections mentioning the PRM.
+lacks most of the sections that mention the PRM.
 
 
 \subsubsection{The Enclave Page Cache (EPC)}
@@ -54,10 +44,22 @@ lacks most of the sections mentioning the PRM.
 % EPC and Management of EPC Pages: SDM S 39.5, S 39.5.1
 
 The contents of enclaves and the associated data structures are stored in the
-\textit{Enclave Page Cache} (EPC), which is a subset of the PRM.
+\textit{Enclave Page Cache} (EPC), which is a subset of the PRM, as shown in
+Figure~\ref{fig:sgx_epc}.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/sgx_epc.pdf}
+  \caption{
+    Enclave data is stored into the EPC, which is a subset of the PRM. The
+    PRM is a contiguous range of DRAM that cannot be accessed by system
+    software or peripherals.
+  }
+  \label{fig:sgx_epc}
+\end{figure}
 
 The SGX design supports having multiple enclaves on a system at the same time,
-which is a  necessity in multi-process environments. This is achieved by having
+which is a necessity in multi-process environments. This is achieved by having
 the EPC split into 4~KB pages that can be associated to different enclaves. The
 system software uses SGX instructions to allocate unused pages to enclaves, and
 to free previously allocated EPC pages.
@@ -69,7 +71,8 @@ system software to load the initial code and data into an enclave.
 
 SGX also offers a method for system software to evict EPC pages into non-PRM
 memory, which allows the EPC to be over-committed, just like evicting DRAM
-pages to disk (swapping) allows the main memory to be over-committed.
+pages to disk (page swapping, \S~\ref{sec:paging}) allows the main memory to be
+over-committed.
 
 
 \subsubsection{The Enclave Page Cache Map (EPCM)}
@@ -79,10 +82,29 @@ pages to disk (swapping) allows the main memory to be over-committed.
 
 One of SGX's design goals is to make it easy to migrate the sensitive pieces of
 an application into an enclave. To this end, enclave code uses the same address
-translation process (\S~\ref{sec:paging}) as the application hosting the
-enclave. It follows that enclave code can access non-EPC memory using the same
-virtual addresses as the host application, which makes it easy to migrate
+translation process and page tables (\S~\ref{sec:paging}) as the application
+hosting the enclave.
+
+% SGX Enclave Control Structure (SECS): SDM S 38.7
+
+Each enclave designates an area in its virtual address space, called the
+\textit{Enclave Linear Range} (ELRANGE), which is used to map the code and
+the sensitive data stored in the enclave's EPC pages. The virtual address
+space outside ELRANGE is mapped to access non-EPC memory via the same virtual
+addresses as the enclave's host application, as shown in
+Figure~\ref{fig:sgx_elrange}. This design facilitates the migration of
 application code that uses pointers into SGX enclaves.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/sgx_elrange.pdf}
+  \caption{
+    An enclave's EPC pages are accessed using a dedicated region in the
+    enclave's virtual address space, called ELRANGE. The rest of the virtual
+    address space maps the host application's memory.
+  }
+  \label{fig:sgx_elrange}
+\end{figure}
 
 % Interactions with VMX: SDM S 42.5, S 42.5.{1,2,3,4,5}
 
@@ -96,9 +118,12 @@ attacks described in \S~\ref{sec:paging_attacks}.
 % SECINFO.FLAGS: SDM S 38.11.1
 % PAGE_TYPE Field Definition: SDM S 38.11.2
 
-SGX prevents direct active address translation attacks using the
-\textit{Enclave Page Cache Map}~(EPCM), which has an entry for each EPC page,
-containing the security metadata shown in Table~\ref{fig:epcm_entry}.
+The system software managing a SGX computer is expected to set up each
+enclave's page tables according to the enclave developer's design. However, the
+system software is not trusted to do so. An SGX-enabled CPU prevents direct
+active address translation attacks using the
+\textit{Enclave Page Cache Map}~(EPCM), which has an entry containing the
+security metadata shown in Table~\ref{fig:epcm_entry} for each EPC page.
 
 \begin{table}[hbt]
   \centering
@@ -140,9 +165,21 @@ When an address translation (\S~\ref{sec:paging}) result is the physical
 address of an EPC page, the CPU ensures\footnote{A mismatch triggers a general
 protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
 to the address translation process matches the expected virtual address
-recorded in the page's EPCM entry.  This prevents the system software, which
+recorded in the page's EPCM entry, as shown in
+Figure~\ref{fig:sgx_tlb_miss_checks}. This prevents the system software, which
 manages the page tables and EPT, from modifying an enclave's virtual address
 space in a manner that is inconsistent with the enclave author's expectations.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/sgx_tlb_miss_checks.pdf}
+  \caption{
+    An enclave's EPC pages are accessed using a dedicated region in the
+    enclave's virtual address space, called ELRANGE. The rest of the virtual
+    address space maps the host application's memory.
+  }
+  \label{fig:sgx_tlb_miss_checks}
+\end{figure}
 
 % Security Information (SECINFO): SDM S 38.11, S 38.11.{1,2}
 
@@ -177,7 +214,7 @@ is immutable throughout the page's lifetime.
   \hline
   PT\_TCS & \texttt{EADD} & TCS (\S~\ref{sec:tcs}) \\
   \hline
-  PT\_VA & \texttt{EPT} & VA (\S~\ref{sec:va}) \\
+  PT\_VA & \texttt{EPA} & VA (\S~\ref{sec:va}) \\
   \hline
   \end{tabularx}
   \caption{Values of the PT (page type) field in an EPCM entry.}
@@ -337,6 +374,7 @@ The TCS is stored in a page whose EPCM entry has the type PT\_TCS, and
 therefore cannot be directly accessed by enclave software. However, SSAs are
 stored in regular pages, so they are accessible to enclave software, and their
 layout is defined in the SGX documentation.
+
 
 \subsubsection{The Version Array (VA)}
 \label{sec:va}

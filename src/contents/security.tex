@@ -1,6 +1,26 @@
 \section{Security Background}
 \label{sec:security_background}
 
+Most systems rely on some cryptographic primitives for security. Unfortunately,
+these primitives have many assumptions, and building a secure system on top of
+them is a highly non-trivial endeavor. It follows that a system's security
+analysis should be particularly interested in what cryptographic primitives are
+used, and how they are integrated into the system.
+
+\S~\ref{sec:crypto_primitives} and \S~\ref{sec:crypto_constructs} lay the
+foundations for such an analysis by summarizing the primitives used by the
+secure architectures that we are interested in, and by describing the most
+common constructs built using these primitives.
+\S~\ref{sec:generic_software_attestation} builds on these concepts and
+describes software attestation, which is the most popular method for
+establishing trust in a secure architecture.
+
+Having looked at the cryptographic foundations for building secure systems, we
+turn our attention to the attacks that secure architecture have to withstand.
+Asides from forming a security checklist for architecture design, these attacks
+build intuition that helps understand design decisions in the architectures
+that we are interested in.
+
 The attacks that can be performed on a computer system are broadly classified
 into physical attacks and software attacks. In \textit{physical attacks}, the
 attacker takes advantage of a system's physical implementation details to
@@ -20,6 +40,15 @@ However, the distinction between software and physical attacks is blurred by
 the attacks presented in \S~\ref{sec:device_attacks}, which exploit
 programmable peripherals connected to the victim computer's bus in order to
 carry out actions that are normally associated with physical attacks.
+
+While the vast majority of software attacks exploit a bug in a software
+component, there are a few attack classes that deserve attention from
+architecture designers. Memory mapping attacks, described in
+\S~\ref{sec:paging_attacks}, become a possibility on architectures where the
+system software is not trusted. Cache timing attacks, summarized in
+\S~\ref{sec:cache_timing} exploit microarchitectural behaviors that are
+completely observable in software, but dismissed by the security analyese of
+most systems.
 
 \input{contents/security/crypto_primitives.tex}
 \input{contents/security/crypto_constructs.tex}
