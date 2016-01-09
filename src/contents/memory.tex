@@ -1,73 +1,9 @@
 \section{SGX Memory Organization}
 \label{sec:memory}
 
-The central concept of SGX is the \textit{enclave}, a protected environment
-that contains the code and data pertaining to a security-sensitive computation.
 This section provides an overview of the memory model and  data structures used
 by an enclave.
 
-
-\subsection{Enclaves in DRAM}
-\label{sec:prm}
-
-% Intel SGX Resource Enumeration Leaves: SDM S 37.7.2
-% Interactions with DMA: SDM S 42.10, SGX2 S 6.10
-
-The enclaves' code and data is stored in \textit{Processor Reserved Memory}
-(PRM), which cannot be directly accessed by other software, including system
-software and SMM code. The CPU's integrated memory controllers
-(\S~\ref{sec:cpu_die}) also reject DMA transfers targeting the PRM, thus
-protecting it from access by other peripherals.
-
-% EPC and Management of EPC Pages: SGX2 S 3.5
-% Interactions with Memory Configuration: SGX2 S 6.11
-% Memory Type Considerations for PRMRR: SGX2 S 6.11.1
-% Interactions of PRMRR with Physical Memory Accesses: SGX2 S 6.11.3.1
-
-The PRM range is configured using a base and a mask register with the same
-semantics as a variable memory type range (\S~\ref{sec:cacheability_config}),
-which implies that the PRM's size must be an integer power of two, and its
-start address must be aligned to the same power of two. These restrictions make
-it cheap to check if an address belongs to the PRM in hardware, as described in
-\S~\ref{sec:cacheability_config}.
-
-The PRM and PRM range registers (PRMRR) are described in the SGX
-manuals~\cite{intel2013sgxmanual, intel2014sgx2manual} and in one of the SGX
-papers~\cite{mckeen2013sgx}. The SDM generally mirrors the SGX manuals, but
-lacks most of the sections that mention the PRM.
-
-
-\subsubsection{The Enclave Page Cache (EPC)}
-\label{sec:epc}
-
-% Enclave Page Cache: SDM S 37.5
-% EPC and Management of EPC Pages: SDM S 39.5, S 39.5.1
-
-The contents of enclaves and the associated data structures are stored in the
-\textit{Enclave Page Cache} (EPC), which is a subset of the PRM, as shown in
-Figure~\ref{fig:sgx_epc}.
-
-\begin{figure}[hbt]
-  \centering
-  \includegraphics[width=87mm]{figures/sgx_epc.pdf}
-  \caption{
-    Enclave data is stored into the EPC, which is a subset of the PRM. The
-    PRM is a contiguous range of DRAM that cannot be accessed by system
-    software or peripherals.
-  }
-  \label{fig:sgx_epc}
-\end{figure}
-
-The SGX design supports having multiple enclaves on a system at the same time,
-which is a necessity in multi-process environments. This is achieved by having
-the EPC split into 4~KB pages that can be associated to different enclaves. The
-system software uses SGX instructions to allocate unused pages to enclaves, and
-to free previously allocated EPC pages.
-
-The SGX instructions that allocate an EPC page to an enclave also copy data
-from a page outside PRM to the EPC page. Non-enclave software is not permitted
-to access the PRM, so the page allocation instructions are the only avenue for
-system software to load the initial code and data into an enclave.
 
 SGX also offers a method for system software to evict EPC pages into non-PRM
 memory, which allows the EPC to be over-committed, just like evicting DRAM
@@ -76,54 +12,20 @@ over-committed.
 
 
 \subsubsection{The Enclave Page Cache Map (EPCM)}
-\label{sec:epcm}
-
-% Access Control Requirements: SDM S 38.3
-
-One of SGX's design goals is to make it easy to migrate the sensitive pieces of
-an application into an enclave. To this end, enclave code uses the same address
-translation process and page tables (\S~\ref{sec:paging}) as the application
-hosting the enclave.
-
-% SGX Enclave Control Structure (SECS): SDM S 38.7
-
-Each enclave designates an area in its virtual address space, called the
-\textit{Enclave Linear Range} (ELRANGE), which is used to map the code and
-the sensitive data stored in the enclave's EPC pages. The virtual address
-space outside ELRANGE is mapped to access non-EPC memory via the same virtual
-addresses as the enclave's host application, as shown in
-Figure~\ref{fig:sgx_elrange}. This design facilitates the migration of
-application code that uses pointers into SGX enclaves.
-
-\begin{figure}[hbt]
-  \centering
-  \includegraphics[width=85mm]{figures/sgx_elrange.pdf}
-  \caption{
-    An enclave's EPC pages are accessed using a dedicated region in the
-    enclave's virtual address space, called ELRANGE. The rest of the virtual
-    address space maps the host application's memory.
-  }
-  \label{fig:sgx_elrange}
-\end{figure}
-
-% Interactions with VMX: SDM S 42.5, S 42.5.{1,2,3,4,5}
-
-Under SGX, the operating system and hypervisor are still in full control of the
-page tables and EPTs. This minimizes the amount of changes required to add SGX
-support to existing system software. At the same time, having the page tables
-managed by untrusted system software opens up SGX to the address translation
-attacks described in \S~\ref{sec:paging_attacks}.
 
 % Enclave Page Cache Map (EPCM): SDM S 37.5.1, SDM S 38.19
 % SECINFO.FLAGS: SDM S 38.11.1
 % PAGE_TYPE Field Definition: SDM S 38.11.2
 
-The system software managing a SGX computer is expected to set up each
-enclave's page tables according to the enclave developer's design. However, the
-system software is not trusted to do so. An SGX-enabled CPU prevents direct
-active address translation attacks using the
-\textit{Enclave Page Cache Map}~(EPCM), which has an entry containing the
-security metadata shown in Table~\ref{fig:epcm_entry} for each EPC page.
+SGX relies on the system software to set up each enclave's page tables
+according to the enclave developer's design, but does not trust the system
+software to do so. An SGX-enabled CPU prevents direct active address
+translation attacks using the \textit{Enclave Page Cache Map}~(EPCM), which has
+an entry containing the security metadata shown in
+Table~\ref{fig:sgx_epcm_entry}
+for each EPC page.
+
+
 
 \begin{table}[hbt]
   \centering
@@ -151,7 +53,7 @@ security metadata shown in Table~\ref{fig:epcm_entry} for each EPC page.
   \caption{
     The fields in an EPCM entry.
   }
-  \label{fig:epcm_entry}
+  \label{fig:sgx_epcm_entry}
 \end{table}
 
 % Access Control Requirements: SDM S 38.3
@@ -169,6 +71,9 @@ recorded in the page's EPCM entry, as shown in
 Figure~\ref{fig:sgx_tlb_miss_checks}. This prevents the system software, which
 manages the page tables and EPT, from modifying an enclave's virtual address
 space in a manner that is inconsistent with the enclave author's expectations.
+
+
+Figure~\ref{fig:sgx_tlb_miss_checks}
 
 \begin{figure}[hbt]
   \centering
@@ -190,12 +95,7 @@ protection bits in the page's EPCM entry influence the related bits in the
 page's TLB entry. For example, if X is 0, the XD bit (\S~\ref{sec:paging}) is
 set in the page's TLB entry.
 
-The EPCM also stores the ID of the enclave that owns each EPC page, so the
-processor can prevent the code inside an enclave from accessing pages that
-belong to other enclaves.
-
-A page's EPCM entry also records a \textit{page type} (PT) for each page.
-Table~\ref{fig:pt_values} shows currently defined types. The EPC pages that
+Table~\ref{fig:sgx_pt_values} shows currently defined types. The EPC pages that
 store an enclave's code or data have their type set to \textit{regular}
 (PT\_REG in the Intel documentation). Each page that is dedicated to an SGX key
 data structure has its EPCM entry's type set to the kind of data structure
@@ -210,170 +110,16 @@ is immutable throughout the page's lifetime.
   \hline
   PT\_REG & \texttt{EADD} & enclave code / data \\
   \hline
-  PT\_SECS & \texttt{ECREATE} & SECS (\S~\ref{sec:secs}) \\
+  PT\_SECS & \texttt{ECREATE} & SECS (\S~\ref{sec:sgx_secs}) \\
   \hline
-  PT\_TCS & \texttt{EADD} & TCS (\S~\ref{sec:tcs}) \\
+  PT\_TCS & \texttt{EADD} & TCS (\S~\ref{sec:sgx_tcs}) \\
   \hline
   PT\_VA & \texttt{EPA} & VA (\S~\ref{sec:va}) \\
   \hline
   \end{tabularx}
   \caption{Values of the PT (page type) field in an EPCM entry.}
-  \label{fig:pt_values}
+  \label{fig:sgx_pt_values}
 \end{table}
-
-The SGX documentation does not state where the EPCM is stored, but guarantees
-that the EPCM is ``trusted memory''. The documentation also does not describe
-the EPCM layout.
-
-
-\subsection{Key SGX Structures}
-\label{sec:key_structures}
-
-% Access Control Requirements: SDM S 38.3
-
-Pages that store key SGX structures cannot be accessed directly, even by the
-code executing inside their enclaves. Furthermore, the SGX instructions that
-operate on SGX data structures check the EPCM type fields of their inputs
-against the expected types. This type system prevents software from
-intentionally or accidentally corrupting the key SGX data structures.
-
-The type-based access restrictions have the desirable side-effect of hiding the
-contents of the EPC pages holding key SGX structures from software, so the
-internal layout of any key data structure can change across new CPU revisions.
-Software cannot access the key structures in EPC, so it cannot become dependent
-on a specific processor's implementation details. This is a stronger version of
-the encapsulation used in the Virtual Machine Constrol Structure
-(VMCS, \S~\ref{sec:vmx}).
-
-The SGX documentation does specify a software-visible layout for each key data
-structure. This layout is used by the non-EPC page used to initialize the key
-data structure when it is created. Therefore, new CPU revisions must preserve
-the ability to initialize the key data structures from the less flexible
-software-visible layout.
-
-\begin{figure}[hbt!]
-  \centering
-  \includegraphics[width=70mm]{figures/enclave_layout.pdf}
-  \caption{
-    An enclave's memory layout. Each enclave has a SECS, and one TCS per
-    supported hardware thread. Each TCS points to a sequence of SSAs, and
-    specifies initial values for RIP, FS and GS.
-  }
-  \label{fig:enclave_layout}
-\end{figure}
-
-\subsubsection{The SGX Enclave Control Structure (SECS)}
-\label{sec:secs}
-
-% Data Structures and Enclave Operation: SDM S 37.4
-% SGX Enclave Control Structure (SECS): SDM S 38.7, S 38.7.1
-% Constructing an Enclave: SDM S 39.1
-% ECREATE: SDM S 39.1.1, S 41.3
-% Implicit vs. Explicit accesses: SDM S 38.5.3
-% Implicit accesses: SDM S 38.5.3.2
-
-The first step in creating an enclave is using the \texttt{ECREATE} instruction
-to designate a previously unused EPC page as the enclave's \textit{SGX Enclave
-Control Structure} (SECS). All instructions that operate on an enclave access
-its control structure directly or indirectly.
-
-% Internal CREGs: SDM S 41.1.4
-% ECREATE: SDM S 39.1.1, S 41.3
-% EWB: SDM S 41.3
-
-The most important field in the SECS is the 64-bit \textit{enclave ID} (EID),
-which is assigned by \texttt{ECREATE}. The EID identifies an enclave's pages in
-the EPCM, so it must be unique across all the computer's active enclaves.
-According to the ECREATE pseudo-code in the SDM, enclave IDs are allocated
-using an atomic counter. An enclave's EID is generally hidden, as most SGX
-instructions use the address of the enclave's SECS page as the enclave's
-handler. However, the system software can learn an enclave's EID by evicting
-one of its EPC pages (\S~\ref{sec:sgx_ewb}).
-
-The software-visible SECS layout specifies the range of virtual addresses that
-can be mapped to the enclave's EPC pages. Intel documentation calls the range
-\textit{enclave linear address range} (ELRANGE). The range is specified using a
-base (the BASEADDR field) and a size (the SIZE) field. ELRANGE must meet the
-same constraints as a variable memory type range
-(\S~\ref{sec:cacheability_config}), namely the size must be a power of 2, and
-the base must be aligned to the size.
-
-Currently, the main implication of ELRANGE is that all the SGX data structures
-are initialized with enclave virtual addresses specified relatively to
-BASEADDR. Furthermore, BASEADDR is not a part of the enclave's measurement
-hash (details in \S~\ref{sec:measurement}). It follows that system software can
-relocate an enclave in its host application's virtual address space, without
-impacting the enclave's measurement hash.
-
-Having ELRANGE follow the memory type range constraints provides a cheap way to
-verify if a virtual address belongs to the address, in hardware. This provides
-SGX engineers the option to implement per-enclave page tables in future SGX
-revisions.
-
-% Interactions with the Processor Extended State and Misc State: SDM S 42.7
-% SECS.ATTRIBUTES.XFRM: SDM S 42.7.2.1
-
-The software-visible SECS has an ATTRIBUTE field that specifies the Intel
-achitecture features used by the enclave code. For example, the MODE64BIT flag
-is set if the enclave targets the 64-bit Intel architecture, and the XFRM
-sub-field contains the XCR0 register value expected by the enclave's code. XCR0
-controls Intel architecture extensions such as SSE and AVX (see
-\S~\ref{sec:registers}).
-
-When a logical processor executes code inside an enclave, it sets XCR0 to the
-value specified by the enclave's SECS, so malicious system software cannot
-enable features that the enclave code is not prepared to handle. This lets
-Intel introduce extensions that change the architectural behavior of existing
-instructions, such as Memory Protection Extensions (MPX), without having to
-worry about introducing security vulnerabilities in SGX enclaves written before
-MPX.
-
-The other fields in the software-visible SECS layout are used by the
-software attestation process, which is explained in \S~\ref{sec:attestation}.
-
-
-\subsubsection{The Thread Control Structure (TCS)}
-\label{sec:tcs}
-
-% Thread Control Structure (TCS): SDM S 38.8, S 38.8.{1,2,3,4}
-
-A logical processor uses a \textit{Thread Control Structure} (TCS) while
-executing code inside an enclave, so enclave authors must provision at least as
-many TCS instances as the number of concurrent software threads that they want
-to use.
-
-The fields in the software-visible TCS layout direct the context switches
-performed by a logical processor when it transitions between non-enclave and
-enclave code.
-
-% State Save Area (SSA): SDM S 38.9
-
-In some cases (e.g., when receiving an interrupt), the processor needs to
-preempt the execution of enclave code and start running kernel code. This is
-accomplished by saving the enclave's context (register values) to an area
-inside the enclave, called a \textit{State Save Area} (SSA).
-
-Each TCS references a contiguous sequence of SSAs -- the OSSA field points to
-the first SSA, and the NSSA field indicates the sequence's length. When a
-logical processor needs to preempt enclave code, it uses the next available
-SSA, indicated by the CSSA field in the TCS. The CPU refuses to execute enclave
-code using a TCS where no SSA is available (CSSA $\ge$ NSSA).
-
-An SSA essentially consists of the values of the general-purpose registers
-(GPRs), and the result of running XSAVE (\S~\ref{sec:registers}) using the
-feature mask specified in the ATTRIBUTES.XFRM field in the enclave's SECS.
-
-% SECS.SSAFRAMESIZE: SDM S 42.7.2.2
-
-Each SSA starts at the beginning of an EPC page, and takes up a fixed number of
-EPC pages, specified in the SSAFRAMESIZE field in the enclave's SECS. The SSA
-alignment and size restrictions most likely exist to simplify the SGX
-implementation.
-
-The TCS is stored in a page whose EPCM entry has the type PT\_TCS, and
-therefore cannot be directly accessed by enclave software. However, SSAs are
-stored in regular pages, so they are accessible to enclave software, and their
-layout is defined in the SGX documentation.
 
 
 \subsubsection{The Version Array (VA)}
@@ -407,6 +153,7 @@ nonces stored in VA pages prevent replay attacks where malicious system
 software would attempt to bring back an old version of an evicted EPC page.
 
 
+
 \subsection {The Implementation of EPC Protection}
 
 The memory controller is
@@ -434,4 +181,93 @@ The SGX manual states that the EPC (the memory used to store enclave data) can
 only be set up as UC or WB. While no further explanation is provided, we assume
 that the UC option was provided in order to attempt to mitigate against some
 cache-timing attacks.
+
+
+
+SECS
+
+% Internal CREGs: SDM S 41.1.4
+% ECREATE: SDM S 39.1.1, S 41.3
+% EWB: SDM S 41.3
+
+The most important field in the SECS is the 64-bit \textit{enclave ID} (EID),
+which is assigned by \texttt{ECREATE}. The EID identifies an enclave's pages in
+the EPCM, so it must be unique across all the computer's active enclaves.
+According to the ECREATE pseudo-code in the SDM, enclave IDs are allocated
+using an atomic counter. An enclave's EID is generally hidden, as most SGX
+instructions use the address of the enclave's SECS page as the enclave's
+handler. However, the system software can learn an enclave's EID by evicting
+one of its EPC pages (\S~\ref{sec:sgx_ewb}).
+
+
+
+Currently, the main implication of ELRANGE is that all the SGX data structures
+are initialized with enclave virtual addresses specified relatively to
+BASEADDR. Furthermore, BASEADDR is not a part of the enclave's measurement
+hash (details in \S~\ref{sec:measurement}). It follows that system software can
+relocate an enclave in its host application's virtual address space, without
+impacting the enclave's measurement hash.
+
+Having ELRANGE follow the memory type range constraints provides a cheap way to
+verify if a virtual address belongs to the address, in hardware. This comes in
+handy when EENTER has to disable all the hardware breakpoints inside ELRANGE.
+
+
+% Interactions with the Processor Extended State and Misc State: SDM S 42.7
+% SECS.ATTRIBUTES.XFRM: SDM S 42.7.2.1
+
+The software-visible SECS has an ATTRIBUTE field that specifies the Intel
+achitecture features used by the enclave code. For example, the MODE64BIT flag
+is set if the enclave targets the 64-bit Intel architecture, and the XFRM
+sub-field contains the XCR0 register value expected by the enclave's code. XCR0
+controls Intel architecture extensions such as SSE and AVX (see
+\S~\ref{sec:registers}).
+
+When a logical processor executes code inside an enclave, it sets XCR0 to the
+value specified by the enclave's SECS, so malicious system software cannot
+enable features that the enclave code is not prepared to handle. This lets
+Intel introduce extensions that change the architectural behavior of existing
+instructions, such as Memory Protection Extensions (MPX), without having to
+worry about introducing security vulnerabilities in SGX enclaves written before
+MPX.
+
+An SSA essentially consists of the values of the general-purpose registers
+(GPRs), and the result of running XSAVE (\S~\ref{sec:registers}) using the
+feature mask specified in the ATTRIBUTES.XFRM field in the enclave's SECS.
+
+The SSA alignment and size restrictions most likely exist to simplify the
+SGX implementation.
+
+% Current State Save Area Frame (CSSA): SDM S 38.8.3
+% Number of State Save Area Frames (NSSA): SDM S 38.8.4
+
+Last, the CSSA field in each TCS indicates the next available SSA. When a
+logical processor needs to preempt enclave code, it uses the SSA indicated by
+the CSSA field, and increments it. The CPU refuses to execute enclave code
+using a TCS where no SSA is available (CSSA $\ge$ NSSA).
+
+
+
+
+
+
+% Access Control Requirements: SDM S 38.3
+
+Pages that store key SGX structures cannot be accessed directly, even by the
+code executing inside their enclaves. Furthermore, the SGX instructions that
+operate on SGX data structures check the EPCM type fields of their inputs
+against the expected types. This type system prevents software from
+intentionally or accidentally corrupting the key SGX data structures.
+
+The type-based access restrictions have the desirable side-effect of hiding the
+contents of the EPC pages holding key SGX structures from software, so the
+internal layout of any key data structure can change across new CPU revisions.
+Software cannot access the key structures in EPC, so it cannot become dependent
+on a specific processor's implementation details.
+
+The SGX documentation does specify a software-visible layout for each key data
+structure. This layout is used by the non-EPC page used to initialize the key
+data structure when it is created. Therefore, new CPU revisions must preserve
+the ability to initialize the key data structures from the less flexible
+software-visible layout.
 

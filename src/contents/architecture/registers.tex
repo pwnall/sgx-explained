@@ -78,10 +78,11 @@ features, some of which are shown in Table~\ref{fig:xsave_state}.
 
 The Intel architecture provides a future-proof method for an OS kernel to save
 the values of feature-specific registers used by an application. The
-\texttt{XSAVE} instruction takes in a bitmap of features, and writes the
-registers used by the features whose bits are set to 1 in a memory area that
-can be used by the \texttt{XRSTOR} instruction to load the saved values back
-into feature-specific registers.
+\texttt{XSAVE} instruction takes in a \textit{requested-feature bitmap}~(RFBM),
+and writes the registers used by the features whose RFBM bits are set to 1 in a
+memory area. The memory area written by \texttt{XSAVE} can later be used by the
+\texttt{XRSTOR} instruction to load the saved values back into feature-specific
+registers.
 
 Application software declares the features that it plans to use to the kernel,
 so the kernel knows what XSAVE bitmap to use when context-switching. When

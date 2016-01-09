@@ -136,7 +136,7 @@ that exchange the disk bytes that store evicted pages.
 The subtle attack described above can be defeated by cryptographically
 binding the contents of each page that is evicted from DRAM to the virtual
 address that the page should be mapped to. The cryptographic primitive
-(\S~\ref{sec:sec:crypto_primitives}) used to perform the binding must obiously
+(\S~\ref{sec:crypto_primitives}) used to perform the binding must obiously
 guarantee integrity. Furthermore, it must also guarantee freshness, in order
 to foil replay attacks where the system software ``undoes'' an application's
 writes by evicting one of its DRAM pages to disk and bringing in an older
