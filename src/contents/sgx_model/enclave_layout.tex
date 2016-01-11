@@ -9,6 +9,12 @@ designed to be conceptually similar to the leading software modularization
 construct, dynamically loaded libraries, which are packaged as \texttt{.so}
 files on Unix, and \texttt{.dll} files on Windows.
 
+For simplicity, we describe the interaction between enclaves and non-enclave
+software assuming that each enclave is used by exactly one application process,
+which we shall refer to as the enclave's \textit{host process}. We do note,
+however, that the SGX design does not explicitly prohibit having an enclave be
+shared by multiple application processes.
+
 
 \subsubsection{The Enclave Linear Address Range (ELRANGE)}
 \label{sec:sgx_elrange}
@@ -19,7 +25,7 @@ Each enclave designates an area in its virtual address space, called the
 \textit{enclave linear address range} (ELRANGE), which is used to map the code
 and the sensitive data stored in the enclave's EPC pages. The virtual address
 space outside ELRANGE is mapped to access non-EPC memory via the same virtual
-addresses as the enclave's host application, as shown in
+addresses as the enclave's host process, as shown in
 Figure~\ref{fig:sgx_elrange}.
 
 \begin{figure}[hbt]
@@ -28,7 +34,7 @@ Figure~\ref{fig:sgx_elrange}.
   \caption{
     An enclave's EPC pages are accessed using a dedicated region in the
     enclave's virtual address space, called ELRANGE. The rest of the virtual
-    address space is used to access the host application's memory. The memory
+    address space is used to access the memory of the host process. The memory
     mappings are established using the page tables managed by system software.
   }
   \label{fig:sgx_elrange}
@@ -51,8 +57,8 @@ hardware~(\S~\ref{sec:cacheability_config}) or software.
 When an enclave represents a dynamic library, it is natural to have ELRANGE be
 set to the memory range reserved for the library by the loader. The ability to
 access non-enclave memory from enclave code makes it easy to reuse existing
-library code that expects to receive pointers to memory buffers managed by
-the host application, and reads or modifies the buffers.
+library code that expects to work with pointers to memory buffers managed by
+code in the host process.
 
 
 \subsubsection{Address Translation for SGX Enclaves}
@@ -194,11 +200,10 @@ software.
 In the SGX design, the area used to store an enclave thread's execution context
 while a hardware exception is handled is called a \texttt{State Save
 Area}~(SSA), illustrated in Figure~\ref{fig:sgx_enclave_layout}. Each TCS
-references a contiguous sequence of SSAs. The OSSA field specifies the location
-of the first SSA in the enclave's virtual address space, and the NSSA field
-indicates the number of available SSAs. Each SSA starts at the beginning of an
-EPC page, and uses up the number of EPC pages that is specified in the
-SSAFRAMESIZE field of the enclave's SECS.
+references a contiguous sequence of SSAs. The \textit{offset of the SSA
+array}~(OSSA) field specifies the location of the first SSA in the enclave's
+virtual address space. The \textit{number of SSAs}~(NSSA) field indicates the
+number of available SSAs.
 
 \begin{figure}[hbt]
   \centering
@@ -211,6 +216,11 @@ SSAFRAMESIZE field of the enclave's SECS.
   }
   \label{fig:sgx_enclave_layout}
 \end{figure}
+
+Each SSA starts at the beginning of an EPC page, and uses up the number of EPC
+pages that is specified in the SSAFRAMESIZE field of the enclave's SECS. These
+alignment and size restrictions most likely simplify the SGX implementation by
+reducing the number of special cases that it needs to handle.
 
 An enclave thread's execution context consists of the general-purpose registers
 (GPRs) and the result of the XSAVE instruction~(\S~\ref{sec:registers}).

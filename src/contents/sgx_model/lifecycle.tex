@@ -119,30 +119,33 @@ the software attestation process. Software attestation is discussed in
 \S~\ref{sec:sgx_xxx}.
 
 
-\subsubsection{Launch}
+\subsubsection{Initialization}
 \label{sec:sgx_einit_overview}
 
 % EINIT Token Structure (EINITTOKEN): SDM S 38.14
 
 After loading the initial code and data pages into the enclave, the system
-software must execute \textit{Launch Enclave} to obtain an EINIT Token
+software must use a \textit{Launch Enclave}~(LE) to obtain an EINIT Token
 Structure, via an under-documented process that will be described in more
 detail in \S~\ref{sec:sgx_einit}. The token is then provided to the
 \texttt{EINIT} instruction, which marks the enclave's SECS as
 \textit{initialized}.
 
-The Launch Enclave is a privileged enclave provided by Intel, and is a
-prerequisite for the use of non-privileged enclaves from other authors. The
-Launch Enclave is cryptographically signed~(\S~\ref{sec:integrity_crypto}) with
-a special Intel key that is recognized by the SGX implementation, and that
-causes \texttt{EINIT} to initialize the Launch Enclave without checking for
-a valid EINIT Token Structure.
+The LE is a privileged enclave provided by Intel, and \textbf{is a prerequisite
+for the use of enclaves authored by parties other than Intel}. The LE is an
+SGX enclave, so it must be created, loaded and initialized using the processes
+described in this section. However, the LE is cryptographically
+signed~(\S~\ref{sec:integrity_crypto}) with a special Intel key that is
+hard-coded into the SGX implementation, and that causes \texttt{EINIT} to
+initialize the LE  without checking for a valid EINIT Token Structure.
 
-After \texttt{EINIT} is successfully called on an enclave, \texttt{EADD} cannot
-be invoked on that enclave anymore, so the system software must load all the
-pages that make up the enclave's initial state before executing the
-\texttt{EINIT} instruction. At the same time, once an enclave's SECS is marked
-as \textit{initialized}, the enclave's host application can run enclave code.
+After \texttt{EINIT} is successfully called on an enclave,
+ring 3~\S~\ref{sec:rings}) application software can execute the enclave's code,
+using the SGX instructions described in \S~\ref{sec:sgx_threads}. On the other
+hand, once an enclave's SECS is marked as \textit{initialized}, \texttt{EADD}
+cannot be invoked on that enclave anymore, so the system software must load all
+the pages that make up the enclave's initial state before executing the
+\texttt{EINIT} instruction.
 
 
 \subsubsection{Teardown}
@@ -151,6 +154,13 @@ as \textit{initialized}, the enclave's host application can run enclave code.
 After the enclave has done the computation it was designed to perform, the
 system software executes the \texttt{EREMOVE} instruction to deallocate the
 EPC pages used by the enclave.
+
+\texttt{EREMOVE} marks an EPC page as available by setting the VALID field of
+the page's EPCM entry to 0 (zero). Before freeing up the page, \texttt{EREMOVE}
+makes sure that the EPC page is not in use a SGX instruction executing on
+another core. For example, while a core executes code inside an enclave, the
+TCS~(\S~\ref{sec:sgx_tcs}) used by the core is marked as in use, and cannot be
+\texttt{EREMOVE}d.
 
 An enclave is completely destroyed when the EPC page holding its SECS is freed.
 \texttt{EREMOVE} refuses to deallocate a SECS page if it is referenced by any

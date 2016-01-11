@@ -212,43 +212,14 @@ Having ELRANGE follow the memory type range constraints provides a cheap way to
 verify if a virtual address belongs to the address, in hardware. This comes in
 handy when EENTER has to disable all the hardware breakpoints inside ELRANGE.
 
-
-% Interactions with the Processor Extended State and Misc State: SDM S 42.7
-% SECS.ATTRIBUTES.XFRM: SDM S 42.7.2.1
-
-The software-visible SECS has an ATTRIBUTE field that specifies the Intel
-achitecture features used by the enclave code. For example, the MODE64BIT flag
-is set if the enclave targets the 64-bit Intel architecture, and the XFRM
-sub-field contains the XCR0 register value expected by the enclave's code. XCR0
-controls Intel architecture extensions such as SSE and AVX (see
-\S~\ref{sec:registers}).
-
-When a logical processor executes code inside an enclave, it sets XCR0 to the
-value specified by the enclave's SECS, so malicious system software cannot
-enable features that the enclave code is not prepared to handle. This lets
-Intel introduce extensions that change the architectural behavior of existing
-instructions, such as Memory Protection Extensions (MPX), without having to
-worry about introducing security vulnerabilities in SGX enclaves written before
-MPX.
-
 An SSA essentially consists of the values of the general-purpose registers
 (GPRs), and the result of running XSAVE (\S~\ref{sec:registers}) using the
 feature mask specified in the ATTRIBUTES.XFRM field in the enclave's SECS.
-
-The SSA alignment and size restrictions most likely exist to simplify the
-SGX implementation.
-
-% Current State Save Area Frame (CSSA): SDM S 38.8.3
-% Number of State Save Area Frames (NSSA): SDM S 38.8.4
 
 Last, the CSSA field in each TCS indicates the next available SSA. When a
 logical processor needs to preempt enclave code, it uses the SSA indicated by
 the CSSA field, and increments it. The CPU refuses to execute enclave code
 using a TCS where no SSA is available (CSSA $\ge$ NSSA).
-
-
-
-
 
 
 % Access Control Requirements: SDM S 38.3

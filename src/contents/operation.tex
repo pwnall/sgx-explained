@@ -19,39 +19,6 @@ operating system kernel. When VMX is in use, the hypervisor is responsible for
 multiplexing SGX resources across the guest operating systems running in
 virtual machines.
 
-\subsection{The Enclave Mode}
-\label{sec:enclave_mode}
-
-% Internal CREGs: SDM S 41.1.4
-% Access Control Requirements: SDM S 38.3
-
-When executing the code inside an enclave, a logical processor is said to be
-\textit{in enclave mode}. When a processor is outside enclave mode, software
-cannot access any memory inside the PRM range. In enclave mode, the CPU allows
-accesses to EPC pages that belong to the currently executing enclave.
-
-Assuming no interrupts or faults, a logical processor transitions into enclave
-mode by executes the EENTER instruction. EENTER can only be executed by
-application software (running at ring 3), because SGX was designed to be used
-by applications. EENTER can only be used to jump into pre-defined locations
-inside an enclave, for the same reasons that system calls only jump at specific
-locations in an OS kernel. When all the preconditions (described below) are
-met, EENTER causes the logical processor to enter enclave mode, and keeps it at
-ring 3.
-
-SGX restricts enclaves to ring 3, preserving the role of system software as
-the computer's resource manager. This makes it possible for an infrastructure
-owner to allow user-supplied software to create and use enclaves, while having
-the assurance that the OS kernel and hypervisor can still protect the
-infrastructure from buggy or malicious software.
-
-
-\subsubsection{Interrupt / Fault Handling}
-\label{sec:aex}
-
-
-
-
 
 \subsection{Evicting EPC Pages}
 \label{sec:sgx_ewb}

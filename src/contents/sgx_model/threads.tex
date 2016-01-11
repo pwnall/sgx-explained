@@ -1,0 +1,175 @@
+\subsection{The Life Cycle of an SGX Thread}
+\label{sec:sgx_threads}
+
+Between the time when an enclave is
+initialized~(\S~\ref{sec:sgx_einit_overview}) and the time when it is torn
+down~(\S~\ref{sec:sgx_eremove}), the enclave's code can be executed by any
+application process that has the enclave's EPC pages mapped into its virtual
+address space.
+
+% Internal CREGs: SDM S 41.1.4
+% Access Control Requirements: SDM S 38.3
+
+When executing the code inside an enclave, a logical processor is said to be
+\textit{in enclave mode}, and the code that it executes can access the
+regular~(PT\_REG,~\S~\ref{sec:sgx_epcm}) EPC pages that belong to the currently
+executing enclave. When a logical process is outside enclave mode, it bounces
+any memory accesses inside the Processor Reserved Memory
+range~(PRM,~\S~\ref{sec:sgx_prm}), which includes the EPC.
+
+Each logical processor that executes enclave code uses a Thread Control
+Structure~(TCS,~\S~\ref{sec:sgx_tcs}). When a TCS is used by a logical
+processor, it is said to be \textit{busy}, and it cannot be used by any other
+logical processor.  Figure~\ref{fig:sgx_tcs_lifecycle} illustrates the
+instructions used by a host process to execute enclave code and their
+interactions with the TCS that they target.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=75mm]{figures/sgx_tcs_lifecycle.pdf}
+  \caption{
+    The stages of the life cycle of an SGX Thread Control Structure (TCS) that
+    has two State Save Areas (SSAs).
+  }
+  \label{fig:sgx_tcs_lifecycle}
+\end{figure}
+
+
+\subsubsection{Synchronous Enclave Entry and Exit}
+\label{sec:sgx_enclave_mode}
+\label{sec:sgx_eenter}
+\label{sec:sgx_eexit}
+
+Assuming that no hardware exception occurs, an enclave's host process uses the
+\texttt{EENTER} instruction to execute enclave code. When the enclave code
+finishes performing its task, it uses the \texttt{EEXIT} instruction to return
+the execution control to the host process that invoked it.
+
+% ENCLU - Execute an Enclave User Function of Specified Leaf Number: SDM S 41.2
+
+\texttt{EENTER}, illustrated in Figure~\ref{fig:sgx_eenter} can only be
+executed by unprivileged application software running at ring
+3~(\S~\ref{sec:rings}), and results in an undefined instruction (\#UD) fault if
+is executed by system software.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/sgx_eenter.pdf}
+  \caption{
+    Data flow diagram for a subset of the logic in \texttt{EENTER}. The figure
+    omits the logic for disabling debugging features, such as hardware
+    breakpoints and performance monitoring events.
+  }
+  \label{fig:sgx_eenter}
+\end{figure}
+
+\texttt{EENTER} switches the logical processor to enclave mode, but does not
+perform a privilege level switch~(\S~\ref{sec:faults}). Therefore, enclave code
+always executes at ring 3, with the same privileges as the application code
+that calls it. This makes it possible for an infrastructure owner to allow
+user-supplied software to create and use enclaves, while having the assurance
+that the OS kernel and hypervisor can still protect the infrastructure from
+buggy or malicious software.
+
+% EENTER - Enters an Enclave: SDM S 41.4.1
+% Current State Save Area Frame (CSSA): SDM S 38.8.3
+% Number of State Save Area Frames (NSSA): SDM S 38.8.4
+
+\texttt{EENTER} takes the virtual address of a TCS as its input, and requires
+that the TCS is \textit{available} (not busy), and that at least one State Save
+Area~(SSA,~\S~\ref{sec:sgx_ssa}) is available in the TCS. The latter check is
+implemented by making sure that the \textit{current SSA index}~(CSSA) field in
+the TCS is less than the number of SSAs (NSSA) field. The SSA indicated by CSSA
+is used in the event that a hardware exception occurs while enclave code is
+executed, which shall be discussed in the following section.
+
+\texttt{EENTER} transitions the logical processor into enclave mode, and sets
+the instruction pointer (RIP) to the value indicated by the \textit{entry point
+offset}~(OENTRY) field in the TCS that it receives. \textit{EENTER} is used by
+an untrusted caller to execute code in a protected environment, and therefore
+has the same security considerations as
+\texttt{SYSCALL}~(\S~\ref{sec:privilege_switches}, which is used to call into
+system software. Setting RIP to the value indicated by OENTRY guarantees to the
+enclave author that the enclave code will only be invoked at well defined
+points, and prevents a malicious host application from bypassing any security
+checks that the enclave author may perform.
+
+% Interactions with the Processor Extended State and Misc State: SDM S 42.7
+% SECS.ATTRIBUTES.XFRM: SDM S 42.7.2.1
+
+\texttt{EENTER} also sets XCR0~(\S~\ref{sec:registers}), the register that
+controls which extended architectural features are in use, to the value of the
+XFRM field in the SECS of the enclave that owns the TCS. Ensuring that XCR0 is
+set according to the enclave author's intentions prevents a malicious operating
+system from bypassing an enclave's security by enabling architectural features
+that the enclave is not prepared to handle. This lets Intel introduce
+extensions that change the architectural behavior of existing instructions,
+such as Memory Protection Extensions (MPX), without having to worry about
+introducing security vulnerabilities in SGX enclaves.
+
+Last, \texttt{EENTER} loads the bases of the segment
+registers~(\S~\ref{sec:segments}) FS and GS using values specified in the TCS.
+The segments' selectors and types are hard-coded to safe values for ring 3 data
+segments. This aspect of the SGX design makes it easy to implement per-thread
+Thread Local Storage (TLS). For 64-bit enclaves, this is a convenience feature
+rather than a security measure, as enclave code can securely load new bases
+into FS and GS using the \texttt{WRFSBASE} and \texttt{WRGSBASE} instructions.
+
+The \texttt{EENTER} implementation backs up the old values of the registers
+that it modifies, so they can be restored when the enclave finishes its
+computation. Just like \texttt{SYSCALL}, \texttt{EEENTER} saves the address of
+the following instruction in the RCX register.
+
+Interestingly, the SDM states that the old values of the XCR0, FS and GS
+registers are saved in new registers dedicated to the SGX implementation.
+However, given that they will only be used on an enclave exit, we expect that
+the registers are saved in DRAM, in the reserved area in the TCS.
+
+Like \texttt{SYSCALL}, \texttt{EENTER} does not modify the stack pointer
+register (RSP). To avoid any security exploits, enclave code should set RSP to
+point to a stack area that is entirely contained in EPC pages. Multi-threaded
+enclaves can easily implement per-thread stack areas by setting up each
+thread's TLS area to include a pointer to the thread's stack, and by setting
+RSP to the value obtained by reading the TLS area pointed by the FS or GS
+segment.
+
+\texttt{EEXIT} can only be executed while the logical processor is in enclave
+mode, and results in an undefined instruction (\#UD) fault if is executed in
+any other circumstances. In a nutshell, the instruction returns the processor
+to ring 3 outside enclave mode and restores the registers saved by
+\texttt{EENTER}, which were described above.
+
+Unlike \texttt{SYSRET}, \texttt{EEXIT} sets RIP to the value read from RBX,
+after exiting enclave mode. This is inconsistent with \texttt{EENTER}, which
+saves the RIP value to RCX. Unless this inconsistency stems from an error in
+the SDM, enclave code must be sure to note the difference.
+
+The SDM explicitly states that \texttt{EEXIT} does not modify most registers,
+so enclave authors must make sure to clear any secrets stored in the
+processor's registers before returning control to the host process.
+Furthermore, enclave software will most likely cause a fault in its caller if
+it doesn't restore the stack pointer RSP and the stack frame base pointer RBP
+to the values that they had when \texttt{EENTER} was called.
+
+It may seem unfortunate that enclave code can induce faults in its caller.
+For better or for worse, this perfectly matches the case where an application
+calls into a dynamically loaded module. More specifically, the module's code is
+also responsible for preserving stack-related registers, and a buggy module
+might jump anywhere in the application code of the host process.
+
+At a first glance, it may seem elegant to have \texttt{EENTER} store the
+contents of the XCR0, FS, and GS registers in the SSA, and have \texttt{EEXIT}
+restore them from the SSA. However, this approach would break the Intel
+architecture's guarantees that only system software can modify XCR0, and
+application software can only load segment registers using selectors that index
+into the GDT or LDT set up by system software (\S~\ref{sec:segments}).
+Specifically, a malicious application could modify these privileged registers
+by creating an enclave that writes the desired values to the SSA locations
+backing up the registers, and then executes \texttt{EEXIT}.
+
+
+\subsubsection{Asynchronous Enclave Exit}
+\label{sec:sgx_aex}
+\label{sec:sgx_eresume}
+
+
