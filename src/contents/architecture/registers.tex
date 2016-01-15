@@ -82,7 +82,8 @@ the values of feature-specific registers used by an application. The
 and writes the registers used by the features whose RFBM bits are set to 1 in a
 memory area. The memory area written by \texttt{XSAVE} can later be used by the
 \texttt{XRSTOR} instruction to load the saved values back into feature-specific
-registers.
+registers. The memory area includes the RFBM given to \texttt{XSAVE}, so
+\texttt{XRSTOR} does not require an RFBM input.
 
 Application software declares the features that it plans to use to the kernel,
 so the kernel knows what XSAVE bitmap to use when context-switching. When
@@ -91,6 +92,6 @@ bitmap declared by the application. The CPU generates a fault if application
 software attempts to use features that are not enabled by XCR0, so applications
 cannot modify feature-specific registers that the kernel wouldn't take into
 account when context-switching. The kernel can use the \texttt{CPUID}
-instruction to learn the size of the XSAVE memory area for a given feature
-bitmap, and compute how much memory it needs to allocate for the context of
-each of the application's threads.
+instruction to learn the size of the \texttt{XSAVE} memory area for a given
+feature bitmap, and compute how much memory it needs to allocate for the
+context of each of the application's threads.

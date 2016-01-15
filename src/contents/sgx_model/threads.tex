@@ -34,15 +34,31 @@ interactions with the TCS that they target.
   \label{fig:sgx_tcs_lifecycle}
 \end{figure}
 
+Assuming that no hardware exception occurs, an enclave's host process uses the
+\texttt{EENTER} instruction, described in \S~\ref{sec:sgx_eenter}, to execute
+enclave code. When the enclave code finishes performing its task, it uses the
+\texttt{EEXIT} instruction, covered in \S~\ref{sec:sgx_eexit}, to return the
+execution control to the host process that invoked the enclave.
+
+If a hardware exception occurs in while a logical processor is in enclave mode,
+the processor is taken out of enclave mode using an
+\textit{Asynchronous Enclave Exit}~(AEX), summarized in \S~\ref{sec:sgx_aex},
+before the system software's exception handler is invoked. After the system
+software's handler is invoked, the enclave's host process can use the
+\texttt{ERESUME} instruction, described in \S~\ref{sec:sgx_eresume}, to
+re-enter the enclave and resume the computation that it was performing.
+
 
 \subsubsection{Synchronous Enclave Entry}
 \label{sec:sgx_enclave_mode}
 \label{sec:sgx_eenter}
 
-Assuming that no hardware exception occurs, an enclave's host process uses the
-\texttt{EENTER} instruction to execute enclave code. When the enclave code
-finishes performing its task, it uses the \texttt{EEXIT} instruction to return
-the execution control to the host process that invoked it.
+At a high level, \texttt{EENTER} performs a controlled jump into enclave code,
+while performing the processor configuration that is needed by SGX's security
+guarantees. Going through all the configuration steps is a tedious exercise,
+but it a necessary prerequisite to understanding how all data structures used
+by SGX work together. For this reason, \texttt{EENTER} and its siblings are
+described in much more detail than the other SGX instructions.
 
 % ENCLU - Execute an Enclave User Function of Specified Leaf Number: SDM S 41.2
 
@@ -268,3 +284,67 @@ were suppressed by \texttt{EENTER} are restored to their previous states.
 \subsubsection{Recovering from an Asynchronous Exit}
 \label{sec:sgx_eresume}
 
+When a hardware exception occurs inside enclave mode, the processor performs
+an AEX before invoking the exception's handler set up by the system software.
+The AEX sets up the execution context in such a way that when the system
+software finishes processing the exception, it returns into an asynchronous
+exit handler in the enclave's host process. The asynchronous exception handler
+usually executes the \texttt{ERESUME} instruction, which causes the logical
+processor to go back back into enclave mode and continue the computation that
+was interrupted by the hardware exception.
+
+\texttt{ERESUME} shares much of its functionality with \texttt{EENTER}. This is
+best illustrated by the similarity between Figures
+\ref{fig:sgx_aex_eresume} and \ref{fig:sgx_aex_setup}.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/sgx_aex_eresume.pdf}
+  \caption{
+    If a hardware exception occurs during enclave execution, the synchronous
+    execution path is aborted, and an Asynchronous Enclave Exit (AEX) occurs
+    instead.
+  }
+  \label{fig:sgx_aex_eresume}
+\end{figure}
+
+\texttt{EENTER} and \texttt{ERESUME} receive the same inputs, namely a pointer
+to a TCS, described in \S~\ref{sec:sgx_eenter} and an AEP, described in
+\S~\ref{sec:sgx_aex}. The most common application design will pair each
+\texttt{EENTER} instance with an asynchronous exit handler that invokes
+\texttt{ERESUME} with exactly the same arguments.
+
+The main difference between \texttt{ERESUME} and \texttt{EENTER} is that the
+former uses a SSA that was ``filled out'' by an AEX~(\S~\ref{sec:sgx_aex},
+whereas the latter uses an empty SSA. Therefore, \texttt{ERESUME} results in a
+\#GP fault if the CSSA field in the provided TCS is 0 (zero), whereas
+\texttt{EENTER} fails if CSSA is greater than or equal to NSSA.
+
+When successful, \texttt{ERESUME} decrements the CSSA field of the TCS, and
+restores the execution context backed up in the SSA pointed by CSSA.
+Speficially, the \texttt{ERESUME} implementation restores the
+GPRs~(\S~\ref{sec:registers}) from the GPRSGX field in the SSA, and performs an
+\texttt{XRSTOR}~(\S~\ref{sec:registers}) to load the execution state
+associated with the extended architectural features used by the enclave.
+
+\texttt{ERESUME} shares the following behavior with
+\texttt{EENTER}~(\S~\ref{sec:sgx_eenter}). Both instructions write the U\_RSP,
+U\_RBP and AEP fields in the current SSA. Both instructions follow the same
+process for backing up XCR0 and the FS and GS segment registers, and set them
+to the same values, based on the current TCS and its enclave's SECS. Last, both
+instructions disable the same subset of the logical processor's debugging
+features.
+
+An interesting edge case that \texttt{ERESUME} handles correctly is that it
+sets XCR0 to the XFRM field in the enclave's SECS \textbf{before} performing an
+\texttt{XRSTOR}. It follows that \texttt{ERESUME} fails if the requested
+feature bitmap (RFBM) in the SSA is not a subset of the XFRM field. This
+matters because, while an AEX will always use the XFRM value as the RFBM,
+enclave code executing on another thread is free to modify the SSA contents
+before \texttt{ERESUME} is called.
+
+The correct sequencing of actions in the \texttt{ERESUME} implementation
+prevents a malicious application from using an enclave to modify registers
+associated with extended architectural features that are not declared in XFRM.
+This would break the system software's ability to provide thread-level
+execution context isolation.
