@@ -5,6 +5,23 @@ The rest of this section describes the security properties of
 enclaves, discussing the trade-offs made while trying to balance security with
 backwards compatibility.
 
+SGX's security revolves around maintaining the following
+invariant. \textbf{At all times, a logical processor's TLB
+entries can only map DRAM pages that can be accessed by the code executing on
+the processor.} Specifically, when a logical processor is in enclave mode, its
+TLB can include entries for the enclave's EPC pages, and for DRAM pages outside
+the PRM. The TLB of a logical processor outside enclave mode must not include
+any PRM entry.
+
+Without any special measures, the invariant described above would be broken
+when a logical processor exits an enclave, either via
+\texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}), or via an AEX~(\S~\ref{sec:sgx_aex}).
+This is because enclave mode allows TLB entries that point to the currently
+executing enclave's EPC pages, and these entries become disallowed the moment
+the processor leaves enclave mode. The SGX implementation solves this problem
+by flushing a logical processor's TLBs when it leaves enclave mode.
+
+
 % Interactions with Paging: SDM S 42.4
 % The Intel SGX access control itself is implemented as an extension to the
 % three paging modes of Intel Architecture.
@@ -44,6 +61,16 @@ that code which accesses private data must be entirely contained inside an
 enclave. Jumping into and out of enclave code must be performed explicitly
 using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
 
+
+% Victor 2 scheme for ETRACK / EBLOCK / EWB.
+%
+% ETRACK - sets tracking to 1, sets CPUmask in SECS to 0, sets LPleft to number
+%          of logical processors executing enclave code, sets canEvict to 0
+% EEXIT / AEX - if tracking is set to 1 and CPUmask bit in SECS for current LP
+%               is set to 0, decrement LPleft; if LPleft is 0, set canEvict to
+%               1
+% EENTER - if tracking is set to 1, set CPUmask bit in SECS for current LP to 1
+% EWB - check that canEvict is 1; set tracking to 0
 
 
 \begin{figure}[hbt]

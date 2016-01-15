@@ -115,15 +115,16 @@ In addition to isolating application processes, operating systems also use the
 address translation feature to run applications whose collective memory
 demands exceed the amount of DRAM installed in the computer. The OS evicts
 infrequently used memory pages from DRAM to a larger (but slower) memory, such
-as a hard disk drive (HDD) or solid-state drive (SSD).
+as a hard disk drive (HDD) or solid-state drive (SSD). For historical reason,
+this slower memory is referred to as the \textit{disk}.
 
 The OS ability to over-commit DRAM is often called \textit{page swapping}, for
 the following reason. When an application process attempts to access a page
 that has been evicted, the OS ``steps in'' and reads the missing page back into
 DRAM. In order to do this, the OS might have to evict a different page from
-DRAM, effectively swapping the contents of a page in DRAM with a page in the
-slower memory. The details behind this high-level description are covered in
-the following sections.
+DRAM, effectively swapping the contents of a DRAM page with a disk page. The
+details behind this high-level description are covered in the following
+sections.
 
 The CPU's address translation is also referred to as ``paging'', which is a
 shorthand for ``page swapping''.

@@ -7,6 +7,9 @@ attacks that can be mounted entirely by application code running at ring 3
 the victim's memory, so they bypass the address translation-based isolation
 measures (\S~\ref{sec:paging}) implemented in today's kernels and hypervisors.
 
+
+\subsubsection{Theory}
+
 Cache timing attacks exploit the unfortunate dependency between the location of
 a memory access and the time it takes to perform the access. A cache miss
 requires at least one memory access to the next level cache, and might require
@@ -41,6 +44,9 @@ access pattern. If the victim processes sensitive information using
 data-dependent memory fetches, the attacker may be able to deduce the sensitive
 information from the learned memory access pattern.
 
+
+\subsubsection{Practical Considerations}
+
 Cache timing attacks require control over a software process that shares a
 cache memory with the victim process. Therefore, a cache timing attack that
 aims at the L2 cache would have to rely on the system software to schedule a
@@ -69,6 +75,9 @@ timing attacks, as the attacker may observe cache fills that don't correspond
 to instructions in the victim code, even when accounting for speculative
 execution.
 
+
+\subsubsection{Known Cache Timing Attacks}
+
 Despite these difficulties, cache timing attacks are known to retrieve
 cryptographic keys used by AES~\cite{osvik2006aes, bonneau2006aes},
 RSA~\cite{brumley2005rsa}, Diffie-Hellman~\cite{kocher1996timing}, and
@@ -88,6 +97,9 @@ Given this pattern of vulnerabilities, ignoring cache timing attacks is
 dangerously similar to ignoring the string of demonstrated attacks which led to
 the deprecation of SHA-1~\cite{nist2014sha1policy, google2014sha1deprecation,
 microsoft2014sha1deprecation}.
+
+
+\subsubsection{Defending against Cache Timing Attacks}
 
 Fortunately, invalidating any of the preconditions for cache timing attacks is
 sufficient for defending against them. The easiest precondition to focus on is

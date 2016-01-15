@@ -20,27 +20,3 @@ multiplexing SGX resources across the guest operating systems running in
 virtual machines.
 
 
-\subsection{Evicting EPC Pages}
-\label{sec:sgx_ewb}
-
-% Eviction of Enclave Pages: SDM S 39.5.3
-% Eviction of an SECS Page: SDM S 39.5.5
-% Eviction of a Version Array Page: SDM S 39.5.6
-
-% EPA: SDM S 41.3
-
-\begin{figure}[hbt!]
-  \centering
-  \includegraphics[width=85mm]{figures/sgx_ewb.pdf}
-  \caption{
-    The data flow of the EWB instruction that evicts an EPC page. The page's
-    content is encrypted in a non-EPC RAM page. A nonce is created and saved
-    in an empty slot inside a VA page. The page's EPCM metadata and a MAC
-    are saved in a separate area in non-EPC memory.
-  }
-  \label{fig:sgx_ewb}
-\end{figure}
-
-% Loading an Enclave Page: SDM S 39.5.4
-
-

@@ -14,6 +14,10 @@ executing software on the victim processor. The incorrect classification
 matters in cloud computing scenarios, where physical attacks are significantly
 more expensive than software attacks.
 
+
+\subsubsection{PCI Express Attacks}
+\label{sec:pcie_attacks}
+
 The PCIe bus~(\S~\ref{sec:motherboard}) allows any device connected to the bus
 to perform \textit{Direct Memory Access}~(DMA), reading from and writing to
 the computer's DRAM without the involvement of a CPU core. Each device is
@@ -29,6 +33,10 @@ compromised by programming a PCIe NIC to read TXT-reserved DRAM via DMA
 transfers~\cite{wojtczuk2011txt}. Recent versions have addressed this attack by
 adding extra security checks in the DMA bus arbiter. \S~\ref{sec:intel_txt}
 provides a more detailed description of Intel TXT.
+
+
+\subsubsection{DRAM Attacks}
+\label{sec:rowhammer_attack}
 
 The rowhammer DRAM bit-flipping attack~\cite{kim2014rowhammer,
 google2015rowhammer, gruss2015rowhammer} is an example of a different class of
@@ -55,6 +63,10 @@ exploited the interaction between \texttt{CLFLUSH}'s availability and the DRAM
 engineers' invalid assumptions to obtain capabilities that are normally
 associated with an active DRAM bus attack.
 
+
+\subsubsection{The Performance Monitoring Side Channel}
+\label{sec:perfmon_attacks}
+
 % On Die Digital Thermal Sensors: SDM S 14.7.5
 
 Intel's \textit{Software Development Manual}~(SDM)~\cite{intel2015sdm} and
@@ -69,6 +81,10 @@ An attacker that compromises a computer's system software and gains access to
 the performance monitoring events or the temperature sensors can obtain the
 information needed to carry out a power analysis attack, which normally
 requires physical access to the victim computer and specialized equipment.
+
+
+\subsubsection{Attacks on the Boot Firmware and Intel ME}
+\label{sec:firmware_attacks}
 
 Virtually all motherboards store the firmware used to boot the computer in a
 flash memory chip (\S~\ref{sec:motherboard}) that can be written by system
@@ -124,6 +140,9 @@ analysis~\cite{ververis2010security} found that early versions of Intel's
 Active Management Technology~(AMT), the flagship ME application, contained an
 assortment of security issues that allowed an attacker to completely take over
 a computer whose ME firmware contained the AMT application.
+
+
+\subsubsection{Accounting for Software Attacks on Peripherals}
 
 The attacks described in this section show that a system whose threat model
 assumes no software attacks must be designed with an understanding of all the

@@ -116,7 +116,7 @@ that all the reserved fields in SECINFO are set to zero.
 While loading an enclave, the system software will also use the
 \texttt{EEXTEND} instruction, which updates the enclave's measurement used in
 the software attestation process. Software attestation is discussed in
-\S~\ref{sec:sgx_xxx}.
+\S~\ref{sec:sgx_attestation}.
 
 
 \subsubsection{Initialization}
@@ -157,10 +157,8 @@ EPC pages used by the enclave.
 
 \texttt{EREMOVE} marks an EPC page as available by setting the VALID field of
 the page's EPCM entry to 0 (zero). Before freeing up the page, \texttt{EREMOVE}
-makes sure that the EPC page is not in use a SGX instruction executing on
-another core. For example, while a core executes code inside an enclave, the
-TCS~(\S~\ref{sec:sgx_tcs}) used by the core is marked as in use, and cannot be
-\texttt{EREMOVE}d.
+makes sure that there is no logical processor executing code inside the enclave
+that owns the page to be removed.
 
 An enclave is completely destroyed when the EPC page holding its SECS is freed.
 \texttt{EREMOVE} refuses to deallocate a SECS page if it is referenced by any

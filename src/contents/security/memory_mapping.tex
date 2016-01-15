@@ -1,5 +1,5 @@
 \subsection{Address Translation Attacks}
-\label{sec:paging_attacks}
+\label{sec:address_translation_attacks}
 
 \S~\ref{sec:system_software_attacks} argues that today's system software is
 virtually guaranteed to have security vulnerabilities. This suggests that a
@@ -60,7 +60,7 @@ the outline of a JPEG image is inferred while the image is decompressed inside
 a container protected by SGX's isolation guarantees.
 
 
-\subsubsection{Active Attacks}
+\subsubsection{Straightforward Active Attacks}
 \label{sec:memory_mapping_attacks}
 
 We define active address translation attacks to be the class of attacks where
@@ -78,7 +78,7 @@ assumes that each procedure's code starts at a page boundary, and takes up less
 than a page. These assumptions are relaxed in more complex versions of the
 attack.
 
-In the most straight-forward setting, the malicious system software directly
+In the most straightforward setting, the malicious system software directly
 modifies the page tables of the application inside the container, as shown in
 Figure~\ref{fig:active_mapping_attack}, so the virtual address intended to
 store the \texttt{errorOut} procedure is actually mapped to a DRAM page that
@@ -100,6 +100,10 @@ place, when the application's code jumps to the virtual address of the
   }
   \label{fig:active_mapping_attack}
 \end{figure}
+
+
+\subsubsection{Active Attacks Using Page Swapping}
+\label{sec:page_swapping_attacks}
 
 The most obvious active attacks on memory mapping can be defeated by tracking
 the correct virtual address for each DRAM page that belongs to a protected
@@ -133,14 +137,18 @@ Remarkably, all the steps taken by this attack are indistinguishable from
 legitimate page swapping activity, with the exception of the I/O operations
 that exchange the disk bytes that store evicted pages.
 
-The subtle attack described above can be defeated by cryptographically
-binding the contents of each page that is evicted from DRAM to the virtual
-address that the page should be mapped to. The cryptographic primitive
-(\S~\ref{sec:crypto_primitives}) used to perform the binding must obiously
-guarantee integrity. Furthermore, it must also guarantee freshness, in order
-to foil replay attacks where the system software ``undoes'' an application's
-writes by evicting one of its DRAM pages to disk and bringing in an older
-version of the same page.
+The subtle attack described in this section can be defeated by
+cryptographically binding the contents of each page that is evicted from DRAM
+to the virtual address that the page should be mapped to. The cryptographic
+primitive (\S~\ref{sec:crypto_primitives}) used to perform the binding must
+obiously guarantee integrity. Furthermore, it must also guarantee freshness, in
+order to foil replay attacks where the system software ``undoes'' an
+application's writes by evicting one of its DRAM pages to disk and bringing in
+an older version of the same page.
+
+
+\subsubsection{Active Attacks Based on TLBs}
+\label{sec:tlb_mapping_attacks}
 
 Today's multi-core architectures can be subjected to an even more subtle active
 attack, illustrated in Figure~\ref{fig:tlb_mapping_attack}, which can bypass
@@ -184,7 +192,7 @@ old page table data, because the system software did not invalidate its TLB
 entries. Assuming the TLBs are not subjected to any additional security checks,
 this attack causes the same private information leak as the previous examples.
 
-In order to avoid the last attack described in this section, the trusted
-software or hardware that implements protected containers must also ensure that
-the system software invalidates the relevant TLB entries on all the cores when
-it evicts a page from a protected container to DRAM.
+In order to avoid the attack described in this section, the trusted software or
+hardware that implements protected containers must also ensure that the system
+software invalidates the relevant TLB entries on all the cores when it evicts a
+page from a protected container to DRAM.

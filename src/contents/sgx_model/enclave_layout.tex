@@ -73,9 +73,9 @@ process and page tables~(\S~\ref{sec:paging}) as its host application. This
 minimizes the amount of changes required to add SGX support to existing system
 software. At the same time, having the page tables managed by untrusted system
 software opens up SGX to the address translation attacks described in
-\S~\ref{sec:paging_attacks}. As future sections will reveal, a good amount of
-the complexity in SGX's design can be attributed to the need to prevent these
-address translation attacks.
+\S~\ref{sec:address_translation_attacks}. As future sections will reveal, a
+good amount of the complexity in SGX's design can be attributed to the need to
+prevent these attacks.
 
 SGX's active memory mapping attacks defense mechanisms revolve around ensuring
 that each EPC page can only be mapped at a specific virtual

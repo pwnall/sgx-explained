@@ -1,0 +1,260 @@
+\subsection{EPC Page Eviction}
+\label{sec:sgx_epc_eviction}
+
+Modern OS kernels take advantage of address translation~(\S~\ref{sec:paging})
+to implement page swapping, also referred to as paging~(\S~\ref{sec:paging}).
+In a nutshell, paging allows the OS kernel to over-commit the computer's DRAM
+by evicting rarely used memory pages to a slower storage medium that is
+referred to as the disk.
+
+Paging is a key contributor to utilizing a computer's resources effectively.
+For example, a desktop system whose user runs multiple programs concurrently
+can evict memory pages allocated to inactive applications without a significant
+degradation in user experience.
+
+Unfortunately, the OS cannot be allowed to evict an enclave's EPC pages via the
+same methods that are used to implement page swapping for DRAM memory outside
+the PRM range. In the SGX threat model, enclaves do not trust the system
+software, so the SGX design offers an EPC page eviction method that can defend
+against a malicious OS that attempts any of the active address translation
+attacks described in \S~\ref{sec:address_translation_attacks}.
+
+The price of the security afforded by SGX is that an OS kernel that supports
+evicting EPC pages must use a modified page swapping implementation that
+interacts with the SGX mechanisms. Enclave authors can mostly ignore EPC
+evictions, similarly to how today's application developers can ignore the OS
+kernel's paging implementation.
+
+As illustrated in Figure~\ref{fig:sgx_page_eviction}, SGX supports evicting
+EPC pages to DRAM pages outside the PRM range. The system software is expected
+to use its existing page swapping implementation to evict the contents of these
+pages out of DRAM and onto a disk.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/sgx_page_eviction.pdf}
+  \caption{
+    SGX offers a method for the OS to evict EPC pages into non-PRM DRAM. The
+    OS can then use its standard paging feature to evict the pages out of DRAM.
+  }
+  \label{fig:sgx_page_eviction}
+\end{figure}
+
+SGX's eviction feature revolves around the \texttt{EWB} instruction, described
+in detail in \S~\ref{sec:sgx_ewb}. Essentially, \texttt{EWB} evicts an EPC page
+into a DRAM page outside the EPC and marks the EPC page as available, by
+zeroing the VALID field in the page's EPCM entry.
+
+The SGX design relies on symmetric key cryptograpy~\ref{sec:crypto_keys} to
+guarantee the privacy and integrity of the evicted EPC pages, and on
+nonces~(\S~\ref{sec:freshness_crypto}) to guarantee the freshness of the pages
+brought back into the EPC. These nonces are stored in Version Arrays~(VAs),
+covered in \S~\ref{sec:sgx_va}, which are EPC pages dedicated to nonce storage.
+
+Before an EPC page is evicted and freed up for use by other enclaves, the SGX
+implementation must ensure that no TLB has address translations associated with
+the evicted page, in order to avoid the TLB-based address translation attack
+described in \S~\ref{sec:tlb_mapping_attacks}.
+
+As explained in \S~\ref{sec:sgx_epc}, SGX leaves the system software in charge
+of managing the EPC. It naturally follows that the SGX instructions described
+in this section, which are used to implement EPC paging, are only available to
+system software, which runs at ring 0~\S~\ref{sec:rings}.
+
+
+\subsubsection{Page Eviction and the TLBs}
+\label{sec:sgx_eblock}
+
+One of the least promoted accomplishments of SGX is that it does not add any
+security checks to the memory execution units~(\S~\ref{sec:cpu_core},
+\S~\ref{sec:out_of_order}). Instead, SGX's access control checks occur after an
+address translation~(\S~\ref{sec:paging}) is performed, right before the
+translation result is written into the TLBs~(\S~\ref{sec:tlbs}). This aspect
+is generally downplayed throughout the SDM, but it becomes visible when
+explaining SGX's EPC page eviction mechanism.
+
+A full discussion of SGX's access control checks merits its own section, and is
+defered to \S~\ref{sec:xxx}. The EPC page eviction mechanisms can be explained
+using only two requirements from SGX's security model. First, when a logical
+processor exits an enclave, either via
+\texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}) or via an AEX~(\S~\ref{sec:sgx_aex}),
+its TLBs are flushed. Second, when an EPC page is deallocated from an enclave,
+all logical processors executing that enclave's code must be directed to exit
+the enclave. This is sufficient to guarantee the removal of any TLB entry
+targeting the deallocated EPC.
+
+System software can cause a logical processor to exit an enclave by sending it
+an Inter-Processor Interrupt (IPI,~\S~\ref{sec:interrupts}), which will trigger
+an AEX when received. Essentially, this is a very coarse-grained TLB shootdown.
+
+SGX does not trust system software. Therefore, before marking an EPC page's
+EPCM entry as free, the SGX implementation must ensure that the OS kernel has
+flushed all the TLBs that might contain translations for the page. Furthermore,
+performing IPIs and TLB flushes for each page eviction would add a significant
+overhead to a paging implementation, so the SGX design allows a batch of pages
+to be evicted using a single IPI / TLB flush sequence.
+
+% Enclave Page Cache Map (EPCM): SDM S 38.19
+
+The TLB flush verification logic relies on a 1-bit EPCM entry field called
+BLOCKED. As shown in Figure~\ref{fig:sgx_page_states}, the VALID and BLOCKED
+fields yield three possible EPC page states. A page is \textit{free} when both
+bits are zero, \textit{in use} when VALID is zero and BLOCKED is one, and
+\textit{blocked} when both bits are one.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=80mm]{figures/sgx_page_states.pdf}
+  \caption{
+    The VALID and BLOCKED bits in an EPC page's EPCM entry can be in one of
+    three states. \texttt{EADD} and its siblings allocate new EPC pages.
+    \texttt{EREMOVE} permanently deallocates an EPC page. \texttt{EBLOCK}
+    blocks an EPC page so it can be evicted using \texttt{EWB}.\texttt{ELDB}
+    and \texttt{ELDU} load an evicted page back into the EPC.
+  }
+  \label{fig:sgx_page_states}
+\end{figure}
+
+Blocked pages are not considered accessible to enclaves. If an address
+translation results in a blocked EPC page, the SGX implementation causes the
+translation to result in a \#PF. Furthermore, every SGX instruction makes sure
+that the EPC pages that it operates on are not blocked. For example,
+\texttt{EENTER} ensures that the TCS it is given is not blocked, that its
+enclave's SECS is not blocked, and that every page in the current SSA is not
+blocked.
+
+% Eviction of Enclave Pages: SDM S 39.5.3
+
+In order to evict a batch of EPC pages, the OS kernel must first issue
+\texttt{EBLOCK} instructions targeting them. The OS is also expected to remove
+the EPC page's mapping from page tables, but is not trusted to do so.
+
+After all the desired pages have been blocked, the OS kernel must execute an
+\texttt{ETRACK} instruction, which directs the SGX implementation to keep track
+of which logical processors have had their TLBs flushed. \texttt{ETRACK}
+requires the virtual address of an enclave's SECS~(\S~\ref{sec:sgx_secs}). If
+the OS wishes to evict a batch of EPC pages belonging to multiple enclaves, it
+must issue an \texttt{ETRACK} for each enclave.
+
+Following the \texttt{ETRACK} instructions, the OS kernel must induce enclave
+exits on all the logical processors that are executing code inside the enclaves
+that have been \texttt{ETRACK}ed. The SGX design expects that the OS will use
+IPIs to cause AEXes in the logical processors whose TLBs must be flushed.
+
+The EPC page eviction process is completed when the OS executes an \texttt{EWB}
+instruction for each EPC page to be evicted. This instruction, which will be
+fully described in \S~\ref{sec:ewb}, writes an encrypted version of the EPC
+page to be evicted into DRAM, and then frees the page by clearing the VALID and
+BLOCKED bits in its EPCM entry. Before carrying out its tasks, \texttt{EWB}
+ensures that the EPC page that it targets has been blocked, and checks the
+state set up by \texttt{ETRACK} to make sure that all the relevant TLBs have
+been flushed.
+
+Similarly to \texttt{EREMOVE}, \texttt{EWB} will only evict the EPC page
+holding an enclave's SECS if there is no other EPCM entry whose ENCLAVESECS
+field references the SECS. At the same time, as an optimization, the SGX
+implementation does not perform \texttt{ETRACK}-related checks when evicting a
+SECS. This is safe because a SECS is only evicted if the EPC has no pages
+belonging to the SECS' enclave, which implies that there isn't any TCS
+belonging to the enclave in the EPC, so no processor can be executing enclave
+code.
+
+An evicted page can be loaded back into the EPC via the \texttt{ELDU} and
+\texttt{ELDB} instructions. Both instructions start up with a free EPC page and
+a DRAM page that has the evicted contents of an EPC page, decrypt the DRAM
+page's contents into the EPC page, and restore the corresponding EPCM entry.
+The only difference between \texttt{ELDU} and \texttt{ELDB} is that the latter
+sets the BLOCKED bit in the page's EPCM entry, whereas the former leaves it
+cleared.
+
+\texttt{ELDU} and \texttt{ELDB} resemble \texttt{ECREATE} and \texttt{EADD},
+in the sense that they populate a free EPC page. Since the page that they
+operate on was free, the SGX security model predicates that no TLB entries can
+possibly target it. Therefore, these instructions do not require a mechanism
+similar to \texttt{EBLOCK} or \texttt{ETRACK}.
+
+
+\subsubsection{The Version Array (VA)}
+\label{sec:sgx_va}
+\label{sec:sgx_epa}
+
+% Version Array (VA): SDM S 38.18
+% EPC and Management of EPC Pages: SDM S 39.5, 39.5.{2,3,4,5,6}
+
+When \texttt{EWB} evicts the contents of an EPC, it creates an 8-byte
+nonce~(\S~\ref{sec:freshness_crypto}) that Intel's documentation calls a
+\textit{page version}. SGX's freshness guarantees are built on the assumption
+that nonces are stored securely, so \texttt{EWB} stores the nonce that it
+creates inside a \textit{Version Array}~(VA).
+
+Version Arrays are EPC pages that are dedicated to storing nonces generated by
+EWB. Each VA is divided into slots, and each slot is exactly large enough to
+store one nonce. Given that the size of an EPC page is 4KB, and each nonce
+occupies 8 bytes, it follows that each VA has 512 slots.
+
+% EPA: SDM S 41.3
+
+VA pages are allocated using the \texttt{EPA} instruction, which takes in the
+virtual address of a free EPC page, and turns it into a Version Array with
+empty slots. VA pages are identified by the PT\_VA type in their EPCM entries.
+Like SECS pages, VA pages have the ENCLAVEADDRESS fields in their EPCM entries
+set to zero, and cannot be accessed directly by any software, including
+enclaves.
+
+% EBLOCK, EREMOVE: SDM S 41.3
+
+Unlike the other page types discussed so far, VA pages are not associated with
+any enclave. This means they can be deallocated via \texttt{EREMOVE} without
+any restriction. However, freeing up a VA page whose slots are in use
+effectively discards the nonces in those slots, which results in losing the
+ability to load the corresponding evicted pages back into the EPC. Therefore,
+it is unlikely that a correct OS implementation will ever call \texttt{EREMOVE}
+on a VA with non-free slots.
+
+% EPA, EWB: SDM S 41.3
+
+According to the pseudo-code for \texttt{EPA} and \texttt{EWB} in the SDM, SGX
+uses the zero value to represent the free slots in a VA, implying that all the
+generated nonces have to be non-zero. This also means that \texttt{EPA}
+initializes a VA simply by zeroing the underlying EPC page. However, since
+software cannot access a VA's contents, neither the use of a special value, nor
+the value itself is architectural.
+
+
+\subsubsection{Evicting an EPC Page}
+\label{sec:sgx_ewb}
+
+Non-EPC memory can be accessed by system software, which is untrusted in the
+SGX threat model, so EWB (illustrated in Figure~\ref{fig:sgx_ewb}) encrypts and
+MACs the contents of the EPC page before storing it in untrusted memory. The
+nonces stored in VA pages prevent replay attacks where malicious system
+software would attempt to bring back an old version of an evicted EPC page.
+
+
+% Eviction of Enclave Pages: SDM S 39.5.3
+% Eviction of an SECS Page: SDM S 39.5.5
+% Eviction of a Version Array Page: SDM S 39.5.6
+
+The pages holding Version Arrays can be evicted, just like any other EPC page.
+VA pages are never accessible by software, so they can't have any TLB entries
+pointing to them. Therefore, \texttt{EWB} evicts VA pages without performing
+any \texttt{ETRACK}-related checks. The ability to evict VA pages has profound
+implications that will be discussed in \S~\ref{sec:sgx_xxx}.
+
+
+% EPA: SDM S 41.3
+
+\begin{figure}[hbt!]
+  \centering
+  \includegraphics[width=85mm]{figures/sgx_ewb.pdf}
+  \caption{
+    The data flow of the EWB instruction that evicts an EPC page. The page's
+    content is encrypted in a non-EPC RAM page. A nonce is created and saved
+    in an empty slot inside a VA page. The page's EPCM metadata and a MAC
+    are saved in a separate area in non-EPC memory.
+  }
+  \label{fig:sgx_ewb}
+\end{figure}
+
+% Loading an Enclave Page: SDM S 39.5.4
+
