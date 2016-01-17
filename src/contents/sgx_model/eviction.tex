@@ -143,21 +143,12 @@ IPIs to cause AEXes in the logical processors whose TLBs must be flushed.
 
 The EPC page eviction process is completed when the OS executes an \texttt{EWB}
 instruction for each EPC page to be evicted. This instruction, which will be
-fully described in \S~\ref{sec:ewb}, writes an encrypted version of the EPC
+fully described in \S~\ref{sec:sgx_ewb}, writes an encrypted version of the EPC
 page to be evicted into DRAM, and then frees the page by clearing the VALID and
 BLOCKED bits in its EPCM entry. Before carrying out its tasks, \texttt{EWB}
 ensures that the EPC page that it targets has been blocked, and checks the
 state set up by \texttt{ETRACK} to make sure that all the relevant TLBs have
 been flushed.
-
-Similarly to \texttt{EREMOVE}, \texttt{EWB} will only evict the EPC page
-holding an enclave's SECS if there is no other EPCM entry whose ENCLAVESECS
-field references the SECS. At the same time, as an optimization, the SGX
-implementation does not perform \texttt{ETRACK}-related checks when evicting a
-SECS. This is safe because a SECS is only evicted if the EPC has no pages
-belonging to the SECS' enclave, which implies that there isn't any TCS
-belonging to the enclave in the EPC, so no processor can be executing enclave
-code.
 
 An evicted page can be loaded back into the EPC via the \texttt{ELDU} and
 \texttt{ELDB} instructions. Both instructions start up with a free EPC page and
@@ -221,28 +212,154 @@ software cannot access a VA's contents, neither the use of a special value, nor
 the value itself is architectural.
 
 
+\subsubsection{Enclave IDs}
+\label{sec:sgx_eid}
+
+The \texttt{EWB} and \texttt{ELDU} / \texttt{ELDB} instructions use an
+\textit{enclave ID}~(EID) to identify the enclave that owns an evicted page.
+The EID has the same purpose as the ENCLAVESECS~(\S~\ref{sec:sgx_epcm}) field
+in an EPCM entry, which is also used to identify the enclave that owns an EPC
+page. This section explains the need for having two values represent the same
+concept by comparing the two values and their uses.
+
+% Enclave Page Cache Map (EPCM): SDM S 37.5.1, SDM S 38.19
+
+The SDM states that ENCLAVESECS field in an EPCM entry is used to identify the
+SECS of the enclave owning the associated EPC page, but stops short of
+describing its format. SGX instructions never expose the value of the
+ENCLAVESECS field to software so, in theory, its representation can even change
+between SGX implementations.
+
+% ENCLAVESECS compared with CR_ACTIVE_SECS
+% EENTER: TMP_SECS <- address of SECS for TCS; CR_ACTIVE_SECS <- TMP_SECS
+
+However, we will later argue that the most plausible representation for the
+ENCLAVESECS field is the physical address of the enclave's SECS. Therefore, the
+ENCLAVESECS value associated with a given enclave will change if the enclave's
+SECS is evicted from the EPC and loaded back at a different location. It
+follows that the ENCLAVESECS value is only suitable for identifying an enclave
+while its SECS remains in the EPC.
+
+% Internal CREGs: SDM S 41.1.4
+% ECREATE: SDM S 41.3
+
+According to the SDM, the EID field is a 64-bit field stored in an enclave's
+SECS. \texttt{ECREATE}'s pseudocode in the SDM reveals that an enclave's ID is
+generated when the SECS is allocated, by atomically incrementing a global
+counter. Assuming that the counter does not roll over\footnote{A 64-bit counter
+incremented at 4Ghz would roll over in slightly more than 136 years}, this
+process guarantees that every enclave created during a power cycle has a unique
+EID.
+
+Although the SDM does not specifically guarantee this, the EID field in an
+enclave's SECS does not appear to be modified by any instruction. This makes
+the EID's value suitable for identifying an enclave throughout its lifetime,
+even across evictions of its SECS page from the EPC.
+
+
 \subsubsection{Evicting an EPC Page}
 \label{sec:sgx_ewb}
 
-Non-EPC memory can be accessed by system software, which is untrusted in the
-SGX threat model, so EWB (illustrated in Figure~\ref{fig:sgx_ewb}) encrypts and
-MACs the contents of the EPC page before storing it in untrusted memory. The
-nonces stored in VA pages prevent replay attacks where malicious system
-software would attempt to bring back an old version of an evicted EPC page.
+The system software evicts an EPC page using the \texttt{EWB} instruction,
+which produces all the data needed to restore the evicted page at a later time
+via the \texttt{ELDU} instruction, as shown in Figure~\ref{fig:sgx_eviction}.
 
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/sgx_eviction.pdf}
+  \caption{
+    The \texttt{EWB} instruction outputs the encrypted contents of the
+    evicted EPC page, a subset of the fields in the page's EPCM entry, a
+    MAC tag, and a nonce. All this information is used by the \texttt{ELDB} or
+    \texttt{ELDU} instruction to load the evicted page back into the EPC, with
+    privacy, integrity and freshness guarantees.
+  }
+  \label{fig:sgx_eviction}
+\end{figure}
 
-% Eviction of Enclave Pages: SDM S 39.5.3
+% EWB: SDM S 41.3
+
+\texttt{EWB}'s output consists of an encrypted version of the evicted EPC
+page's contents, a subset of the fields in the EPCM entry corresponding to the
+page, the nonce discussed in \S~\ref{sec:sgx_va}, and a message authentication
+code~(MAC,~\S~\ref{sec:integrity_crypto}) tag. With the exception of the nonce,
+\texttt{EWB} writes its output in DRAM outside the PRM area, so the system
+software can choose to further evict it to disk.
+
+The EPC page contents is encrypted, to protect the privacy of the enclave's
+data while the page is stored in the untrusted DRAM outside the PRM range.
+Without the use of encryption, the system software could learn the contents of
+an EPC page by evicting it from the EPC.
+
+% Security Information (SECINFO): SDM S 38.11, S 38.11.{1,2}
+
+The page metadata is stored in a \textit{Page Information}~(PAGEINFO)
+structure, illustrated in Figure~\ref{fig:sgx_ewb_pageinfo}. This structure is
+similar to the PAGEINFO structure described in \S~\ref{sec:sgx_eadd} and
+depicted in Figure~\ref{fig:sgx_pageinfo}, except that the SECINFO field has
+been replaced by a PCMD field, which contains the virtual address of a
+\textit{Page Crypto Metadata}~(PCMD) structure.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=75mm]{figures/sgx_ewb_pageinfo.pdf}
+  \caption{
+    The PAGEINFO structure used by the \texttt{EWB} and \texttt{ELDU} /
+    \texttt{ELDB} instructions
+  }
+  \label{fig:sgx_ewb_pageinfo}
+\end{figure}
+
+The LINADDR field in the PAGEINFO structure is used to store the ADDRESS field
+in the EPCM entry, which indicates expected virtual address used to access the
+page. The PCMD structure embeds the \textit{Security Information}~(SECINFO)
+described in \S~\ref{sec:sgx_eadd}, which is used to store the page type~(PT)
+and the access permission flags~(R, W, X) in the EPCM entry. The PCMD structure
+also stores the enclave's ID~(EID,~\S~\ref{sec:sgx_eid}). These fields are
+later used by \texttt{ELDU} or \texttt{ELDB} to populate the EPCM entry for the
+EPC page that is loaded back in.
+
+The metadata described above is stored unencrypted, so the OS has the option of
+using the information inside as-is for its own bookkeeping. This has no
+negative impact on security, because the metadata is not confidential. In fact,
+with the exception of the enclave ID, all the metadata fields are specified by
+the system software when \texttt{ECREATE} is called. The enclave ID is only
+useful for identifying the enclave that the EPC page belongs to, and the system
+software already has this information as well.
+
+Asides from the metadata described above, the PCMD structure also stores the
+MAC tag generated by \texttt{EWB}. The MAC tag covers the authenticity of the
+EPC page contents, the metadata, and the nonce. The MAC tag is checked by
+\texttt{ELDU} and \texttt{ELDB}, which will only load an evicted page back into
+the EPC if the MAC verification confirms the authenticity of the page data,
+metadata, and nonce. This security check protects against the page swapping
+attacks described in \S~\ref{sec:page_swapping_attacks}.
+
 % Eviction of an SECS Page: SDM S 39.5.5
+
+Similarly to \texttt{EREMOVE}, \texttt{EWB} will only evict the EPC page
+holding an enclave's SECS if there is no other EPCM entry whose ENCLAVESECS
+field references the SECS. At the same time, as an optimization, the SGX
+implementation does not perform \texttt{ETRACK}-related checks when evicting a
+SECS. This is safe because a SECS is only evicted if the EPC has no pages
+belonging to the SECS' enclave, which implies that there isn't any TCS
+belonging to the enclave in the EPC, so no processor can be executing enclave
+code.
+
 % Eviction of a Version Array Page: SDM S 39.5.6
 
 The pages holding Version Arrays can be evicted, just like any other EPC page.
 VA pages are never accessible by software, so they can't have any TLB entries
 pointing to them. Therefore, \texttt{EWB} evicts VA pages without performing
 any \texttt{ETRACK}-related checks. The ability to evict VA pages has profound
-implications that will be discussed in \S~\ref{sec:sgx_xxx}.
+implications that will be discussed in \S~\ref{sec:sgx_version_trees}.
 
-
-% EPA: SDM S 41.3
+\texttt{EWB}'s dataflow, shown in detail in Figure~\ref{fig:sgx_ewb}, has an
+aspect that can be confusing to OS developers. The instruction reads the
+virtual address of the EPC page to be evicted from a register (RBX) and writes
+it to the LINADDR field of the PAGEINFO structure that it is provded. The
+separate input (RBX) could have been removed by having the EPC page's address
+be provided in the LINADDR field.
 
 \begin{figure}[hbt!]
   \centering
@@ -258,3 +375,9 @@ implications that will be discussed in \S~\ref{sec:sgx_xxx}.
 
 % Loading an Enclave Page: SDM S 39.5.4
 
+
+\subsubsection{Version Trees}
+\label{sec:sgx_version_trees}
+
+The SGX design allows VA pages to be evicted from the EPC, just like enclave
+pages.

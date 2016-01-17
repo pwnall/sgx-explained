@@ -11,27 +11,40 @@ summarizes the primitives covered in this section.
 
 \begin{table}[hbt]
   \centering
+  \begin{tabular}{| l | l |}
+  \hline
+  \textbf{Guarantee} & \textbf{Primitive} \\
+  \hline
+  Privacy & \textit{Encryption} \\
+  \hline
+  Integrity & \textit{MAC} / \textit{Signatures} \\
+  \hline
+  Freshness & \textit{Nonces} + integrity \\
+  \hline
+  \end{tabular}
+  \caption{
+    Desirable security guarantees and primitives that provide them
+  }
+  \label{fig:crypto_primitives}
+\end{table}
+
+\begin{table}[hbt]
+  \centering
   \begin{tabular}{| l | l | l |}
   \hline
   \textbf{Guarantee} & \textbf{Symmetric} & \textbf{Asymmetric} \\
                      & \textbf{Keys} & \textbf{Keys} \\
   \hline
-  Privacy & \textit{Encryption} & \textit{Encryption} \\
-          & AES-GCM, & RSA with \\
+  Privacy & AES-GCM, & RSA with \\
           & AES-CTR  & PKCS \#1 v2.0 \\
   \hline
-  Integrity & \textit{HMAC},   & \textit{Signatures} \\
-            & \textit{Authenticated} & \\
-            & \textit{encryption} & \\
-            & HMAC-AES-SHA & DSS-RSA, \\
+  Integrity & HMAC-SHA & DSS-RSA, \\
             & AES-GCM & DSS-ECC \\
-  \hline
-  Freshness & \textit{Nonces} + & \textit{Nonces} + \\
-            & integrity & integrity \\
   \hline
   \end{tabular}
   \caption{
-    Summary of cryptographic primitives
+    Popular cryptographic primitives that are considered to be secure against
+    today's adversaries
   }
   \label{fig:crypto_primitives}
 \end{table}
@@ -299,16 +312,39 @@ states that an adversary cannot produce input data corresponding to a given
 hash output. The most popular secure hashing function at the time of this
 writing is the \textit{Secure Hashing Algorithm}~(SHA)~\cite{eastlake2001sha1}.
 
-In the symmetric key setting, integrity guarantees are typically obtained using
-a \textit{Hash Message Authentication Code}~(HMAC)~\cite{krawczyk1997hmac}
-construction built on top of a secure hash function, such as SHA. The message
-sender runs the HMAC algorithm and sends the output \textit{HMAC tag} along
-with the original message, as shown in Figure~\ref{fig:symmetric_hmac}. The
-message receiver verifies that the received HMAC value is the same as the
-output of running the HMAC algorithm on the message. HMAC algorithms inherit
-the pre-image resistance property from their underlying secure hash functions,
-and have the additional property that an adversary cannot produce the correct
-HMAC for a message without the secret key.
+In the symmetric key setting, integrity guarantees are obtained using an
+\textit{Message Authentication Code}~(MAC) cryptosystem, illustrated in
+Figure~\ref{fig:symmetric_mac}. The sender uses a MAC algorithm that reads in a
+symmetric key and a variable-legnth message, and produces a fixed-length, short
+\textit{MAC tag}. The receiver provides the original message, the symmetric
+key, and the MAC tag to a MAC verification algorithm that checks the
+authenticity of the message.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/symmetric_mac.pdf}
+  \caption{
+    In the symmetric key setting, integrity is assured by computing a
+    Message Authentication Code (MAC) tag and transmitting it over the network
+    along the message. The receiver feeds the MAC tag into a verification
+    algorithm that checks the message's authenticity.
+  }
+  \label{fig:symmetric_mac}
+\end{figure}
+
+The key property of MAC cryptosystems is that an adversary cannot produce a
+MAC tag that will validate a message without the secret key.
+
+Many MAC cryptosystems do not have a separate MAC verification algorithm.
+Instead, the receiver checks the authenticity of the MAC tag by running the
+same algorithm as the sender to compute the expected MAC tag for the received
+message, and compares the output with the MAC tag received from the network.
+
+This is the case for the
+\textit{Hash Message Authentication Code}~(HMAC)~\cite{krawczyk1997hmac}
+generic construction, whose operation is illustrated in
+Figure~\ref{fig:symmetric_hmac}. HMAC can use any secure hash function, such as
+SHA, to build a MAC cryptosystem.
 
 \begin{figure}[hbt]
   \centering
