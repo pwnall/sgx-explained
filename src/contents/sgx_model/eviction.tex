@@ -61,6 +61,16 @@ of managing the EPC. It naturally follows that the SGX instructions described
 in this section, which are used to implement EPC paging, are only available to
 system software, which runs at ring 0~\S~\ref{sec:rings}.
 
+In today's software stacks~(\S~\ref{sec:rings}), only the OS kernel implements
+page swapping in order to support the over-committing of DRAM. The hypervisor
+is only used to partition the computer's physical resources between operating
+systems. Therefore, this section is written with the expectation that the OS
+kernel will also take on the responsibility of EPC page swapping. For
+simplicity, we often use the term ``OS kernel'' instead of ``system software''.
+The reader should be aware that the SGX design does not preclude a system where
+the hypervisor implements its own EPC page swapping. Therefore, ``OS kernel''
+should really be read as ``the system software that performs EPC paging''.
+
 
 \subsubsection{Page Eviction and the TLBs}
 \label{sec:sgx_eblock}
@@ -117,11 +127,14 @@ bits are zero, \textit{in use} when VALID is zero and BLOCKED is one, and
 
 Blocked pages are not considered accessible to enclaves. If an address
 translation results in a blocked EPC page, the SGX implementation causes the
-translation to result in a \#PF. Furthermore, every SGX instruction makes sure
-that the EPC pages that it operates on are not blocked. For example,
-\texttt{EENTER} ensures that the TCS it is given is not blocked, that its
-enclave's SECS is not blocked, and that every page in the current SSA is not
-blocked.
+translation to result in a Page Fault~(\#PF,~\S~\ref{sec:faults}). This
+guarantees that once a page is blocked, the CPU will not create any new TLB
+entries pointing to it.
+
+Furthermore, every SGX instruction makes sure that the EPC pages that it
+operates on are not blocked. For example, \texttt{EENTER} ensures that the TCS
+it is given is not blocked, that its enclave's SECS is not blocked, and that
+every page in the current SSA is not blocked.
 
 % Eviction of Enclave Pages: SDM S 39.5.3
 
@@ -373,8 +386,46 @@ be provided in the LINADDR field.
   \label{fig:sgx_ewb}
 \end{figure}
 
-% Loading an Enclave Page: SDM S 39.5.4
 
+\subsubsection{Loading an Evicted Page Back into EPC}
+
+% AEX Operational Detail: SDM S 40.4.1
+
+After an EPC page belonging to an enclave is evicted, any attempt to access the
+page from enclave code will result in a Page Fault~(\#PF,~\S~\ref{sec:faults}).
+The \#PF will cause the logical processor to exit enclave mode via
+AEX~(\S~\ref{sec:aex}), and then invoke the OS kernel's page fault handler.
+
+Page faults receive special handling from the AEX process. While leaving the
+enclave, the AEX logic specifically checks if the hardware exception that
+triggerred the AEX was \#PF. If that is the case, the AEX implementation clears
+the least significant 12 bits of the CR2 register, which stores the virtual
+address whose translation caused a page fault.
+
+In general, the OS kernel's page handler needs to be able to extract the
+virtual page number~(VPN,~\S~\ref{sec:paging_vpn}) from CR2, so that it knows
+which memory page needs to be loaded back into DRAM. The OS kernel may also be
+able to use the 12 least signficant address bits, which are not part of the
+VPN, to better predict the application software's memory access patterns.
+However, unlike the bits that make up the VPN, the bottom 12 bits are not
+absolutely necessary for the fault handler to carry out its job. Therefore,
+SGX's AEX implementation clears these 12 bits, in order to limit the amount of
+information that is learned by the page fault handler.
+
+% Loading an Enclave Page: SDM S 39.5.4
+% TODO: page fault -> AEX -> ELDB / ELDU
+
+When the OS page fault handler examines the address in the CR2 register and
+determines that the faulting address is inside the EPC, it is generally
+expected to use the \texttt{ELDU} or \texttt{ELDB} instruction to load the
+evicted page back into the EPC. If the outputs of \texttt{EWB} have been
+evicted from DRAM to a slower storage medium, the OS kernel will have to read
+the outputs back into DRAM before invoking \texttt{ELDU} / \texttt{ELDB}.
+
+\texttt{ELDU} and \texttt{ELDB} verify the MAC tag produced by \texttt{EWB},
+described in \S~\ref{sec:sgx_ewb}. This prevents the OS kernel from performing
+the page swapping-based active address translation attack described in
+\S~\ref{sec:page_swapping_attacks}.
 
 
 \subsubsection{Eviction Trees}
