@@ -352,7 +352,7 @@ The pages holding Version Arrays can be evicted, just like any other EPC page.
 VA pages are never accessible by software, so they can't have any TLB entries
 pointing to them. Therefore, \texttt{EWB} evicts VA pages without performing
 any \texttt{ETRACK}-related checks. The ability to evict VA pages has profound
-implications that will be discussed in \S~\ref{sec:sgx_version_trees}.
+implications that will be discussed in \S~\ref{sec:sgx_eviction_trees}.
 
 \texttt{EWB}'s dataflow, shown in detail in Figure~\ref{fig:sgx_ewb}, has an
 aspect that can be confusing to OS developers. The instruction reads the
@@ -376,8 +376,44 @@ be provided in the LINADDR field.
 % Loading an Enclave Page: SDM S 39.5.4
 
 
-\subsubsection{Version Trees}
-\label{sec:sgx_version_trees}
+
+\subsubsection{Eviction Trees}
+\label{sec:sgx_eviction_trees}
 
 The SGX design allows VA pages to be evicted from the EPC, just like enclave
-pages.
+pages. When a VA page is evicted from EPC, all the nonces stored by the VA
+slots become inaccessible to the processor. Therefore, the evicted pages
+associated with these nonces cannot be restored by \texttt{ELDB} until the
+OS loads the VA page back into the EPC.
+
+In other words, an evicted page depends on the VA page storing its nonce, and
+cannot be loaded back into the EPC until the VA page is loaded back in as well.
+The dependency graph created by this relationship is a forest of
+\texttt{eviction trees}. An eviction tree, shown in
+Figure~\ref{fig:sgx_eviction_tree}, has enclave EPC pages as leaves, and VA
+pages as inner nodes. A page's parent is the VA page that holds its nonce.
+Since \texttt{EWB} always outputs a nonce in a VA page, the root node of each
+eviction tree is always a VA page in the EPC.
+
+\begin{figure}[hbt!]
+  \centering
+  \includegraphics[width=80mm]{figures/sgx_eviction_tree.pdf}
+  \caption{
+    A version tree formed by evicted VA pages and enclave EPC pages. The
+    enclave pages are leaves, and the VA pages are inner nodes. The OS controls
+    the tree's shape, which impacts the performance of evictions, but not their
+    correctness.
+  }
+  \label{fig:sgx_eviction_tree}
+\end{figure}
+
+A straightforward inductive argument shows that when an OS wishes to load an
+evicted enclave page back into the EPC, it needs to load all the VA pages on
+the path from the eviction tree's root to the leaf corresponding to the enclave
+page. Therefore, the number of page loads required to satisfy a page fault
+inside the EPC depends on the shape of the eviction tree that contains the
+page.
+
+The SGX design leaves the OS in complete control of the shape of the eviction
+trees. This has no negative impact on security, as the tree shape only impacts
+the performance of the eviction scheme, and not its correctness.

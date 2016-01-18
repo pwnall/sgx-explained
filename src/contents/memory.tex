@@ -150,24 +150,6 @@ that the UC option was provided in order to attempt to mitigate against some
 cache-timing attacks.
 
 
-
-SECS
-
-% Internal CREGs: SDM S 41.1.4
-% ECREATE: SDM S 39.1.1, S 41.3
-% EWB: SDM S 41.3
-
-The most important field in the SECS is the 64-bit \textit{enclave ID} (EID),
-which is assigned by \texttt{ECREATE}. The EID identifies an enclave's pages in
-the EPCM, so it must be unique across all the computer's active enclaves.
-According to the ECREATE pseudo-code in the SDM, enclave IDs are allocated
-using an atomic counter. An enclave's EID is generally hidden, as most SGX
-instructions use the address of the enclave's SECS page as the enclave's
-handler. However, the system software can learn an enclave's EID by evicting
-one of its EPC pages (\S~\ref{sec:sgx_ewb}).
-
-
-
 Currently, the main implication of ELRANGE is that all the SGX data structures
 are initialized with enclave virtual addresses specified relatively to
 BASEADDR. Furthermore, BASEADDR is not a part of the enclave's measurement
@@ -178,15 +160,6 @@ impacting the enclave's measurement hash.
 Having ELRANGE follow the memory type range constraints provides a cheap way to
 verify if a virtual address belongs to the address, in hardware. This comes in
 handy when EENTER has to disable all the hardware breakpoints inside ELRANGE.
-
-An SSA essentially consists of the values of the general-purpose registers
-(GPRs), and the result of running XSAVE (\S~\ref{sec:registers}) using the
-feature mask specified in the ATTRIBUTES.XFRM field in the enclave's SECS.
-
-Last, the CSSA field in each TCS indicates the next available SSA. When a
-logical processor needs to preempt enclave code, it uses the SSA indicated by
-the CSSA field, and increments it. The CPU refuses to execute enclave code
-using a TCS where no SSA is available (CSSA $\ge$ NSSA).
 
 
 % Access Control Requirements: SDM S 38.3
