@@ -221,6 +221,9 @@ exception handler, as shown in Figure~\ref{fig:sgx_aex_setup}.
   \label{fig:sgx_aex_setup}
 \end{figure}
 
+% AEX Flow: SDM S 40.4
+% AEX Operational Detail: SDM S 40.4.1
+
 The AEX saves the enclave code's execution context~(\S~\ref{sec:registers}),
 restores the state saved by \texttt{EENTER}, and sets up the processor
 registers so that the system software's hardware exception handler will return
@@ -255,6 +258,8 @@ model, the system software is not trusted by enclaves. Therefore, the AEX step
 erases any secrets that may exist in the execution state by resetting all its
 registers to predefined values.
 
+% State Saving by AEX: SDM S 40.2
+
 Before the enclave's execution state is reset, it is backed up inside the
 current SSA. Specifically, an AEX backs up the general purpose
 registers~(GPRs,~\S~\ref{sec:registers}) in the GPRSGX area in the SSA, and
@@ -264,6 +269,8 @@ SECS. As each SSA is entirely stored in EPC pages allocated to the enclave, the
 system software cannot read or tamper with the backed up execution state. When
 an SSA receives the enclave's execution state, it is marked as used by
 incrementing the CSSA field in the current TCS.
+
+% Compatible Switch to the Exiting Stack of AEX: SDM S 40.1
 
 After clearing the execution context, the AEX process sets RSP and RBP to the
 values saved by \texttt{EENTER} in the current SSA, and sets RIP to the value
