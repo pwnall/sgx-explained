@@ -6,8 +6,9 @@ interested in cryptographic primitives that guarantee privacy, integrity, and
 freshness, and we treat these primitives as black boxes, focusing on their use
 in larger systems. \cite{katz2014crypto} covers the mathematics behind
 cryptography, while \cite{ferguson2011crypto} covers the topic of building
-systems out of cryptographic primitives. Table~\ref{fig:crypto_primitives}
-summarizes the primitives covered in this section.
+systems out of cryptographic primitives. Tables \ref{fig:crypto_names}
+and \ref{fig:crypto_primitives} summarize the primitives covered in this
+section.
 
 \begin{table}[hbt]
   \centering
@@ -25,7 +26,7 @@ summarizes the primitives covered in this section.
   \caption{
     Desirable security guarantees and primitives that provide them
   }
-  \label{fig:crypto_primitives}
+  \label{fig:crypto_names}
 \end{table}
 
 \begin{table}[hbt]
@@ -38,7 +39,7 @@ summarizes the primitives covered in this section.
   Privacy & AES-GCM, & RSA with \\
           & AES-CTR  & PKCS \#1 v2.0 \\
   \hline
-  Integrity & HMAC-SHA & DSS-RSA, \\
+  Integrity & HMAC-SHA-2 & DSS-RSA, \\
             & AES-GCM & DSS-ECC \\
   \hline
   \end{tabular}
@@ -309,8 +310,32 @@ Many cryptosystems that provide integrity guarantees are built upon
 amount of input data and produce a small fixed-size output. Secure hash
 functions have a few guarantees, such as \textit{pre-image resistance}, which
 states that an adversary cannot produce input data corresponding to a given
-hash output. The most popular secure hashing function at the time of this
-writing is the \textit{Secure Hashing Algorithm}~(SHA)~\cite{eastlake2001sha1}.
+hash output.
+
+At the time of this writing, the most popular secure hashing function is the
+\textit{Secure Hashing Algorithm}~(SHA)~\cite{eastlake2001sha1}. However, due
+to security issues in SHA-1~\cite{stevens2015sha1attack}, new software is
+recommended to use at least 256-bit SHA-2~\cite{fips2015shs} for secure
+hashing.
+
+The SHA hash functions are members of a large family of \textit{block hash
+functions} that consume their input in fixed-size message blocks, and use a
+fixed-size internal state. A block hash function is used as shown in
+Figure~\ref{fig:block_hash_operation}. An \textsc{initialize} algorithm is
+first invoked to set the internal state to its initial values. An
+\textsc{extend} algorithm is executed for each message block in the input.
+After the entire input is consumed, a \textsc{finalize} algorithm produces the
+hash output from the internal state.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=70mm]{figures/block_hash_operation.pdf}
+  \caption{
+    A block hash function operates on fixed-size message blocks and uses a
+    fixed-size internal state.
+  }
+  \label{fig:block_hash_operation}
+\end{figure}
 
 In the symmetric key setting, integrity guarantees are obtained using an
 \textit{Message Authentication Code}~(MAC) cryptosystem, illustrated in

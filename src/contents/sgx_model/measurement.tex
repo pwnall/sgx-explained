@@ -1,0 +1,239 @@
+\subsection{SGX Enclave Measurement}
+\label{sec:sgx_measurement}
+\label{sec:sgx_mrenclave}
+
+SGX implements a software attestation scheme that follows the general
+principles outlined in \S~\ref{sec:generic_software_attestation}. For the
+purposes of this section, the most relevant principle is that a remote party
+authenticates an enclave based on its measurement, which is intended to
+identify the software that is executing inside the enclave. The remote party
+compares the enclave measurement reported by the trusted hardware with an
+expected measurement, and only proceeds if the two values match.
+
+\S~\ref{sec:sgx_enclave_lifecycle} explains that an SGX enclave is built using
+the \texttt{ECREATE}~(\S~\ref{sec:sgx_ecreate}),
+\texttt{EADD}~(\S~\ref{sec:sgx_eadd}) and \texttt{EEXTEND} instructions.
+After the enclave is initialized via
+\texttt{EINIT}~(\S~\ref{sec:sgx_einit_overview}) the instructions mentioned
+above cannot be used anymore. As the SGX measurement scheme follows the
+principles outlined in \S~\ref{sec:generic_measurement}, the measurement of an
+SGX enclave is obtained by computing a secure
+hash~(\S~\ref{sec:integrity_crypto}) over the inputs to the \texttt{ECREATE},
+\texttt{EADD} and \texttt{EEXTEND} instructions used to create the enclave and
+load the initial code and data into its memory. \texttt{EINIT} finalizes the
+hash that represents the enclave's measurement.
+
+Along with the enclave's contents, the enclave author is expected to specify
+the sequence of instructions that should be used in order to create an enclave
+whose measurement will match the expected value used by the remote party in the
+software attestation process. The \texttt{.so} and \texttt{.dll} dynamically
+loaded library file formats, which are SGX's intended enclave delivery methods,
+already include informal specifications for loading algorithms. We expect the
+informal loading specifications to serve as the starting points for
+specifications that prescribe the exact sequences of SGX instructions that
+should be used to create enclaves from \texttt{.so} and \texttt{.dll} files.
+
+As argued in \S~\ref{sec:generic_measurement}, an enclave's measurement is
+computed using a secure hashing algorithm, so the system software can only
+build an enclave that matches an expected measurement by following the exact
+sequence of instructions specified by the enclave's author.
+
+% SGX Enclave Control Structure (SECS): SDM S 38.7, S 38.7.1
+
+The SGX design uses the 256-bit SHA-2~\cite{fips2015shs} secure hash function
+to compute its measurements. SHA-2 is a block hash
+function~(\S~\ref{sec:integrity_crypto}) that operates on 64-byte blocks, uses
+a 32-byte internal state, and produces a 32-byte output. Each enclave's
+measurement is stored in the MRENCLAVE field of the enclave's SECS. The 32-byte
+field stores the internal state and final output of the 256-bit SHA-2 secure
+hash function.
+
+
+\subsubsection{Measuring \texttt{ECREATE}}
+
+% ECREATE: SDM S 41.3
+
+The \texttt{ECREATE} instruction, overviewed in \S~\ref{sec:sgx_ecreate},
+first initializes the MRENCLAVE field in the newly created SECS using the
+256-bit SHA-2 initialization algorithm, and then extends the hash with
+the 64-byte block depicted in Table~\ref{fig:ecreate_mrenclave}.
+
+\begin{table}[hbt]
+  \centering
+  \begin{tabularx}{\columnwidth}{| r | r | X |}
+  \hline
+  \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
+  \hline
+  0 & 8 & "ECREATE\textbackslash{}0" \\
+  \hline
+  8 & 8 & SECS.SSAFRAMESIZE (\S~\ref{sec:sgx_ssa}) \\
+  \hline
+  16 & 8 & SECS.SIZE (\S~\ref{sec:sgx_elrange}) \\
+  \hline
+  32 & 8 & 32 zero (0) bytes \\
+  \hline
+  \end{tabularx}
+  \caption{
+    64-byte block extended into MRENCLAVE by \texttt{ECREATE}
+  }
+  \label{fig:ecreate_mrenclave}
+\end{table}
+
+The enclave's measurement does not include the BASEADDR field. The omission is
+intentional, as it allows the system software to load an enclave at any virtual
+address inside a host process that satisfies the ELRANGE
+restrictions~(\S~\ref{sec:sgx_elrange}), without changing the enclave's
+measurement. This feature can be combined with a compiler that generates
+position-independent enclave code to obtain relocatable enclaves.
+
+The enclave's measurement includes the \texttt{SSAFRAMESIZE} field, which
+guarantees that the SSAs~\ref{sec:sgx_ssa} created by AEX and used by
+\texttt{EENTER}~(\S~\ref{sec:sgx_eenter}) and
+\texttt{ERESUME}~(\S~\ref{sec:sgx_eresume}) have the size that is expected by
+the enclave's author. Leaving this field out of an enclave's measurement would
+allow a malicious enclave loader to attempt to attack the enclave's security
+checks by specifying a bigger SSAFRAMESIZE than the enclave's author intended,
+which could cause the SSA contents written by an AEX to overwrite the enclave's
+code or data.
+
+The enclave's measurement does not include the ATTRIBUTES field in the SECS.
+However, the SGX software attestation definitely needs to cover the ATTRIBUTES
+field, and especially its XFRM sub-field~(\S~\ref{sec:sgx_ssa}) that decides
+the value of XCR0~(\S~\ref{sec:registers}) while the enclave's code is
+executing, and therefore determines the extended architectural features that
+are used by the enclave. If XFRM is not covered, a malicious enclave loader
+could attempt to subvert an enclave's security checks by setting XFRM to a
+value that enables architectural extensions which change the semantics of
+instructions used by the enclave, but still produces an \texttt{XSAVE} output
+that fits in SSAFRAMESIZE.
+
+As mentioned above, the ATTRIBUTES field is not included in the enclave's
+measurement. Instead, it is included directly in the information that is
+covered by the attestation signature, which will be discussed in
+\S~\ref{sec:sgx_attestation_signature}.
+
+
+\subsubsection{Measuring \texttt{EADD}}
+
+% EADD and EEXTEND Interaction: SDM S 39.1.1
+% EADD: SDM S 41.3
+
+The \textit{EADD} instruction, described in \S~\ref{sec:sgx_eadd}, extends the
+SHA-2 hash in MRENCLAVE with the 64-byte block shown in
+Table~\ref{fig:eadd_mrenclave}.
+
+\begin{table}[hbt]
+  \centering
+  \begin{tabularx}{\columnwidth}{| r | r | X |}
+  \hline
+  \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
+  \hline
+  0 & 8 &
+  "EADD\textbackslash{}0\textbackslash{}0\textbackslash{}0\textbackslash{}0" \\
+  \hline
+  8 & 8 & PAGEINFO.LINADDR \\
+  \hline
+  16 & 48 & SECINFO (first 48 bytes) \\
+  \hline
+  \end{tabularx}
+  \caption{
+    64-byte block extended into MRENCLAVE by \texttt{EADD}
+  }
+  \label{fig:eadd_mrenclave}
+\end{table}
+
+The address included in the measurement is the address where the
+\texttt{EADD}ed page is expected to be mapped in the enclave's virtual address
+space. This ensures that the system software sets up the enclave's virtual
+memory layout according to the enclave author's specifications. If a malicious
+enclave loader attempts to set up the enclave's layout incorrectly, perhaps in
+order to mount an active address translation
+attack~(\S~\ref{sec:memory_mapping_attacks}), the loaded enclave's measurement
+will differ from the measurement expected by the enclave's author.
+
+The virtual address of the newly created page is measured relatively to the
+start of the enclave's ELRANGE. In other words, the value included in the
+measurement is LINADDR - BASEADDR. This makes the enclave's measurement
+invariant to BASEADDR changes, which is desirable for relocatable enclaves.
+Measuring the relative addresses still preserves all the information about the
+memory layout inside ELRANGE, and therefore has no negative security impact.
+
+\texttt{EADD} also measures the first 48 bytes of the SECINFO
+structure~(\S~\ref{sec:sgx_eadd}) provided to \texttt{EADD}, which contains the
+page type (PT) and access permissions (R, W, X) field values used to initialize
+the page's EPCM entry. By the same argument as above, including these values in
+the measurement guarantees that the memory layout built by the system software
+loading the enclave matches the specifications of the enclave author.
+
+The EPCM field values mentioned above take up less than one byte in the SECINFO
+structure, and the rest of the bytes are reserved and expected to be
+initialized to zero. This leaves plenty of expansion room for future SGX
+features.
+
+
+\subsubsection{Measuring \texttt{EEXTEND}}
+
+The most notable omission from Table~\ref{fig:eadd_mrenclave} is the data used
+to initialize the newly created EPC page. Therefore, \texttt{EADD}'s
+measurements can guarantee, for example, that an enclave's memory layout
+consists of three executable pages followed by five writable data pages.
+However, the measurements don't cover the code or data loaded in these pages.
+
+% EEXTEND: SDM S 41.3
+
+This gap is filled by the \texttt{EEXTEND} instruction, which exists solely for
+the reason of measuring data loaded inside the enclave. The instruction reads
+in a virtual address, and extends the enclave's measurement hash with the
+five 64-byte blocks in Table~\ref{fig:eextend_mrenclave}, which have the effect
+of guaranteeing the contents of a 256-byte chunk of data in the enclave's
+memory.
+
+\begin{table}[hbt]
+  \centering
+  \begin{tabularx}{\columnwidth}{| r | r | X |}
+  \hline
+  \textbf{Offset} & \textbf{Size} & \textbf{Description}\\
+  \hline
+  0 & 8 & "EEXTEND\textbackslash{}0" \\
+  \hline
+  8 & 8 & ENCLAVEOFFSET \\
+  \hline
+  16 & 48 & 48 zero (0) bytes \\
+  \hline
+  \hline
+  64 & 64 & bytes 0 - 64 in the chunk \\
+  \hline
+  \hline
+  128 & 64 & bytes 64 - 128 in the chunk \\
+  \hline
+  \hline
+  192 & 64 & bytes 128 - 192 in the chunk \\
+  \hline
+  \hline
+  256 & 64 & bytes 192 - 256 in the chunk \\
+  \hline
+  \end{tabularx}
+  \caption{
+    64-byte blocks extended into MRENCLAVE by \texttt{EEXTEND}
+  }
+  \label{fig:eextend_mrenclave}
+\end{table}
+
+It is essential that the message blocks used by \texttt{EEXTEND} include the
+address of the 256-byte chunk, in addition to the contents of the data chunk.
+If the address were not included, a malicious enclave loader could mount the
+memory mapping attack described in \S~\ref{sec:memory_mapping_attacks} and
+illustrated in Figure~\ref{fig:active_mapping_attack}. The malicious loader
+would \texttt{EADD} the \texttt{errorOut} page contents at the virtual address
+intended for \texttt{disclose}, \texttt{EADD} the \texttt{disclose} page
+contents at the virtual address intended for \texttt{errorOut}, and then
+\texttt{EEXTEND} the pages in the wrong order. If \texttt{EEXTEND} would not
+include the address of the data chunk that is measured, the steps above would
+yield the same measurement as the correctly constructed enclave.
+
+
+\subsubsection{Measuring \texttt{EINIT}}
+
+% EINIT: SDM S 41.3
+
+

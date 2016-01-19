@@ -21,6 +21,9 @@ trusted hardware platform follow directly from the design choices outlined
 above, so a good understanding of attestation is a prerequisite to discussing
 the differences between existing platforms.
 
+
+\subsubsection{Authenticated Key Agreement}
+
 Software attestation can be combined with a key agreement
 protocol~(\S~\ref{sec:key_agreement}), as software attestation provides the
 authentication required the key agreement protocol. The resulting protocol can
@@ -75,3 +78,60 @@ that it expects to communicate with. Having checked all the links in the
 attestation chain, the verifier has authenticated the other party in the key
 exchange, and is assured that it now shares a secret with the software that it
 expects, running in an isolated container on hardware that it trusts.
+
+
+\subsubsection{The Role of Software Measurement}
+\label{sec:generic_measurement}
+
+The measurement that identifies the software inside a secure container is
+always computed using a secure hashing
+algorithm~(\S~\ref{sec:integrity_crypto}). Trusted hardware designs differ in
+their secure hash function choices, and in the data provided to the hash
+function. However, all the designs share the principle that each step taken to
+build a secure container contributes data to its measurement hash.
+
+The philosophy behind software attestation is that the computer's owner can
+load any software she wishes in a secure container. However, the computer owner
+is assumed to have an incentive to participate in a distributed system where
+the secure container built by her is authenticated in software attestation.
+Without the requirement to undergo software attestation, the computer owner can
+build any container without constraints, which would make it impossible to
+reason about the security properties of the software inside the container.
+
+By the argument above, a trusted hardware design based on software attestation
+must assume that each container is involved in software attestation, and that
+the remote party will refuse to interact with a container whose reported
+measurement does not match the expected value set by the distributed system's
+author.
+
+For example, a cloud infrastructure provider should be able to use the secure
+containers provided by trusted hardware to run any software she wishes on her
+computers. However, the provider makes money by renting her infrastructure to
+customers. If security savvy customers are only willing to rent containers
+provided by trusted hardware, and use software attestation to authenticate the
+containers that they use, the cloud provider will have a strong financial
+incentive to build the customers' containers according to their specifications,
+so that the containers pass the software attestation.
+
+A container's measurement is computed using a secure hashing algorithm, so the
+only method of building a container that matches an expected measurement is to
+follow the exact sequence of steps specified by the distributed system's
+author. The cryptographic properties of the secure hash function guarantee that
+if the computer's owner strays in any way from the prescribed sequence of
+steps, the measurement of the created container will not match the value
+expected by the distributed system's author, so the container will be rejected
+by the software attestation process.
+
+Therefore, it makes sense to state that a trusted hardware design's measurement
+scheme guarantees that a property has a certain value in a secure container.
+The precise meaning of the phrase is that the property's value determines the
+the data used to compute the container's measurement, so an expected
+measurement hash effectively specifies an expected value for the property. The
+correct use of software attestation in a distributed system will cause all
+containers that are allowed to participate in the system to have the desired
+value for the given property.
+
+For example, the measuring scheme used by trusted hardware designed for cloud
+infrastructure should guarantee that the container's memory was initialized
+using the contents desired by the customer. This contents is often referred to
+as an image.

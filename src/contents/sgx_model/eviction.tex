@@ -394,7 +394,7 @@ be provided in the LINADDR field.
 After an EPC page belonging to an enclave is evicted, any attempt to access the
 page from enclave code will result in a Page Fault~(\#PF,~\S~\ref{sec:faults}).
 The \#PF will cause the logical processor to exit enclave mode via
-AEX~(\S~\ref{sec:aex}), and then invoke the OS kernel's page fault handler.
+AEX~(\S~\ref{sec:sgx_aex}), and then invoke the OS kernel's page fault handler.
 
 Page faults receive special handling from the AEX process. While leaving the
 enclave, the AEX logic specifically checks if the hardware exception that

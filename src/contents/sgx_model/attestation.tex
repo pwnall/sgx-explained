@@ -1,4 +1,53 @@
 \subsection{SGX Software Attestation}
 \label{sec:sgx_attestation}
 
+The software attestation scheme implemented by SGX follows the principles
+outlined in \S~\ref{sec:generic_software_attestation}. An SGX-enabled processor
+computes a measurement of the code and data that is loaded in each enclave,
+which is similar to the measurement computed by the TPM~(\S~\ref{sec:tpm}). The
+software inside an enclave can start a process that results in an SGX
+attestation signature, which includes the enclave's measurement and an enclave
+message. However, the details of the SGX attestation scheme are unnecessarily
+complicated by Intel's desire to force itself as an intermediary in the
+distribution of enclave software.
+
+Under the SGX design, there are two sides to an enclave's identity. The
+enclave's measurement, described in \S~\ref{sec:sgx_measurement}, reflects all
+the code and data loaded in the enclave when it is initialized. The enclave's
+signature, described in \S~\ref{sec:sgx_sigstruct}, is an endorsement of the
+enclave's contents issued by a software vendor.
+
+
+
+
+\subsubsection{Enclave Signature}
+\label{sec:sgx_sigstruct}
+\label{sec:sgx_mrsigner}
+
+% Enclave Signature Structure (SIGSTRUCT): SDM S 38.13
+
+\subsubsection{Enclave Key Generation}
+\label{sec:sgx_egetkey}
+
+
+\subsubsection{Local Attestation}
+
+The enclave asks the CPU to produce an \textit{enclave report}, which contains
+the attestation challenge, the enclave's measurement value, an
+enclave-generated 256-byte message, and an HMAC
+ with a symmetric key shared between the CPU and a special
+\textit{signing enclave} produced by Intel. The untrusted system software
+executes the signing enclave, which verifies the report and produces an
+\textit{attestation signature} that covers the challenge and the enclave's
+measurement.
+
+
+\subsubsection{Enclave Initialization}
+\label{sec:sgx_einit}
+
+% EINIT Token Structure (EINITTOKEN): SDM S 38.14
+
+
+\subsubsection{The Attestation Signature}
+\label{sec:sgx_attestation_signature}
 

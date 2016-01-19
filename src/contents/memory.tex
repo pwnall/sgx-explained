@@ -150,13 +150,6 @@ that the UC option was provided in order to attempt to mitigate against some
 cache-timing attacks.
 
 
-Currently, the main implication of ELRANGE is that all the SGX data structures
-are initialized with enclave virtual addresses specified relatively to
-BASEADDR. Furthermore, BASEADDR is not a part of the enclave's measurement
-hash (details in \S~\ref{sec:measurement}). It follows that system software can
-relocate an enclave in its host application's virtual address space, without
-impacting the enclave's measurement hash.
-
 Having ELRANGE follow the memory type range constraints provides a cheap way to
 verify if a virtual address belongs to the address, in hardware. This comes in
 handy when EENTER has to disable all the hardware breakpoints inside ELRANGE.
