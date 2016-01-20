@@ -89,6 +89,49 @@ using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
 \end{figure}
 
 
+\subsection {Page Eviction Security}
+
+The most obvious attack is prevented by having the MAC cover the contents of
+the evicted EPC page, so the untrusted OS cannot modify the data in the page
+while it is stored in untrusted DRAM. The MAC also covers the metadata that
+makes up the EPCM entry, which prevents the more subtle attacks described
+below.
+
+The enclave ID (EID) field is covered by the MAC tag, so the OS cannot evict an
+EPC page belonging to one enclave, and assign the page to a different enclave
+when it is loaded back into the EPC. If EID was not covered by authenticity
+guarantees, a malicious OS could read any enclave's data by evicting an EPC
+page belonging to the victim enclave, and loading it into a malicious enclave
+that would copy the page's contents to untrusted DRAM.
+
+The virtual address (LINADDR) field is covered by the MAC tag, so the OS cannot
+modify the virtual memory layout of an enclave by evicting an EPC page and
+specifying a different LINADDR when loading it back. If LINADDR was not covered
+by authenticity guarantees, a malicious OS could perform the exact attack shown
+in Figure~\ref{fig:swap_mapping_attack} and described in
+\S~\ref{sec:page_swapping_attacks}.
+
+The page access permission flags (R, W, X) are also covered by the MAC tag.
+This prevents the OS from changing the access permission bits in a page's EPCM
+entry by evicting the page and loading it back in. If the permission flags were
+not covered by authenticity guarantees, the OS could use the ability to change
+EPCM access permissions to facilitate exploiting vulnerabilities in enclave
+code. For example, exploiting a stack overflow vulnerability is generally
+easier if OS can make the stack pages executable.
+
+The nonce stored in the VA slot is also covered by the MAC. This prevents the
+OS from mounting a replay attack that reverts the contents of an EPC page to an
+older version. If the nonce would not be covered by integrity guarantees, the
+OS could evict the target EPC page at different times $t_1$ and $t_2$ in the
+enclave's life, and then provide the \texttt{EWB} outputs at $t_1$ to the
+\texttt{ELDU} / \texttt{ELDB} instruction. Without the MAC verification, this
+attack would successfully revert the contents of the EPC page to its version
+at $t_1$.
+
+While replay attacks look relatively benign, they can be quite devastating when
+used to facilitate double spending.
+
+
 \subsection{DOS Prevention}
 % NOTE: This is a slightly edited answer to a question we received.
 

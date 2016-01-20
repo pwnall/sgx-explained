@@ -1,9 +1,9 @@
 % Abstract
 @article{mckeen2013sgx,
-  title={Innovative instructions and software model for isolated execution},
-  author={McKeen, Frank and Alexandrovich, Ilya and Berenzon, Alex and Rozas,
-          Carlos V and Shafi, Hisham and Shanbhogue, Vedvyas and Savagaonkar,
-          Uday R},
+  title={Innovative Instructions and Software Model for Isolated Execution},
+  author={McKeen, Frank and Alexandrovich, Ilya and Berenzon, Alex and
+          Rozas, Carlos V and Shafi, Hisham and Shanbhogue, Vedvyas and
+          Savagaonkar, Uday R},
   journal={HASP},
   volume={13},
   pages={10},
@@ -11,18 +11,18 @@
 }
 @inproceedings{anati2013sgx,
   title={Innovative Technology for CPU Based Attestation and Sealing},
-  author={Anati, Ittai and Gueron, Shay and Johnson, Simon P and Scarlata,
-          Vincent R},
+  author={Anati, Ittai and Gueron, Shay and Johnson, Simon P and
+          Scarlata, Vincent R},
   booktitle={Proceedings of the 2nd International Workshop on Hardware and
              Architectural Support for Security and Privacy, HASP},
   volume={13},
   year={2013}
 }
 @inproceedings{hoekstra2013sgx,
-  title={Using innovative instructions to create trustworthy software
-         solutions},
-  author={Hoekstra, Matthew and Lal, Reshma and Pappachan, Pradeep and Phegade,
-          Vinay and Del Cuvillo, Juan},
+  title={Using Innovative Instructions to Create Trustworthy Software
+         Solutions},
+  author={Hoekstra, Matthew and Lal, Reshma and Pappachan, Pradeep and
+          Phegade, Vinay and Del Cuvillo, Juan},
   booktitle={Proceedings of the 2nd International Workshop on Hardware and
              Architectural Support for Security and Privacy, HASP},
   volume={13},
@@ -65,15 +65,17 @@
           Johnson, Simon P and Scarlata, Vincent and Goldsmith, Michael A and
           Brickell, Ernie and Li, Jiang Tao and Herbert, Howard C and Dewan,
           Prashant and others},
-  year={2013},
-  note={US Patent App. 13/802,272}
+  year={2009},
+  month={Dec},
+  note={US Patent 9,087,200}
 }
 @misc{intel2013patent2,
   title={Technique for supporting multiple secure enclaves},
   author={Johnson, Simon P and Savagaonkar, Uday R and Scarlata, Vincent R and
           McKeen, Francis X and Rozas, Carlos V},
-  year={2013},
-  note={US Patent App. 13/838,237}
+  year={2010},
+  month={Dec},
+  note={US Patent 8,972,746}
 }
 @misc{intel2014patent3,
   title={Paging in secure enclaves},
@@ -1140,7 +1142,8 @@
   publisher={JSTOR}
 }
 @article{fips2001ctr,
-  title={Recommendation for Block Cipher Modes of Operation},
+  title={Recommendation for Block Cipher Modes of Operation: Methods and
+         Techniques},
   author={Dworkin, Morris},
   publisher={National Institute of Standards and Technology (NIST)},
   journal={Federal Information Processing Standards (FIPS) Special Publications
@@ -1148,6 +1151,17 @@
   volume={800-38A},
   month={Dec},
   year={2001},
+}
+@article{fips2005cmac,
+  title={Recommendation for Block Cipher Modes of Operation: The CMAC Mode for
+         Authentication},
+  author={Dworkin, Morris},
+  publisher={National Institute of Standards and Technology (NIST)},
+  journal={Federal Information Processing Standards (FIPS) Special Publications
+           (SP)},
+  volume={800-38B,
+  month={May},
+  year={2005},
 }
 @article{eastlake2001sha1,
   title={{RFC 3174: US Secure Hash Algorithm 1 (SHA1)}},
@@ -1549,7 +1563,21 @@
   note={[Online; accessed 4-May-2015]}
 }
 
+% SGX Programming Model: Attestation
+
+@article{jonsson2003pkcsv21,
+  title={{RFC 3447: Public-Key Cryptography Standards (PKCS) \#1: RSA
+          Cryptography Specifications Version 2.1}},
+  author={Jonsson, Jakob and Kaliski, Burt},
+  journal={Internet RFCs},
+  year={2003},
+  month={Feb},
+  publisher={RFC Editor United States}
+}
+
+
 % Hardware
+% (PUFs used to provision keys in Intel SGX processors)
 
 @misc{brickell2014hardening,
   title={Hardening Inter-Device Secure Communication Using Physically
@@ -1636,14 +1664,6 @@
   pages={120--132},
   year={2005},
   publisher={Elsevier Advanced Technology}
-}
-@inproceedings{mckeen2013innovative,
-  title={Innovative instructions and software model for isolated execution},
-  author={McKeen, Frank and Alexandrovich, Ilya and Berenzon, Alex and Rozas, Carlos V and Shafi, Hisham and Shanbhogue, Vedvyas and Savagaonkar, Uday R},
-  booktitle={Proceedings of the 2nd International Workshop on Hardware and Architectural Support for Security and Privacy},
-  pages={10},
-  year={2013},
-  organization={ACM}
 }
 @incollection{bonneau2006cache,
   title={Cache-collision timing attacks against AES},

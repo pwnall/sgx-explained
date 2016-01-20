@@ -374,7 +374,7 @@ it to the LINADDR field of the PAGEINFO structure that it is provded. The
 separate input (RBX) could have been removed by having the EPC page's address
 be provided in the LINADDR field.
 
-\begin{figure}[hbt!]
+\begin{figure}[hbt]
   \centering
   \includegraphics[width=85mm]{figures/sgx_ewb.pdf}
   \caption{
@@ -446,7 +446,7 @@ pages as inner nodes. A page's parent is the VA page that holds its nonce.
 Since \texttt{EWB} always outputs a nonce in a VA page, the root node of each
 eviction tree is always a VA page in the EPC.
 
-\begin{figure}[hbt!]
+\begin{figure}[hbt]
   \centering
   \includegraphics[width=80mm]{figures/sgx_eviction_tree.pdf}
   \caption{

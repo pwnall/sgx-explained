@@ -10,6 +10,8 @@ identify the software that is executing inside the enclave. The remote party
 compares the enclave measurement reported by the trusted hardware with an
 expected measurement, and only proceeds if the two values match.
 
+% Enclave Measurement: SDM S 39.4.1
+
 \S~\ref{sec:sgx_enclave_lifecycle} explains that an SGX enclave is built using
 the \texttt{ECREATE}~(\S~\ref{sec:sgx_ecreate}),
 \texttt{EADD}~(\S~\ref{sec:sgx_eadd}) and \texttt{EEXTEND} instructions.
@@ -39,6 +41,7 @@ build an enclave that matches an expected measurement by following the exact
 sequence of instructions specified by the enclave's author.
 
 % SGX Enclave Control Structure (SECS): SDM S 38.7, S 38.7.1
+% MRENCLAVE: SDM S 39.4.1.1
 
 The SGX design uses the 256-bit SHA-2~\cite{fips2015shs} secure hash function
 to compute its measurements. SHA-2 is a block hash
@@ -111,7 +114,7 @@ that fits in SSAFRAMESIZE.
 As mentioned above, the ATTRIBUTES field is not included in the enclave's
 measurement. Instead, it is included directly in the information that is
 covered by the attestation signature, which will be discussed in
-\S~\ref{sec:sgx_attestation_signature}.
+\S~\ref{sec:sgx_ereport}.
 
 
 \subsubsection{Measuring \texttt{EADD}}

@@ -1,0 +1,164 @@
+\subsection{Enclave Signature Verification}
+\label{sec:sgx_rsa_check}
+
+Let $m$ be the public modulus in the enclave author's RSA key, and $s$ be the
+enclave signature. Since the SGX design fixes the value of the public exponent
+$e$ to $3$, verifying the RSA signature amounts to computing the signed
+message $M = s^3 \bmod m$, checking that the value meets the PKCS v1.5 padding
+requirements, and comparing the 256-bit SHA-2 hash inside the message with the
+value obtained by hashing the relevant fields in the SIGSTRUCT supplied with
+the enclave.
+
+This section describes an algorithm for computing the signed message while only
+using subtraction and multiplication on large non-negative integers. The
+algorithm admits a significantly simpler implementation than the typical RSA
+signature verification algorithm, by avoiding the use of long division and
+negative numbers.
+
+The algorithm provided here requires the signer to compute the $q_1$ and
+$q_2$ values shown below. The values can be computed from the public
+information in the signature, so they do not leak any additional information
+about the private signing key. Furthermore, the algorithm verifies the
+correctness of the values, so it does not open up the possibility for an attack
+that relies on supplying incorrect values for $q_1$ and $q_2$.
+
+\begin{align*}
+q_1 & = \left\lfloor \frac{s^2}{m} \right\rfloor \\
+q_2 & = \left\lfloor \frac{s^3 - q_1 \times s \times m}{m} \right\rfloor
+\end{align*}
+
+Due to the desirable properties mentioned above, it is very likely that the
+algorithm described here is used by the SGX implementation to verify the RSA
+signature in an enclave's SIGSTRUCT~(\S~\ref{sec:sgx_sigstruct}).
+
+The algorithm in Figure~\ref{fig:sgx_sig_verification} computes the signed
+message $M = s^3 \bmod m$, while also verifying that the given values of $q_1$
+and $q_2$ are correct. The latter is necessary because the SGX implementation
+of signature verification must handle the case where an attacker attempts to
+exploit the signature verification implementation by supplying invalid values
+for $q_1$ and $q_2$.
+
+\begin{figure}[hbt]
+  \centering
+  \begin{enumerate}
+    \item Compute $u \leftarrow s \times s$ and $v \leftarrow q_1 \times m$
+    \item If $u < v$, abort. $q_1$ must be incorrect.
+    \item Compute $w \leftarrow u - v$
+    \item If $w \ge m$, abort. $q_1$ must be incorrect.
+    \item Compute $x \leftarrow w \times s$ and $y \leftarrow q_2 \times m$
+    \item If $x < y$, abort. $q_2$ must be incorrect.
+    \item Compute $z \leftarrow x - y$.
+    \item If $z \ge m$, abort. $q_2$ must be incorrect.
+    \item Output $z$.
+  \end{enumerate}
+  \caption{
+    An RSA signature verification algorithm specialized for the case where
+    the public exponent is 3. $s$ is the RSA signature and $m$ is the RSA key
+    modulus. The algorithm uses two additional inputs, $q_1$ and $q_2$.
+  }
+  \label{fig:sgx_sig_verification}
+\end{figure}
+
+The rest of this section proves the correctness of the algorithm in
+Figure~\ref{fig:sgx_sig_verification}.
+
+
+\subsubsection{Analysis of Steps 1 - 4}
+
+Steps $1 - 4$ in the algorithm check the correctness of $q_1$ and use it
+to compute $s^2 \bmod m$. The key observation to understanding these steps is
+recognizing that $q_1$ is the quotient of the integer division $s^2 / m$.
+
+Having made this observation, we can use elementary division properties to
+prove that the supplied value for $q_1$ is correct if and only if the following
+property holds.
+
+$$ 0 \le s^2 - q_1 \times m < m $$
+
+We observe that the first comparison, $0 \le s^2 - q_1 \times m$, is equivalent
+to $q_1 \times m \le s^2$, which is precisely the check performed by step 2. We
+can also see that the second comparison, $s^2 - q_1 \times m < m$ corresponds
+to the condition verified by step 4. Therefore, if the algorithm passes step 4,
+it must be the case that the value supplied for $q_1$ is correct.
+
+We can also plug $s^2$, $q_1$ and $m$ into the integer division remainder
+definition to obtain the identity $s^2 \bmod m = s^2 - q_1 \times m$. However,
+according to the computations performed in steps 1 and 3,
+$w = s^2 - q_1 \times m$. Therefore, we can conclude that $w = s^2 \bmod p$.
+
+
+\subsubsection{Analysis of Steps 5 - 8}
+
+Similarly, steps $5 - 8$ in the algorithm check the correctness of $q_2$ and
+use it to compute $w \times s \bmod m$. The key observation here is that
+$q_2$ is the quotient of the integer division $(w \times s) / m$.
+
+We can convince ourselves of the truth of this observation by using the fact
+that $w = s^2 \bmod p$, which was proven above, by plugging in the definition
+of the remainder in integer division, and by taking advantage of the
+distributivity of integer multiplication with respect to addition.
+
+\begin{align*}
+\left\lfloor \frac{w \times s}{m} \right\rfloor
+    & = \left\lfloor \frac{(s^2 \bmod m) \times s}{m} \right\rfloor \\
+    & = \left\lfloor \frac{(s^2 - \lfloor \frac{s^2}{m} \rfloor \times m)
+        \times s}{m} \right\rfloor \\
+    & = \left\lfloor \frac{s^3 - \lfloor \frac{s^2}{m} \rfloor \times m
+        \times s}{m} \right\rfloor \\
+    & = \left\lfloor \frac{s^3 - q_1 \times m \times s}{m} \right\rfloor \\
+    & = \left\lfloor \frac{s^3 - q_1 \times s \times m}{m} \right\rfloor \\
+    & = q_2
+\end{align*}
+
+By the same argument used to analyze steps $1 - 4$, we use elementary division
+properties to prove that $q_2$ is correct if and only if the equation below is
+correct.
+
+$$ 0 \le w \times s - q_2 \times m < m $$
+
+The equation's first comparison, $0 \le w \times s - q_2 \times m$, is
+equivalent to $q_2 \times m \le w \times s$, which corresponds to the check
+performed by step 6. The second comparison, $w \times s - q_2 \times m < m$,
+matches the condition verified by step 8. It follows that, if the algorithm
+passes step 8, it must be the case that the value supplied for $q_2$ is
+correct.
+
+By plugging $w \times s$, $q_2$ and $m$ into the integer division remainder
+definition, we obtain the identity
+$w \times s \bmod m = w \times s - q_2 \times m$. Trivial substitution reveals
+that the computations in steps 5 and 7 result in
+$z = w \times s - q_2 \times m$, which allows us to conclude that
+$z = w \times s \bmod m$.
+
+In the analysis for steps $1 - 4$, we have proven that $w = s ^ 2 \bmod m$. By
+substituting this into the above identity, we obtain the proof that the
+algorithm's output is indeed the desired signed message.
+
+\begin{align*}
+z & = w \times s \bmod m \\
+  & = (s^2 \bmod m) \times s \bmod m \\
+  & = s^2 \times s \bmod m \\
+  & = s^3 \bmod m
+\end{align*}
+
+
+\subsubsection{Implementation Requirements}
+
+The main advantage of the algorithm in Figure~\ref{fig:sgx_sig_verification} is
+that it relies on the implementation of very few arithmetic operations on large
+integers. The maximum integer size that needs to be handled is twice the size
+of the modulus in the RSA key used to generate the signature.
+
+Steps 1 and 5 use large integer multiplication. Steps 3 and 7 use integer
+subtraction. Steps 2, 4, 6, and 8 use large integer comparison. The checks in
+steps 2 and 6 guarantee that the results of the subtractions performed in steps
+3 and 7 will be non-negative. It follows that the algorithm will never
+encounter negative numbers.
+
+Given that $s$ is the output of an RSA signature, its size must be at most the
+size of the RSA key's modulus. It follows that
+
+$q_1$ and $q_2$ are integer division quotients,
+where the divi
+
+Therefore, the size of $x$
