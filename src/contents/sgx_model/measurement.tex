@@ -50,6 +50,7 @@ hash function.
 
 
 \subsubsection{Measuring \texttt{ECREATE}}
+\label{sec:sgx_ecreate_mrenclave}
 
 % ECREATE: SDM S 41.3
 
@@ -114,6 +115,7 @@ covered by the attestation signature, which will be discussed in
 
 
 \subsubsection{Measuring \texttt{EADD}}
+\label{sec:sgx_eadd_mrenclave}
 
 % EADD and EEXTEND Interaction: SDM S 39.1.1
 % EADD: SDM S 41.3
@@ -131,13 +133,15 @@ Table~\ref{fig:eadd_mrenclave}.
   0 & 8 &
   "EADD\textbackslash{}0\textbackslash{}0\textbackslash{}0\textbackslash{}0" \\
   \hline
-  8 & 8 & PAGEINFO.LINADDR \\
+  8 & 8 & ENCLAVEOFFSET \\
   \hline
   16 & 48 & SECINFO (first 48 bytes) \\
   \hline
   \end{tabularx}
   \caption{
-    64-byte block extended into MRENCLAVE by \texttt{EADD}
+    64-byte block extended into MRENCLAVE by \texttt{EADD}. The ENCLAVEOFFSET
+    is computed by subtracting the BASEADDR in the enclave's SECS from the
+    LINADDR field in the PAGEINFO structure.
   }
   \label{fig:eadd_mrenclave}
 \end{table}
@@ -170,23 +174,29 @@ structure, and the rest of the bytes are reserved and expected to be
 initialized to zero. This leaves plenty of expansion room for future SGX
 features.
 
+The most notable omission from Table~\ref{fig:eadd_mrenclave} is the data used
+to initialize the newly created EPC page. Therefore, the measurement data
+contributed by \texttt{EADD} guarantees that the enclave's memory layout
+will have pages allocated with prescribed access permissions at the desired
+virtual addresses. However, the measurements don't cover the code or data
+loaded in these pages.
+
+For example, \texttt{EADD}'s measurement data guarantees that an enclave's
+memory layout consists of three executable pages followed by five writable data
+pages, but it does not guarantee that any of the code pages contains the
+code supplied by the enclave's author.
+
 
 \subsubsection{Measuring \texttt{EEXTEND}}
-
-The most notable omission from Table~\ref{fig:eadd_mrenclave} is the data used
-to initialize the newly created EPC page. Therefore, \texttt{EADD}'s
-measurements can guarantee, for example, that an enclave's memory layout
-consists of three executable pages followed by five writable data pages.
-However, the measurements don't cover the code or data loaded in these pages.
+\label{sec:sgx_eextend}
 
 % EEXTEND: SDM S 41.3
 
-This gap is filled by the \texttt{EEXTEND} instruction, which exists solely for
-the reason of measuring data loaded inside the enclave. The instruction reads
-in a virtual address, and extends the enclave's measurement hash with the
-five 64-byte blocks in Table~\ref{fig:eextend_mrenclave}, which have the effect
-of guaranteeing the contents of a 256-byte chunk of data in the enclave's
-memory.
+The \texttt{EEXTEND} instruction exists solely for the reason of measuring data
+loaded inside the enclave's EPC pages. The instruction reads in a virtual
+address, and extends the enclave's measurement hash with the five 64-byte
+blocks in Table~\ref{fig:eextend_mrenclave}, which have the effect of
+guaranteeing the contents of a 256-byte chunk of data in the enclave's memory.
 
 \begin{table}[hbt]
   \centering
@@ -214,26 +224,84 @@ memory.
   \hline
   \end{tabularx}
   \caption{
-    64-byte blocks extended into MRENCLAVE by \texttt{EEXTEND}
+    64-byte blocks extended into MRENCLAVE by \texttt{EEXTEND}. The
+    ENCLAVEOFFSET is computed by subtracting the BASEADDR in the enclave's SECS
+    from the LINADDR field in the PAGEINFO structure.
   }
   \label{fig:eextend_mrenclave}
 \end{table}
 
-It is essential that the message blocks used by \texttt{EEXTEND} include the
-address of the 256-byte chunk, in addition to the contents of the data chunk.
-If the address were not included, a malicious enclave loader could mount the
-memory mapping attack described in \S~\ref{sec:memory_mapping_attacks} and
-illustrated in Figure~\ref{fig:active_mapping_attack}. The malicious loader
-would \texttt{EADD} the \texttt{errorOut} page contents at the virtual address
-intended for \texttt{disclose}, \texttt{EADD} the \texttt{disclose} page
-contents at the virtual address intended for \texttt{errorOut}, and then
-\texttt{EEXTEND} the pages in the wrong order. If \texttt{EEXTEND} would not
-include the address of the data chunk that is measured, the steps above would
-yield the same measurement as the correctly constructed enclave.
+Before examining the details of \texttt{EEXTEND}, we note that SGX's security
+guarantees only hold when the contents of the enclave's key pages is measured.
+For example, \texttt{EENTER}~(\S~\ref{sec:sgx_eenter}) is only guaranteed to
+perform controlled jumps inside an enclave's code if the contents of all the
+Thread Control Structure~(TCS,~\S~\ref{sec:sgx_tcs}) pages is measured.
+Otherwise, a malicious enclave loader can change the OENTRY
+field~(\S~\ref{sec:sgx_tcs}, \S~\ref{sec:sgx_eenter}) in a TCS while building
+the enclave, and then a malicious OS can use the TCS to perform an arbitrary
+jump inside enclave code.
+
+By the same argument, all the enclave's code should be measured by
+\texttt{EEXTEND}. Any code fragment that is not measured can be replaced by a
+malicious enclave loader.
+
+Given these pitfalls, it is surprising that the SGX design opted to decouple
+the virtual address space layout measurements done by \texttt{EADD} from the
+memory content measurements done by \texttt{EEXTEND}. The decoupling does
+provide a benefit, namely the ability to load un-measured user input into an
+enclave while it is being built. However, this benefit only translates into a
+small performance improvement, because enclaves can alternatively be designed
+to copy the user input from untrusted DRAM after being initialized. At the same
+time, the decoupling opens up the possibility of relying on an enclave that
+provides no meaningful security guarantees, due to not measuring all the
+important data via \texttt{EEXTEND} calls.
+
+A mitigating circumstance for the \texttt{EADD} / \texttt{EEXTEND} separation
+is that the SGX design seems to expect enclaves to be authored using the same
+tools that build today's dynamically loaded modules. Such tools would easily be
+able to identify the enclave data that needs to be measured.
+
+It is correct and meaningful, from a security perspective, to have the message
+blocks provided by \texttt{EEXTEND} to the hash function include the address of
+the 256-byte chunk, in addition to the contents of the data. If the address
+were not included, a malicious enclave loader could mount the memory mapping
+attack described in \S~\ref{sec:memory_mapping_attacks} and illustrated in
+Figure~\ref{fig:active_mapping_attack}.
+
+More specifically, the malicious loader would \texttt{EADD} the
+\texttt{errorOut} page contents at the virtual address intended for
+\texttt{disclose}, \texttt{EADD} the \texttt{disclose} page contents at the
+virtual address intended for \texttt{errorOut}, and then \texttt{EEXTEND} the
+pages in the wrong order. If \texttt{EEXTEND} would not include the address of
+the data chunk that is measured, the steps above would yield the same
+measurement as the correctly constructed enclave.
+
+% SGX Enclave Control Structure (SECS): SDM S 38.7, S 38.7.1
+
+The last aspect of \texttt{EEXTEND} worth analyzing is its support for
+relocating enclaves. Similarly to \texttt{EADD}, the virtual address measured
+by \texttt{EEXTEND} is relative to the enclave's BASEADDR. Furthermore, the
+only SGX structure whose content is expected to be measured by \texttt{EEXTEND}
+is the TCS. The SGX design has carefully used relative addresses for all the
+TCS fields that represent enclave addresses, which are OENTRY, OFSBASGX and
+OGSBASGX.
 
 
 \subsubsection{Measuring \texttt{EINIT}}
 
 % EINIT: SDM S 41.3
 
+The \texttt{EINIT} instruction~(\S~\ref{sec:sgx_einit_overview}) concludes the
+enclave building process. After \texttt{EINIT} is successfully invoked on an
+enclave, the enclave's contents is ``sealed'', meaning that the system software
+cannot use the \texttt{EADD} instruction to load code and data into the
+enclave, and cannot use the \texttt{EEXTEND} instruction to update the
+enclave's measurement.
 
+\texttt{EINIT} uses the SHA-2 finalization
+algorithm~(\S~\ref{sec:integrity_crypto}) on the MRENCLAVE field of the
+enclave's SECS. After \texttt{EINIT}, the field no longer stores the
+intermediate state of the SHA-2 algorithm, and instead stores the final output
+of the secure hash function. This value remains constant after \texttt{EINIT}
+completes, and is included in the attestation signature produced by the
+SGX software attestation process.
