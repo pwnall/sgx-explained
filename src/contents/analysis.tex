@@ -132,6 +132,19 @@ While replay attacks look relatively benign, they can be quite devastating when
 used to facilitate double spending.
 
 
+\subsubsection{On Measuring Enclave Attributes}
+
+At a very high level, the exponential explosion described here seems similar to
+the measurement problem that plauges the Trusted Platform
+Module~(TPM,~\S~\ref{sec:tpm}). However, they are quite different. The TPM's
+measurement must account for all the system \textbf{software} loaded on the
+computer, including all the drivers. The explosion of potentially valid TPM
+measurement is due to the fact that every new OS kernel release and driver
+release creates new potentially valid measurements. If SGX were to include XFRM
+values into the enclave's measurement, the number of possible \textbf{hardware}
+
+
+
 \subsection{DOS Prevention}
 % NOTE: This is a slightly edited answer to a question we received.
 
@@ -238,3 +251,116 @@ for malware. However, the enclave isolation mechanism is fundamentally
 incompatible with the approach employed by today's AV solutions. Fortunately,
 it is possible (though non-trivial) to develop more intelligent AV software for
 enclave software.
+
+
+\subsection{SGX Information Leaks}
+\label{sec:sgx_leaks}
+
+Software Guard Extensions, as documented in \cite{intel2015sdm}, does not
+provide full privacy guarantees to the code executing inside an enclave. We
+present methods that an attacker can use to extract information from an
+enclave.
+
+\subsubsection{Hyper-Threading Leaks}
+
+Modern Intel CPUs feature hyper-threading, which means that each core has two
+(or more) sets of register files and local APICs, presented as logical
+processors running separate threads (see Figure \ref{fig:cpu_core}). The
+threads share the other core resources, such as the fetch and decode units,
+execution units and L1 and L2 caches. SGX does not prevent hyper-threading, so
+a malicious OS kernel or hypervisor can schedule a thread executing enclave
+code and a snooping thread on logical processors on same core. The snooping
+thread can use the processor's high-resolution performance counter
+\cite{petters1999making} to get information about the instructions and memory
+access patterns of the thread executing enclave code.
+
+A promising approach for preventing against hyper-threading leaks is to
+effectively disable hyper-threading, by using \texttt{CPUID} to find out the
+number of logical processors in the current core, and to require the OS to
+schedule threads in the same enclave on all the logical processors. This could
+be implemented by having the main thread spinlock waiting for the other threads
+to start, before any protected computation is performed. However, a malicious
+kernel or hypervisor can de-schedule the other threads after the main thread
+performed the spinlock check, so this defense is not reliable.
+
+\subsubsection{Page-Level Memory Access Leaks}
+
+While executing the code inside an enclave, the CPU still follows the standard
+page translation process (\S \ref{sec:paging}), including setting the A and D
+bits and delivering page faults. A malicious OS kernel or hypervisor can
+obtain the page-level trace of an application executing inside an enclave by
+setting the P flag to 0 on all the enclave's pages before starting enclave
+execution, and then maintaining exactly one instruction page and one data page
+present in the enclave's address space.
+
+When a page fault is generated, CR2 contains the virtual address of a page
+accessed by enclave, and the error code indicates whether the memory access was
+a read or a write (bit 1) and whether the memory access is a data access or
+an instruction fetch access (bit 4). On a data access, the kernel tracing the
+enclave code's memory access pattern would set the P flag of the desired page
+to 1, and set the P flag of the previously accessed data page to 0. Instruction
+accesses can be handled in a similar manner.
+
+For a slightly more detailed trace, the kernel can set a desired page's W flag
+to 0 if the page fault's error code indicates a read access, and only set it to
+1 for write accesses. Also, applications that use a page as both code and data
+(self-modifying code and just-in-time compiling VMs) can be handled by setting
+a page's XD flag to 0 for a data access, and by carefully accounting for the
+case where the last accessed data page is the same as the last accessed code
+page.
+
+Leaving an enclave via an AEX and re-entering the enclave via \texttt{ERESUME}
+causes the CPU to flush TLB entries that contain enclave addresses, so a
+tracing kernel would not need to worry about flushing the TLB. The tracing
+kernel does not need to flush the caches either, because the CPU needs to
+perform address translation even for cached data.
+
+An easy way to reduce this attack's power is to increase the page size, so the
+trace contains less information. However, the attack cannot be completely
+prevented without removing the kernel's ability to oversubscribe the EPC,
+which is a major benefit of paging.
+
+\subsubsection{Fine-Grained Memory Access Leaks}
+
+The AEX process and the \texttt{ERESUME} instructions do not flush the CPU
+caches. A tracing kernel can take advantage of cache timing to narrow down
+the addresses in an application's memory access trace to cache line
+granularity, by extending the method described above with the steps below.
+
+The tracing kernel controls the mapping between virtual addresses and physical
+addresses, so it can make sure that its own code and data use different sets
+in the L2 cache from the enclave's code and data. For example, in a typical
+256~KB (per-core) L2 cache organized as 512 8-way sets of 64-byte lines, the
+tracing kernel could allocate lines 0-63 for the enclave's code page, lines
+64-127 for the enclave's data page, and use lines 128-511 for its own pages.
+
+Right before entering an enclave via \texttt{EENTER} or \texttt{ERESUME}, the
+kernel would issue \texttt{CLFLUSH} instructions to flush the enclave's code
+page and data page from the cache. The enclave could have accessed a single
+code page and a single data page, so flushing the cache should be reasonably
+efficient. The tracing kernel then uses 16 bogus pages (8 for the enclave's
+code page, and 8 for the enclave's data page) to load all the 8 ways in the 128
+cache sets allocated by enclave pages. After an AEX gives control back to the
+tracing kernel, it can read the 16 bogus pages, and exploit the time difference
+between an L2 cache hit and a miss to see which cache lines were evicted and
+replaced by the enclave's memory accesses.
+
+\subsubsection{Leaks via Physical Attacks}
+
+The methods described above rely on a compromised hypervisor or OS kernel, but
+not on physical attacks. If an attacker can tap into the memory bus and read
+the address lines, the attacker can learn the enclave code's memory access
+patterns, at a fine granularity.
+
+The processor reserved memory (PRM) is configured by the BIOS at boot time as
+a continuous memory area, and can be configured as write-back (WB) or
+uncacheable (UC) memory. If the PRM is uncacheable, the CPU will generate a
+memory transaction for every memory access. The granularity of the memory
+transactions depends on the encryption engine used for the EPC, which is not
+documented in \cite{intel2015sdm}. If 128-bit AES is used, memory tapping
+would yield addresses at 16-byte granularity, which means two 64-bit words.
+
+At the same time, configuring the PRM as uncacheable memory removes the cache
+timing attack documented above, at the cost of dramatically slowing down the
+execution of SGX code. In this case, the CPU would still leak memory access
+patterns at page granularity, due to the address translation engine.

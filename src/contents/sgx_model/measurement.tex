@@ -100,21 +100,42 @@ checks by specifying a bigger SSAFRAMESIZE than the enclave's author intended,
 which could cause the SSA contents written by an AEX to overwrite the enclave's
 code or data.
 
-The enclave's measurement does not include the ATTRIBUTES field in the SECS.
-However, the SGX software attestation definitely needs to cover the ATTRIBUTES
-field, and especially its XFRM sub-field~(\S~\ref{sec:sgx_ssa}) that decides
-the value of XCR0~(\S~\ref{sec:registers}) while the enclave's code is
-executing, and therefore determines the extended architectural features that
-are used by the enclave. If XFRM is not covered, a malicious enclave loader
-could attempt to subvert an enclave's security checks by setting XFRM to a
-value that enables architectural extensions which change the semantics of
-instructions used by the enclave, but still produces an \texttt{XSAVE} output
-that fits in SSAFRAMESIZE.
+\subsubsection{Measuring Enclave Attributes}
+\label{sec:sgx_ecreate_mrenclave_no_attributes}
 
-As mentioned above, the ATTRIBUTES field is not included in the enclave's
-measurement. Instead, it is included directly in the information that is
-covered by the attestation signature, which will be discussed in
-\S~\ref{sec:sgx_ereport}.
+The enclave's measurement does not include the enclave
+attributes~(\S~\ref{sec:sgx_secs_attributes}), which are specified in the
+ATTRIBUTES field in the SECS. Instead, it is included directly in the
+information that is covered by the attestation signature, which will be
+discussed in \S~\ref{sec:sgx_ereport}.
+
+The SGX software attestation definitely needs to cover the enclave attributes.
+For example, if XFRM~(\S~\ref{sec:sgx_secs_attributes}, \S~\ref{sec:sgx_ssa})
+would not be covered, a malicious enclave loader could attempt to subvert an
+enclave's security checks by setting XFRM to a value that enables architectural
+extensions which change the semantics of instructions used by the enclave, but
+still produces an \texttt{XSAVE} output that fits in SSAFRAMESIZE.
+
+The special treatment applied to the ATTRIBUTES SECS field seems questionable
+from a security standpoint, as it adds extra complexity to the software
+attestation verifier, which translates into more opportunities for exploitable
+bugs. This decision also adds complexity to the SGX software attestation
+design, which is described in \S~\ref{sec:sgx_attestation}.
+
+The most likely reason why the SGX design decided to go this route, despite the
+concerns described above, is the wish to be able to use a single measurement to
+represent an enclave that can take advantage of some architectural extensions,
+but can also perform its task without them.
+
+Consider, for example, an enclave that performs image processing using a
+library such as OpenCV, which has routines optimized for SSE and AVX, but also
+includes generic fallbacks for processors that do not have these features. The
+enclave's author will likely wish to allow an enclave loader to set bits 1
+(SSE) and 2 (AVX) to either true or false. If ATTRIBUTES (and, by extension,
+XFRM) was a part of the enclave's measurement, the enclave author would have to
+specify that the enclave has 4 valid measurements. In general, allowing $n$
+architectural extensions to be used independently will result in $2^n$ valid
+measurements.
 
 
 \subsubsection{Measuring \texttt{EADD}}

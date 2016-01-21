@@ -1,4 +1,4 @@
-\section{The Hardware Underpinnings of SGX}
+\subsection{The Hardware Underpinnings of SGX}
 
 The security of SGX hinges on the assumption that it is very difficult for an
 attacker to produce an attestation that contains attacker-supplied information
@@ -19,7 +19,7 @@ positive fact, fueling our suspicion that minimizing hardware changes was a
 high priority in the SGX design.
 
 
-\subsection{Memory Protection Mechanisms}
+\subsubsection{Memory Protection Mechanisms}
 
 The SGX reference manual states that the Processor Reserved Memory (PRM) is
 allocated by the BIOS, by setting the PRM range registers (PRMRR). The patents
@@ -88,7 +88,7 @@ The Intel patents call ELRANGE the Enclave Linear Space (ELS) range.
 
 
 
-\subsection{Key Hierarchy and Derivation}
+\subsubsection{Key Hierarchy and Derivation}
 
 According to Intel's patents, the SGX implementation relies on a complex key
 derivation process rooted on global secret keys in the CPU circuitry, and on
@@ -180,7 +180,7 @@ Key Request Inputs
 Key names: LAUNCH, PROVISION, PROVISION\_SEAL, REPORT, SEAL.
 
 
-\subsection{Data Structures}
+\subsubsection{Data Structures}
 
 The Intel patents state that the 128-bit enclave key is stored in the enclave's
 SECS page, and that SGX security depends on enclaves not being able to read

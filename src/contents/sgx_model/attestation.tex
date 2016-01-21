@@ -50,7 +50,7 @@ described in \S~\ref{sec:sgx_ereport}. This structure only proves the enclave's
 identity to the SGX Quoting Enclave, described in
 \S~\ref{sec:sgx_quoting_enclave}, which is a special enclave authored by Intel
 that can access to the CPU's attestation key. Therefore, the REPORT structure
-created by \texttt{EREPORT} is given to the SGX Quoting enclave, which produces
+created by \texttt{EREPORT} is given to the SGX Quoting Enclave, which produces
 an attestation signature that can be verified by a remote party.
 
 The EINITTOKEN and REPORT structures are passed between enclaves by untrusted
@@ -158,6 +158,8 @@ in \S~\ref{sec:sgx_rsa_check}. The efficient algorithm also requires the fields
 Q1 and Q2 in the RSA signature, which are also described in
 \S~\ref{sec:sgx_rsa_check}.
 
+% Security Version Numbers: SDM S 39.4.2
+
 The RSA signature in a SIGSTRUCT is verified by the SGX implementation when the
 structure is used in an \texttt{EINIT}~(\S~\ref{sec:sgx_einit_overview})
 invocation. The 256-bit SHA-2 hash of the EXPONENT field in the SIGSTRUCT is
@@ -167,9 +169,8 @@ identity of the enclave's author. The ISVPRODID and ISVSVN fields from
 SIGSTRUCT are also copied into the enclave's SECS. The role of these fields
 will be revealed in \S~\ref{sec:sgx_egetkey}.
 
-
-% Enclave Signature Structure (SIGSTRUCT): SDM S 38.13
 % EINIT: SDM S 41.3
+% Enclave Signature Structure (SIGSTRUCT): SDM S 38.13
 
 The SDM description of the VENDOR field in the section dedicated to SIGSTRUCT
 suggests that the field is essentially used to distinguish between special
@@ -178,23 +179,18 @@ enclaves, which get a VENDOR value of zero. However, the \textit{EINIT}
 pseudocode seems to imply that the SGX implementation only checks that
 VENDOR is either zero or 0x8086.
 
-
-% Security Version Numbers: SDM S 39.4.2
-% Enclave Security Version: SDM S 39.4.2.1
-
-\subsubsection{Enclave Attributes}
-\label{sec:sgx_attributes}
-
 The ATTRIBUTES and ATTRIBUTESMASK fields in the SIGSTRUCT are used to restrict
-the values of the ATTRIBUTES field in an enclave's SECS. \texttt{EINIT} refuses
-to initialize an enclave using a SIGSTRUCT if the bitwise AND between the
-ATTRIBUTES field in the enclave's SECS and the ATTRIBUTESMASK field in the
-SIGSTRUCT does not equal the SIGSTRUCT's ATTRIBUTES field.
+the values of the enclave's attributes~(\S~\ref{sec:sgx_secs_attributes}).
+\texttt{EINIT} refuses to initialize an enclave using a SIGSTRUCT if the
+bitwise AND between the ATTRIBUTES field in the enclave's SECS and the
+ATTRIBUTESMASK field in the SIGSTRUCT does not equal the SIGSTRUCT's ATTRIBUTES
+field.
 
-The restriction on ATTRIBUTES seems redundant for SGX enclaves that participate
-in software attestation, because the SGX attestation signature includes the
-value of the SECS' ATTRIBUTES field, so an enclave built with an undesirable
-ATTRIBUTES value would be rejected during the attestation process.
+The restriction on the enclave's attributes seems redundant for SGX enclaves
+that participate in software attestation, because the SGX attestation signature
+includes the value of the ATTRIBUTES field in the enclave's SECS. Assuming the
+attestation signature is examined correctly, an enclave built with undesirable
+attributes would be rejected during the attestation process.
 
 % SECS.ATTRIBUTES.XFRM: SDM S 42.7.2.1
 
@@ -204,16 +200,18 @@ Enclave. These enclaves gain access to SGX's secret keys without participating
 in software attestation, and therefore must rely on another protection
 mechanism. If \texttt{EINIT} would not enforce the ATTRIBUTES restrictions
 expressed in SIGSTRUCT, malicious system software may be able to subvert a
-special enclave's security checks by building the enclave with an unexpected
-ATTRIBUTES value. For example, setting the XFRM
-sub-field~(\S~\ref{sec:sgx_ssa}) to an unexpected value may enable
-architectural extensions that the enclave wat not designed to handle.
+special enclave's security checks by building the enclave with unexpected
+attributes value. For example, setting the XFRM
+attribute~(\S~\ref{sec:sgx_ssa}) to an unexpected value may enable
+architectural extensions that the enclave was not designed to handle.
 
 
 \subsubsection{Enclave Key Generation}
 \label{sec:sgx_egetkey}
 
 % Keys: SDM S 39.4.3
+
+% Enclave Security Version: SDM S 39.4.2.1
 
 
 
