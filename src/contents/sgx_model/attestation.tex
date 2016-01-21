@@ -217,6 +217,13 @@ architectural extensions that the enclave wat not designed to handle.
 
 
 
+
+The PROVISIONKEY and EINITTOKENKEY flags are only set for a few special
+enclaves authored by Intel, which are involved in the SGX software attestation
+process that will be described in \S~\ref{sec:sgx_attestation}. All enclaves
+produced by non-Intel developers will have these flags cleared.
+
+
 % Security Version Numbers: SDM S 39.4.2
 % Hardware Security Version: SDMS S 39.4.2.2
 

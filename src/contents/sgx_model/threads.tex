@@ -114,13 +114,10 @@ checks that the enclave author may perform.
 
 \texttt{EENTER} also sets XCR0~(\S~\ref{sec:registers}), the register that
 controls which extended architectural features are in use, to the value of the
-XFRM field in the SECS of the enclave that owns the TCS. Ensuring that XCR0 is
+XFRM enclave attribute~(\S~\ref{sec:sgx_secs_attributes}. Ensuring that XCR0 is
 set according to the enclave author's intentions prevents a malicious operating
 system from bypassing an enclave's security by enabling architectural features
-that the enclave is not prepared to handle. This lets Intel introduce
-extensions that change the architectural behavior of existing instructions,
-such as Memory Protection Extensions (MPX), without having to worry about
-introducing security vulnerabilities in SGX enclaves.
+that the enclave is not prepared to handle.
 
 Furthermore, \texttt{EENTER} loads the bases of the segment
 registers~(\S~\ref{sec:segments}) FS and GS using values specified in the TCS.
@@ -343,12 +340,12 @@ instructions disable the same subset of the logical processor's debugging
 features.
 
 An interesting edge case that \texttt{ERESUME} handles correctly is that it
-sets XCR0 to the XFRM field in the enclave's SECS \textbf{before} performing an
+sets XCR0 to the XFRM enclave attribute \textbf{before} performing an
 \texttt{XRSTOR}. It follows that \texttt{ERESUME} fails if the requested
-feature bitmap (RFBM) in the SSA is not a subset of the XFRM field. This
-matters because, while an AEX will always use the XFRM value as the RFBM,
-enclave code executing on another thread is free to modify the SSA contents
-before \texttt{ERESUME} is called.
+feature bitmap (RFBM) in the SSA is not a subset of XFRM. This matters because,
+while an AEX will always use the XFRM value as the RFBM, enclave code executing
+on another thread is free to modify the SSA contents before \texttt{ERESUME} is
+called.
 
 The correct sequencing of actions in the \texttt{ERESUME} implementation
 prevents a malicious application from using an enclave to modify registers

@@ -54,6 +54,12 @@ validation, combined with the fact that the SECS is not accessible by software,
 simplifies the implementation of the other SGX instructions, which can assume
 that the information inside the SECS is valid.
 
+Last, \texttt{ECREATE} initializes the enclave's INIT attribute (sub-field of
+the ATTRIBUTES field in the enclave's SECS, \S~\ref{sec:sgx_secs_attributes})
+to the false value. The enclave's code cannot be executed until the INIT
+attribute is set to true, which happens in the initialization stage that will
+be described in \S~\ref{sec:sgx_einit_overview}.
+
 
 \subsubsection{Loading}
 \label{sec:sgx_eadd}
@@ -139,13 +145,13 @@ signed~(\S~\ref{sec:integrity_crypto}) with a special Intel key that is
 hard-coded into the SGX implementation, and that causes \texttt{EINIT} to
 initialize the LE  without checking for a valid EINIT Token Structure.
 
-After \texttt{EINIT} is successfully called on an enclave,
-ring 3~\S~\ref{sec:rings}) application software can execute the enclave's code,
-using the SGX instructions described in \S~\ref{sec:sgx_threads}. On the other
-hand, once an enclave's SECS is marked as \textit{initialized}, \texttt{EADD}
-cannot be invoked on that enclave anymore, so the system software must load all
-the pages that make up the enclave's initial state before executing the
-\texttt{EINIT} instruction.
+When \texttt{EINIT} completes successfully, it sets the enclave's INIT
+attribute to true. This opens the way for ring 3~\S~\ref{sec:rings})
+application software to execute the enclave's code, using the SGX instructions
+described in \S~\ref{sec:sgx_threads}. On the other hand, once INIT is set to
+true, \texttt{EADD} cannot be invoked on that enclave anymore, so the system
+software must load all the pages that make up the enclave's initial state
+before executing the \texttt{EINIT} instruction.
 
 
 \subsubsection{Teardown}

@@ -61,6 +61,68 @@ library code that expects to work with pointers to memory buffers managed by
 code in the host process.
 
 
+\subsubsection{SGX Enclave Attributes}
+\label{sec:sgx_secs_attributes}
+
+The execution environment of an enclave is heavily influenced by the value of
+the ATTRIBUTES field in the enclave's SECS~(\ref{sec:sgx_secs}). The rest of
+this work will refer to the field's sub-fields, shown in
+Table~\ref{fig:sgx_secs_attributes}), as \textit{enclave attributes}.
+
+% ATTRIBUTES: SDM S 37.8.1
+
+\begin{table}[hbt]
+  \centering
+  \begin{tabularx}{\columnwidth}{| l | r | X |}
+  \hline
+  \textbf{Field} & \textbf{Bits} & \textbf{Description} \\
+  \hline
+  DEBUG & 1 & Opts into enclave debugging features. \\
+  \hline
+  XFRM & 64 & The value of XCR0~(\S~\ref{sec:registers}) while this enclave's
+              code is executed. \\
+  \hline
+  MODE64BIT & 1 & Set for 64-bit enclaves. \\
+  \hline
+  \end{tabularx}
+  \caption{
+    An enclave's attributes are the sub-fields in the ATTRIBUTES field of the
+    enclave's SECS. This table shows a subset of the attributes defined in the
+    SGX documentation.
+  }
+  \label{fig:sgx_secs_attributes}
+\end{table}
+
+The most important attribute, from a security perspective, is the DEBUG flag.
+When this flag is set, it enables the use of SGX's debugging features for this
+enclave. These debugging features include the ability to read and modify most
+of the enclave's memory. Therefore, DEBUG should only be set in a development
+environment, as it causes the enclave to lose all the SGX security guarantees.
+
+SGX guarantees that enclave code will always run with the XCRO
+register~\ref{sec:registers} set to the value indicated by
+\textit{extended features request mask}~(XFRM). Enclave authors are expected to
+use XFRM to specify the set of architectural extensions enabled by the compiler
+used to produce the enclave's code. Having XFRM be explicitly specified allows
+Intel to design new architectural extensions that change the semantics of
+existing instructions, such as Memory Protection Extensions (MPX), without
+having to worry about the security implications on enclave code that was
+developed without an awareness of the new features.
+
+The MODE64BIT flag is set to true for enclaves that use the 64-bit Intel
+architecture. From a security standpoint, this flag should not even exist, as
+supporting a secondary architecture adds unnecessary complexity to the SGX
+implementation, and increases the probability that security vulnerabilities
+will creep in. In the interest of mental sanity, this work does not analyze the
+behavior of SGX for enclaves whose MODE64BIT flag is cleared. However, a
+security researcher that wishes to find vulnerabilities in SGX might wish to
+study this area.
+
+Last, the INIT flag is always false when the enclave's SECS is created. The
+flag is set to true at a certain point in the enclave lifecycle, which will be
+summarized in \S~\ref{sec:sgx_enclave_lifecycle}.
+
+
 \subsubsection{Address Translation for SGX Enclaves}
 \label{sec:sgx_paging}
 
@@ -226,11 +288,11 @@ An enclave thread's execution context consists of the general-purpose registers
 (GPRs) and the result of the XSAVE instruction~(\S~\ref{sec:registers}).
 Therefore, the size of the execution context depends on the requested-feature
 bitmap~(RFBM) used by to XSAVE. All the code in an enclave uses the same RFBM,
-which is declared in the XFRM sub-field of the ATTRIBUTES field of the
-enclave's SECS. The number of EPC pages reserved for each SSA, specified in
-SSAFRAMESIZE, must\footnote{\texttt{ECREATE}~(\S~\ref{sec:sgx_ecreate}) fails
-if SSAFRAMESIZE is too small.} be large enough to fit the XSAVE output for the
-feature bitmap specified in XFRM.
+which is declared in the XFRM enclave attribute~\ref{sec:sgx_secs_attributes}.
+The number of EPC pages reserved for each SSA, specified in SSAFRAMESIZE,
+must\footnote{\texttt{ECREATE}~(\S~\ref{sec:sgx_ecreate}) fails if SSAFRAMESIZE
+is too small.} be large enough to fit the XSAVE output for the feature bitmap
+specified by XFRM.
 
 SSAs are stored in regular EPC pages, whose EPCM page type is PT\_REG.
 Therefore, the SSA contents is accessible to enclave software. The SSA layout
