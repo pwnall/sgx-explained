@@ -8,12 +8,13 @@ hash, to identify the software inside a container. The downside of using
 content hashes for identity is that there is no relation between the identities
 of containers that hold different versions of the same software.
 
-In practice, systems based on secure containers need to handle software
-updates, which entails having the ability to migrate secrets between the
-container that has the old version of the software and the container that has
-the updated version. This requirement translates into a need for a separate
-identity system that can recogize the relationship between two versions of the
-same software.
+In practice, it is highly desirable that systems based on secure containers
+can handle software updates without having access to the remote party in the
+initial software attestation process. This entails having the ability to
+migrate secrets between the container that has the old version of the software
+and the container that has the updated version. This requirement translates
+into a need for a separate identity system that can recogize the relationship
+between two versions of the same software.
 
 SGX supports the migration of secrets between enclaves that represent different
 versions of the same software, as shown in
@@ -30,7 +31,7 @@ Figure~\ref{fig:sgx_secret_migration}.
   \label{fig:sgx_secret_migration}
 \end{figure}
 
-SGX's migration system relies on a one-level certificate
+The secret migration feature relies on a one-level certificate
 hierarchy~(~\S~\ref{sec:certificates}), where each enclave author is a
 Certificate Authority, and each enclave receives a certificate from its author.
 These certificates must be formatted as Signature Structures~(SIGSTRUCT), which
@@ -48,11 +49,23 @@ certificate-based identity. This process is summarized in
 Last, the actual secret migration process is based on the key derivation
 service implemented by the \texttt{EGETKEY} instruction, which is described
 in \S~\ref{sec:sgx_egetkey}. The sending enclave uses the \texttt{EGETKEY}
-instruction to obtain a symmetric key based on its identity, encrypts its
-secrets with the key, and hands off the encrypted secrets to the untrusted
-system software. The receiving enclave passes the sending enclave's identity
-to \texttt{EGETKEY}, obtains the same symmetric key as above, and uses the key
-to decrypt the secrets received from system software.
+instruction to obtain a symmetric key~(\S~\ref{sec:crypto_keys}) based on its
+identity, encrypts its secrets with the key, and hands off the encrypted
+secrets to the untrusted system software. The receiving enclave passes the
+sending enclave's identity to \texttt{EGETKEY}, obtains the same symmetric key
+as above, and uses the key to decrypt the secrets received from system
+software.
+
+The symmetric key obtained from \texttt{EGETKEY} can be used in conjunction
+with cryptographic primitives that protect the
+privacy~(\S~\ref{sec:privacy_crypto}) and
+integrity~(\S~\ref{sec:integrity_crypto}) of an enclave's secrets while they
+are migrated to another enclave by the untrusted system software. However,
+symmetric keys alone cannot be used to provide freshness
+guarantees~(\S~\ref{sec:crypto_primitives}), so secret migration is subject to
+replay attacks. This is acceptable when the secrets being migrated are
+immutable, such as when the secrets are encryption keys obtained via software
+attestation
 
 
 \subsubsection{Enclave Certificates}
@@ -148,7 +161,7 @@ The SGX implementation only supports 3072-bit RSA keys whose public exponent is
 3. The key size is likely chosen to meet FIPS'
 recommendation~\cite{fips2012keysize}, which makes SGX eligible for use in U.S.
 government applications. The public exponent 3 affords a simplified signature
-verification algorithm, which is described in \S~\ref{sec:sgx_rsa_check}. The
+verification algorithm, which is discussed in \S~\ref{sec:sgx_rsa_check}. The
 simplified algorithm also requires the fields Q1 and Q2 in the RSA signature,
 which are also described in \S~\ref{sec:sgx_rsa_check}.
 
@@ -166,11 +179,11 @@ security version number (ISVSVN).
 
 The public RSA key used to issue a certificate identifies the enclave's author.
 All RSA keys used to issue enclave certificates must have the public exponent
-set to 3, so they only have different moduli. Furthermore, SGX does not use
-the entire modulus of a key, but rather a 256-bit SHA-2 hash of the modulus.
-This is called a \textit{signer measurement} (MRSIGNER), to parallel the name
-of \textit{enclave measurement} (MRENCLAVE) for the SHA-2 hash that identifies
-an enclave's contents.
+set to 3, so they are only differentiated by their moduli. SGX does not use the
+entire modulus of a key, but rather a 256-bit SHA-2 hash of the modulus. This
+is called a \textit{signer measurement}~(MRSIGNER), to parallel the name of
+\textit{enclave measurement}~(MRENCLAVE) for the SHA-2 hash that identifies an
+enclave's contents.
 
 The SGX implementation relies on a hard-coded MRSIGNER value to recognize
 certificates issued by Intel. Enclaves that have an Intel-issued certificate
@@ -179,11 +192,11 @@ can receive additional privileges, which are discussed in
 
 An enclave author can use the same RSA key to issue certificates for enclaves
 that represent different software modules. Each module is identified by a
-unique Product ID (ISVPRODID) value. Conversely, all the enclaves whose
+unique Product ID~(ISVPRODID) value. Conversely, all the enclaves whose
 certificates have the same ISVPRODID and are issued by the same RSA key
 (and therefore have the same MRENCLAVE) are assumed to represent different
-versions of the same software module. Enclaves created by different authors are
-always assumed to contain different software modules.
+versions of the same software module. Enclaves whose certificates are signed
+by different keys are always assumed to contain different software modules.
 
 % Security Version Numbers: SDM S 39.4.2
 
@@ -227,15 +240,15 @@ update version.
 The SDM does not describe the structure of CPUSVN, but it states that comparing
 CPUSVN values using integer comparison is not meaningful, and that only some
 CPUSVN values are valid. Furthermore, CPUSVNs admit an ordering relationship
-with has the same semantics as the ordering relationship between enclave SVNs.
+that has the same semantics as the ordering relationship between enclave SVNs.
 Specifically, an SGX implementation will consider all SGX implementations with
 lower SVNs to be compromised due to security vulnerabilities, and will not
 trust them.
 
 An SGX patent~\cite{intel2013patent1} discloses that CPUSVN is a concatenation
-of small integers that represent the SVNs of the various components that make
-up SGX's implementation. This representation is consistent with all the
-statements made in the SDM.
+of small integers representing the SVNs of the various components that make up
+SGX's implementation. This structure is consistent with all the statements made
+in the SDM.
 
 
 \subsubsection{Establishing an Enclave's Identity}
@@ -260,6 +273,9 @@ Figure~\ref{fig:sgx_einit_sigstruct}.
 % EINIT: SDM S 41.3
 % Enclave Signature Structure (SIGSTRUCT): SDM S 38.13
 
+\texttt{EINIT} requires the virtual address of the SIGSTRUCT certificate
+issued to the enclave, and uses the information in the certificate to
+initialize the certificate-based identity information in the enclave's SECS.
 Before using the information in the certificate, \texttt{EINIT} first verifies
 its RSA signature. The SIGSTRUCT fields Q1 and Q2, along with the RSA exponent
 3, facilitate a simplified verification algorithm, which is discussed in
@@ -267,9 +283,9 @@ its RSA signature. The SIGSTRUCT fields Q1 and Q2, along with the RSA exponent
 
 If the SIGSTRUCT certificate is found to be properly signed, \texttt{EINIT}
 follows the steps discussed in the following few paragraphs to ensure that the
-certificate matches the enclave that is being initialized. Once the checks are
-completed, \texttt{EINIT} computes MRSIGNER, the 256-bit SHA-2 hash of the
-MODULUS field in the SIGSTRUCT, and writes it into the enclave's SECS.
+certificate was issued to the enclave that is being initialized. Once the
+checks are completed, \texttt{EINIT} computes MRSIGNER, the 256-bit SHA-2 hash
+of the MODULUS field in the SIGSTRUCT, and writes it into the enclave's SECS.
 \texttt{EINIT} also copies the ISVPRODID and ISVSVN fields from SIGSTRUCT into
 the enclave's SECS. As explained in \S~\ref{sec:sgx_certificate_identity},
 these fields make up the enclave's certificate-based identity.
@@ -305,21 +321,21 @@ remote party that can check the enclave's attributes.
 The SGX design solves this problem having enclave authors convey the set of
 acceptable attribute values for an enclave in the ATTRIBUTES and ATTRIBUTEMASK
 fields of the SIGSTRUCT certificate issued for the enclave. \texttt{EINIT} will
-refuse to initialize an enclave using a SIGSTRUCT if the bitwise AND betwee
+refuse to initialize an enclave using a SIGSTRUCT if the bitwise AND between
 the ATTRIBUTES field in the enclave's SECS and the ATTRIBUTESMASK field in the
 SIGSTRUCT does not equal the SIGSTRUCT's ATTRIBUTES field. This check prevents
-enclaves with undesirable attributes from obtaining secrets using the migration
-process that employs certificate-based identities.
+enclaves with undesirable attributes from obtaining and potentially leaking
+secrets using the migration process.
 
-Any enclave author can use SIGSTRUCT to request that specific bits in an
-enclave's ATTRIBUTES field are cleared. However, certain bits can only be set
-for enclaves that are signed by Intel. \texttt{EINIT} has a mask of restricted
-ATTRIBUTES bits, discussed in \S~\ref{sec:sgx_attestation}. The \texttt{EINIT}
-implementation contains a hard-coded MRSIGNER value that is used to identify
-Intel's privileged enclaves, and only allows privileged enclaves to be built
-with an ATTRIBUTES value that matches any of the bits in the restricted mask.
-This check is essential to the security of the SGX software attestation
-process, which is described in \S~\ref{sec:sgx_attestation}.
+Any enclave author can use SIGSTRUCT to request that any of the bits in an
+enclave's ATTRIBUTES field is zero. However, certain bits can only be set to
+one for enclaves that are signed by Intel. \texttt{EINIT} has a mask of
+restricted ATTRIBUTES bits, discussed in \S~\ref{sec:sgx_attestation}. The
+\texttt{EINIT} implementation contains a hard-coded MRSIGNER value that is used
+to identify Intel's privileged enclaves, and only allows privileged enclaves to
+be built with an ATTRIBUTES value that matches any of the bits in the
+restricted mask. This check is essential to the security of the SGX software
+attestation process, which is described in \S~\ref{sec:sgx_attestation}.
 
 Last, \texttt{EINIT} also inspects the VENDOR field in SIGSTRUCT. The SDM
 description of the VENDOR field in the section dedicated to SIGSTRUCT suggests

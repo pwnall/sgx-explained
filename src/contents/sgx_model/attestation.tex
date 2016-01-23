@@ -9,12 +9,6 @@ software inside an enclave can start a process that results in an SGX
 attestation signature, which includes the enclave's measurement and an enclave
 message.
 
-However, the software attestation scheme in SGX's design, summarized in
-Figure~\ref{fig:sgx_attestation_overview} is unnecessarily complicated by the
-decision to deeply couple software attestation with
-\textbf{an enclave licensing mechanism that allows Intel to force itself as an
-intermediary in the distribution of all enclave software}.
-
 \begin{figure}[hbt]
   \centering
   \includegraphics[width=85mm]{figures/sgx_attestation_overview.pdf}
@@ -27,44 +21,132 @@ intermediary in the distribution of all enclave software}.
   \label{fig:sgx_attestation_overview}
 \end{figure}
 
-Initializing an enclave via \textit{EINIT}~(\S~\ref{sec:sgx_einit_overview})
-generally requires an \texttt{EINIT} Token structure~(EINITTOKEN), which can
-only be issued by the SGX Launch enclave, as described in
-\S~\ref{sec:sgx_launch_enclave}. The SDM does not specify the role of the
-Launch Enclave, but one of the SGX patents~\cite{intel2013patent1} discloses in
-no uncertain terms that the Launch Enclave is intended to check that the
-enclave author has a business relationship with Intel.
+% EPID signing takes too long for microcode.
+%   US 8,972,746 B2 - 33:16-29, 33:58
 
-After an enclave gets cleared by the SGX Launch Enclave and is initialized via
-\texttt{EINIT}, it can authenticate itself to a remote party by participating
-in a software attestation process. This is a two-step process. First, the
-enclave uses the \texttt{EREPORT} instruction to create a REPORT structure,
-described in \S~\ref{sec:sgx_ereport}. This structure only proves the enclave's
-identity to the SGX Quoting Enclave, described in
-\S~\ref{sec:sgx_quoting_enclave}, which is a special enclave authored by Intel
-that can access to the CPU's attestation key. Therefore, the REPORT structure
-created by \texttt{EREPORT} is given to the SGX Quoting Enclave, which produces
-an attestation signature that can be verified by a remote party.
+The cryptographic primitive used in SGX's attestation signature is too complex
+to be implemented in hardware, so signing process is performed by a privileged
+\textit{Quoting Enclave}, which is issued by Intel, and can access the SGX
+attestation key. This enclave is discused in \S~\ref{sec:sgx_quoting_enclave}.
 
-The EINITTOKEN and REPORT structures are passed between enclaves by untrusted
-system software, so they require integrity guarantees. The structures'
-integrity is assured by a MAC scheme~(\S~\ref{sec:integrity_crypto}) that uses
-symmetric keys supplied by the SGX key derivation feature described in
-\S~\ref{sec:sgx_egetkey}.
+Pushing the signing functionality into the Quoting Enclave creates the need for
+a secure communication path between an enclave that desires to undergo
+software attestation and the Quoting Enclave. The SGX design solves this
+problem with a local attestation mechanism that can be used by an enclave to
+prove its identity to any other enclave hosted by the same SGX-enabled CPU.
+This scheme, described in \S~\ref{sec:sgx_ereport}, is implemented by the
+\texttt{EREPORT} instruction.
+
+% Keys: SDM S 39.4.3
+% ISCA SGX Slides 104, 105, 106
+
+The SGX attestation key used by the Quoting Enclave does not exist at the time
+SGX-enabled processors leave the factory. The attestation key is provisioned
+later, using a largely undocumented process that is known to involve at least
+one other enclave issued by Intel, and at least two special \texttt{EGETKEY}
+key types. The publicly available details of this process are summarized in
+\S~\ref{sec:sgx_quoting_enclave}.
+
+The SGX implementation contained in a CPU's hardware does not directly enforce
+the enclave attribute checks that decide which enclaves can access the CPU
+secrets used for software attestation. The potentially complex restrictions on
+enclave attributes are instead enforced by the \textit{Launch Enclave}, which
+is an enclave issued by Intel that gets to approve every other enclave before
+it is initialized by \textit{EINIT}~(\S~\ref{sec:sgx_einit_overview}). The
+officially documented information about the approval process is discussed in
+\S~\ref{sec:sgx_launch_enclave}.
+
+% Enclave License
+%   US 8,972,746 B2 - 34:6-23
+% Licenses are evaluated into Permits (which became EINITTTOKEN)
+%   US 8,972,746 B2 - 34:24-29, 35:27-59
+% EINIT requires a Permit to launch a production enclave
+%   US 8,972,746 B2 - 35:60-67, 36:1-3, 36:47-52, 38:4-65
+% License Enclave creates Permit
+%   US 8,972,746 B2 - 36:40-46, 37:50-67, 38:1-3
+% EMKPERMIT seems to have gotten merged into EINIT
+%   US 8,972,746 B2 - 36:53-67, 37:1-7, 37:24-49
+% License became SIGSTRUCT
+%   US 8,972,746 B2 - 37:8-23
+
+One of the SGX patents~\cite{intel2013patent1} discloses in no uncertain terms
+that the Launch Enclave was introduced to ensure that each enclave's author has
+a business relationship with Intel, and implements a software licensing system.
+\S~\ref{sec:sgx_licensing} briefly discusses the implications, should this turn
+out to be true.
 
 
+\subsubsection{Local Attestation}
+\label{sec:sgx_ereport}
+
+An enclave proves its identity to another \textit{target enclave} via the
+\texttt{EREPORT} instruction shown in Figure~\ref{fig:sgx_ereport}. The SGX
+instruction produces an attestation \textit{Report} (REPORT) that
+cryptographically binds a message supplied by the enclave with the enclave's
+measurement-based~(\S~\ref{sec:sgx_measurement}) and
+certificate-based~(\S~\ref{sec:sgx_certificate_identity}) identities. The
+cryptographic binding is accomplished by a MAC tag computed using a symmetric
+key that is only shared between the target enclave and the SGX implementation.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/sgx_ereport.pdf}
+  \caption{
+    \texttt{EREPORT} data flow
+  }
+  \label{fig:sgx_ereport}
+\end{figure}
+
+The \texttt{EREPORT} instruction reads the current enclave's identity
+information from the enclave's SECS~(\S~\ref{sec:sgx_secs}), and uses it to
+populate the REPORT structure. Specifically, \texttt{EREPORT} copies the
+SECS fields indicating the enclave's measurement (MRENCLAVE), certificate-based
+identity (MRSIGNER, ISVPROD, ISVSVN), and attributes (ATTRIBUTES). The
+attestation report also includes the SVN of the SGX implementation (CPUSVN)
+and a 64-byte (512-bit) message supplied by the enclave.
+
+The target enclave that receives the attestation report can convince itself of
+the report's authenticy by verifying its MAC tag, using a key obtained by
+invoking \texttt{EGETKEY}~(\S~\ref{sec:sgx_egetkey}) and asking for a report
+key. \texttt{EREPORT} uses the same key derivation process as \texttt{EGETKEY}
+does when invoked with KEYNAME set to the value that represents a Report Key.
+
+The report key returned by \texttt{EGETKEY} is derived from a secret embedded
+in the processor~(\S~\ref{sec:sgx_egetkey}), and the key material includes the
+target enclave's measurement. The target enclave can be assured that the MAC
+tag in the report was produced by the SGX implementation, for the following
+reasons. The cryptographic properties of the underlying key derivation and
+MAC algorithms ensure that only the SGX implementation can produce the MAC tag,
+as it is the only entity who can access the processor's secret, and it would be
+impossible for an attacker to derive the report key without knowing the
+processor's secret. The SGX design guarantees that key produced by
+\texttt{EGETKEY} depends on the calling enclave's measurement, so only the
+target enclave can obtain the key used to produce the MAC tag in the report.
+
+\texttt{EREPORT} requires the virtual address of a
+\textit{Report Target Info}~(TARGETINFO) structure that contains the
+measurement-based identity and attributes of the target enclave. These values
+are used to derive the same key that \texttt{EGETKEY} would.
+
+When deriving a report key, \texttt{EGETKEY} does not use the fields
+corresponding to the enclave's certificate-based identity (MRSIGNER, ISVPRODID,
+ISVSVN) in the key generation material. However, it does use the SVN of the
+SGX implementation, which is also written to the REPORT structure.
+
+Last, \texttt{EREPORT} sets the KEYID field in the key generation material to
+the contents of an SGX configuration register (CR\_REPORT\_KEYID) that is
+initialized with a random value when SGX is initialized. The KEYID value is
+also saved in the attestation report, but it is not covered by the MAC tag.
 
 
-
-
-
-
-\subsubsection{License Verification}
+\subsubsection{Enclave Approval}
 \label{sec:sgx_launch_enclave}
 
 % ATTRIBUTES: SDM S 38.7.1
 % EINIT: SDM S 41.3
 % EINITTOKENKEY is bit 5, INTEL_ONLY_MASK is 0x20
+
+Instead of implementing potentially complex access checks
 
 % EINIT Token Structure (EINITTOKEN): SDM S 38.14
 
@@ -84,45 +166,28 @@ states that SGX implementation uses a CMAC based on 128-bit AES.
 
 
 
-\subsubsection{Inter-Enclave Attestation}
-\label{sec:sgx_ereport}
-
-The enclave asks the CPU to produce an \textit{enclave report}, which contains
-the attestation challenge, the enclave's measurement value, an
-enclave-generated 256-byte message, and an HMAC
- with a symmetric key shared between the CPU and a special
-\textit{signing enclave} produced by Intel. The untrusted system software
-executes the signing enclave, which verifies the report and produces an
-\textit{attestation signature} that covers the challenge and the enclave's
-measurement.
-
-
-\subsubsection{Enclave Initialization}
-\label{sec:sgx_einit}
-
 % MRSIGNER: SDM S 39.4.1.2
 
-\texttt{EINIT}~(\S~\ref{sec:sgx_einit_overview}) requires the virtual address
-of the SIGSTRUCT associated with the enclave to be initialized. The instruction
-checks the validity of SIGSTRUCT's contents, and refuses to proceed if it
-detects inconsistencies. For example, \texttt{EINIT} verifies the RSA
-signature and returns an error code if the signature is invalid.
-
-\texttt{EINIT} computes a 256-bit SHA-2 hash of the RSA exponent in the
-enclave's SIGSTRUCT, and writes it into the MRSIGNER field in the enclave's
-SECS. For this reason, the RSA exponent's hash is referred to as MRSIGNER
-throughout the SGX documentation. This value is the cryptographic identity of
-the enclave's author.
-
-The \texttt{EINIT} instruction also copies the ISVPRODID and ISVSVN fields from
-SIGSTRUCT into the enclave's SECS. In the scope of SGX's key generation
-feature, which will be discussed in \S~\ref{sec:sgx_egetkey}, all the enclaves
-that have the same MRSIGNER and ISVPRODID represent different versions of the
-same software, and are ordered according to the value of the ISVSVN field.
-Higher ISVSVN values identify newer enclave versions that potentially fix
-security vulnerabilities found in the older versions.
+After an enclave gets cleared by the SGX Launch Enclave and is initialized via
+\texttt{EINIT}, it can authenticate itself to a remote party by participating
+in a software attestation process.
 
 
 \subsubsection{The Quoting Enclave}
 \label{sec:sgx_quoting_enclave}
 
+While the SDM paints a complete picture of the local attestation mechanism, it
+is a lot more secretive about the Quoting Enclave and the underlying keys.
+Fortunately, the SGX patents~\cite{intel2013patent1, intel2013patent2} shed
+some light on the topic.
+
+
+
+\subsubsection{Licensing}
+\label{sec:sgx_licensing}
+
+However, the software attestation scheme in SGX's design, summarized in
+Figure~\ref{fig:sgx_attestation_overview} is unnecessarily complicated by the
+decision to deeply couple software attestation with
+\textbf{an enclave licensing mechanism that allows Intel to force itself as an
+intermediary in the distribution of all enclave software}.
