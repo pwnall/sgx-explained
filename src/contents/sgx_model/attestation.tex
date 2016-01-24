@@ -79,6 +79,9 @@ out to be true.
 \subsubsection{Local Attestation}
 \label{sec:sgx_ereport}
 
+% Using REPORTs for Local Attestation: SDM S 39.4.3.2
+% EREPORT: SDM S 41.4.1
+
 An enclave proves its identity to another \textit{target enclave} via the
 \texttt{EREPORT} instruction shown in Figure~\ref{fig:sgx_ereport}. The SGX
 instruction produces an attestation \textit{Report} (REPORT) that
@@ -105,11 +108,30 @@ identity (MRSIGNER, ISVPROD, ISVSVN), and attributes (ATTRIBUTES). The
 attestation report also includes the SVN of the SGX implementation (CPUSVN)
 and a 64-byte (512-bit) message supplied by the enclave.
 
+% Keys: SDM S 39.4.3
+
 The target enclave that receives the attestation report can convince itself of
-the report's authenticy by verifying its MAC tag, using a key obtained by
-invoking \texttt{EGETKEY}~(\S~\ref{sec:sgx_egetkey}) and asking for a report
-key. \texttt{EREPORT} uses the same key derivation process as \texttt{EGETKEY}
-does when invoked with KEYNAME set to the value that represents a Report Key.
+the report's authenticy as shown in Figure~\ref{fig:sgx_ereport_check}. The
+report's authenticity proof is its MAC tag. The key required to verify the MAC
+can only be obtained by the target enclave, by asking
+\texttt{EGETKEY}~(\S~\ref{sec:sgx_egetkey}) to derive report key. The SDM
+states that the MAC tag is computed using a block cipher-based
+MAC~(CMAC,~\cite{fips2005cmac}), but stops short of specifying the underlying
+cipher. One of the SGX papers~\cite{anati2013sgx} states that the CMAC is based
+on 128-bit AES.
+
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=87mm]{figures/sgx_ereport_check.pdf}
+  \caption{
+    The authenticty of the REPORT structure created by \texttt{EREPORT} can and
+    should be verified by the report's target enclave. The target's code uses
+    \texttt{EGETKEY} to obtain the key used for the MAC tag embedded in the
+    REPORT structure, and then verifies the tag.
+  }
+  \label{fig:sgx_ereport_check}
+\end{figure}
 
 The report key returned by \texttt{EGETKEY} is derived from a secret embedded
 in the processor~(\S~\ref{sec:sgx_egetkey}), and the key material includes the
@@ -123,15 +145,24 @@ processor's secret. The SGX design guarantees that key produced by
 \texttt{EGETKEY} depends on the calling enclave's measurement, so only the
 target enclave can obtain the key used to produce the MAC tag in the report.
 
-\texttt{EREPORT} requires the virtual address of a
+\texttt{EREPORT} uses the same key derivation process as \texttt{EGETKEY}
+does when invoked with KEYNAME set to the value that represents a Report Key.
+For this reason, \texttt{EREPORT} requires the virtual address of a
 \textit{Report Target Info}~(TARGETINFO) structure that contains the
-measurement-based identity and attributes of the target enclave. These values
-are used to derive the same key that \texttt{EGETKEY} would.
+measurement-based identity and attributes of the target enclave.
 
-When deriving a report key, \texttt{EGETKEY} does not use the fields
-corresponding to the enclave's certificate-based identity (MRSIGNER, ISVPRODID,
-ISVSVN) in the key generation material. However, it does use the SVN of the
-SGX implementation, which is also written to the REPORT structure.
+% EGETKEY: SDM S 41.4.1
+% Key Derivation: SDM Table 41-43
+
+When deriving a report key, \texttt{EGETKEY} behaves slightly differently than
+it does in the case of seal keys, as shown in
+Figure~\ref{fig:sgx_ereport_check}. The key generation material never includes
+the fields corresponding to the enclave's certificate-based identity
+(MRSIGNER, ISVPRODID, ISVSVN), and the KEYPOLICY field in the KEYREQUEST
+structure is ignored. Furthermore, the SGX implementation SVN~(CPUSVN) value
+used for key generation is determined by the current CPUSVN, instead from being
+read from the Key Request structure.
+
 
 Last, \texttt{EREPORT} sets the KEYID field in the key generation material to
 the contents of an SGX configuration register (CR\_REPORT\_KEYID) that is
@@ -158,11 +189,6 @@ Instead of implementing potentially complex access checks
   }
   \label{fig:sgx_einittoken}
 \end{figure}
-
-The SDM states that the MAC that protects EINITTOKEN's authenticity is computed
-using a block cipher-based MAC~(CMAC,~\cite{fips2005cmac}), but stops short of
-specifying the underlying cipher. One of the SGX papers~\cite{anati2013sgx}
-states that SGX implementation uses a CMAC based on 128-bit AES.
 
 
 
