@@ -21,6 +21,11 @@ high priority in the SGX design.
 
 \subsubsection{Memory Protection Mechanisms}
 
+% PMH protects the enclave memory area via a range register.
+%   US 8,972,746 B2 - 31:1-10, 31:31-36, 31:41-46, 31:65-67, 32:1-9
+% TLB invalidation on EEXIT
+%   US 8,972,746 B2 - 32:55-67, 33:1-9
+
 The SGX reference manual states that the Processor Reserved Memory (PRM) is
 allocated by the BIOS, by setting the PRM range registers (PRMRR). The patents
 refer to this range as the secure enclave range registers (SERR), and state

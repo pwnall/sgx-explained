@@ -475,10 +475,10 @@ whose SIGSTRUCT certificates assign them different Product IDs.
 
 Similarly, the key derivation material always includes the value of an 128-bit
 Owner Epoch (OWNEREPOCH) SGX configuration register. This register is intended
-to be set by the computer's firmware to a value that represents the computer's
-current user. If the computer changes ownership, the new owner can change the
-Owner Epoch value, which invalidates all the old keys produced by
-\texttt{EGETKEY}.
+to be set by the computer's firmware to a secret generated once and stored in
+non-volatile memory. Before the computer changes ownership, the old owner can
+clear the OWNEREPOCH from non-volatile memory, making it impossible for the new
+owner to decrypt any enclave secrets that may be left on the computer.
 
 The \texttt{EGETKEY} derivation material also includes a 256-bit value supplied
 by the enclave, in the KEYID field. This makes it possible for an enclave to
