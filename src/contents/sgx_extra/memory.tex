@@ -59,28 +59,6 @@ field, which contains the expected virtual address (\S~\ref{sec:segments}) used
 to access the page. The expected virtual address must be specified when a page
 is allocated, and cannot be changed until the page is freed.
 
-When an address translation (\S~\ref{sec:paging}) result is the physical
-address of an EPC page, the CPU ensures\footnote{A mismatch triggers a general
-protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
-to the address translation process matches the expected virtual address
-recorded in the page's EPCM entry, as shown in
-Figure~\ref{fig:sgx_tlb_miss_checks}. This prevents the system software, which
-manages the page tables and EPT, from modifying an enclave's virtual address
-space in a manner that is inconsistent with the enclave author's expectations.
-
-
-Figure~\ref{fig:sgx_tlb_miss_checks}
-
-\begin{figure}[hbt]
-  \centering
-  \includegraphics[width=85mm]{figures/sgx_tlb_miss_checks.pdf}
-  \caption{
-    An enclave's EPC pages are accessed using a dedicated region in the
-    enclave's virtual address space, called ELRANGE. The rest of the virtual
-    address space maps the host application's memory.
-  }
-  \label{fig:sgx_tlb_miss_checks}
-\end{figure}
 
 % Security Information (SECINFO): SDM S 38.11, S 38.11.{1,2}
 
@@ -162,18 +140,3 @@ code executing inside their enclaves. Furthermore, the SGX instructions that
 operate on SGX data structures check the EPCM type fields of their inputs
 against the expected types. This type system prevents software from
 intentionally or accidentally corrupting the key SGX data structures.
-
-The type-based access restrictions have the desirable side-effect of hiding the
-contents of the EPC pages holding key SGX structures from software, so the
-internal layout of any key data structure can change across new CPU revisions.
-Software cannot access the key structures in EPC, so it cannot become dependent
-on a specific processor's implementation details.
-
-The SGX documentation does specify a software-visible layout for each key data
-structure. This layout is used by the non-EPC page used to initialize the key
-data structure when it is created. Therefore, new CPU revisions must preserve
-the ability to initialize the key data structures from the less flexible
-software-visible layout.
-
-
-

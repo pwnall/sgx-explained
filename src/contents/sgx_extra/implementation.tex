@@ -1,4 +1,5 @@
 \subsection{SGX Implementation Overview}
+\label{sec:sgx_implementation_overview}
 
 An under-documented and overlooked feat achieved by the SGX design is that
 implementing it on an Intel processor has a very low impact on the chip's
@@ -14,6 +15,7 @@ speed than the chip's electrical circuitry.
 
 
 \subsubsection{Execution Core Modifications}
+\label{sec:sgx_core_modifications}
 
 The SGX design may require a very small modification to the processor's
 execution cores~(\S~\ref{sec:cpu_core}), in the Page Miss
@@ -22,10 +24,10 @@ a fast path that relies on an FSM page walker, and a microcode assist fallback
 that handles the edge cases (\S~\ref{sec:microcode_pmh}).
 
 The bulk of SGX's memory access checks, which are discussed in
-\S~\ref{sec:sgx_protection}, can be implemented in the microcode assist. The
-only modification to the PMH hardware is having it trigger the microcode assist
-when the physical address produced by the page walker FSM matches the Processor
-Reserved Memory~(PRM,~\S~\ref{sec:sgx_prm}) range.
+\S~\ref{sec:sgx_access_protection}, can be implemented in the microcode assist.
+The only modification to the PMH hardware is having it trigger the microcode
+assist when the physical address produced by the page walker FSM matches the
+Processor Reserved Memory~(PRM,~\S~\ref{sec:sgx_prm}) range.
 
 We state that SGX \textbf{may} require a hardware modification to the PMH
 because there is a possibility that the behavior described above can be
@@ -41,6 +43,7 @@ extra MTRR pair.
 
 
 \subsubsection{Uncore Modifications}
+\label{sec:sgx_uncore_modifications}
 
 The SDM states that DMA transactions~(\S~\ref{sec:motherboard}) that target the
 PRM range are aborted by the processor. The SGX patents disclose that the PRMRR
@@ -84,6 +87,7 @@ MC.
 
 
 \subsubsection{Microcode Modifications}
+\label{sec:sgx_microcode_modifications}
 
 According to the SGX patents, all the SGX instructions are implemented in
 microcode. This can also be deduced by reading the SDM's pseuodocode for all
