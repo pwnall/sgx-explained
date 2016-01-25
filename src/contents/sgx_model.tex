@@ -2,6 +2,7 @@
 
 The central concept of SGX is the \textit{enclave}, a protected environment
 that contains the code and data pertaining to a security-sensitive computation.
+
 SGX-enabled processors provide trusted computing by isolating each enclave's
 environment from the untrusted software outside the enclave, and by
 implementing a software attestation scheme that allows a remote party to
@@ -13,10 +14,9 @@ same computer, as well as from a limited set of physical attacks.
 This section summarizes the SGX concepts that make up a mental model which is
 sufficient for programmers to author SGX enclaves and to add SGX support to
 existing system software. All the information in this section is backed up by
-Intel's Software Developer Manual (SDM). Future sections use the model created
-here to fill in some the missing pieces in the manual, namely a description of
-the SGX implementation and an anlysis of SGX's security properties.
-
+Intel's Software Developer Manual (SDM). The following section builds on the
+concepts introduced here to fill in some of the missing pieces in the manual,
+and analyzes some of SGX's security properties.
 
 \input{contents/sgx_model/physical_memory.tex}
 \input{contents/sgx_model/enclave_layout.tex}

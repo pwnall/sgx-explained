@@ -11,12 +11,6 @@ patents~\cite{intel2013patent1, intel2013patent2}, because the SGX papers and
 reference consider this information an implementation detail. We point out when
 a piece of information matches the SGX manual or one of the SGX papers.
 
-According to the Intel patents, the SGX instructions are implemented in
-microcode. The statement in \cite{anati2013sgx} that a microcode update changes
-the platform TCB confirms this finding. The patents state that SGX requires
-very few hardware changes, and most of the implementation is in microcode, as a
-positive fact, fueling our suspicion that minimizing hardware changes was a
-high priority in the SGX design.
 
 
 \subsubsection{Memory Protection Mechanisms}
@@ -61,11 +55,14 @@ The patents also specify that the memory access checks are performed in the
 Page-Miss Handler (PMH) microcode, which is invoked during TLB misses. The PMH
 performs the SGX access checks described below. If the access checks succeed,
 the PMH creates a TLB entry, as it normally would. If the access checks fail,
-the PMH aborts, which results in a Page Fault. The desire to restrict SGX
+the PMH aborts, which results in a Page Fault.
+
+The desire to restrict SGX
 access checks to the PMH introduces the requirement to flush a logical
 processor's TLBs when it enters or exits enclave mode. This is accomplished by
 adding 1 bit to TLB entries, which differentiates between enclave pages and
 non-enclave pages.
+
 On enclave entry and exit, all the TLB entries that have the enclave bit set
 are flushed. One of the SGX papers~\cite{mckeen2013sgx} confirms that the EPCM
 is checked by the PMH.

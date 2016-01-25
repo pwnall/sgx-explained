@@ -246,7 +246,7 @@ in the L1 and L2 caches.
 The number of LLC slices matches the number of cores in the CPU, and each LLC
 slice shares a CBox with a core. The CBoxes implement the cache coherence
 engine, so each CBox acts as the QPI cache agent for its LLC slice. CBoxes
-use a \textit{Source Address Decoder} (SAD) to route DRAM requests to the
+use a \textit{Source Address Decoder}~(SAD) to route DRAM requests to the
 appropriate home agents. Conceptually, the SAD takes in a memory address and
 access type, and outputs a transaction type (coherent, non-coherent, IO) and a
 node ID. Each CBox contains a SAD replica, and the configurations of all SADs
@@ -262,7 +262,7 @@ On recent Intel processors, the uncore also contains at least one memory
 controller. Each integrated memory controller (iMC or MBox in Intel's
 documentation) is connected to the ring by a \textit{home agent} (HA or
 \textit{BBox} in Intel's datasheets). Each home agent contains a
-\textit{Target Address Decoder} (TAD), which maps each DRAM address to an
+\textit{Target Address Decoder}~(TAD), which maps each DRAM address to an
 address suitable for use by the DRAM chips, namely a DRAM channel, bank, rank,
 and a DIMM address. The mapping in the TAD is not documented by Intel, but it
 has been reverse-engineered~\cite{pessil2015dramaddressing}.
@@ -431,7 +431,7 @@ look-aside buffer} (TLB).
 Table~\ref{fig:tlb_timings} shows the levels of the TLB hierarchy. Recent
 processors have separate L1 TLBs for instructions and data, and a shared L2
 TLB. Each core has its own TLBs (see Figure~\ref{fig:cpu_core}). When a virtual
-address is not contained in a core's TLB, the \textit{Page Miss Handler} (PMH)
+address is not contained in a core's TLB, the \textit{Page Miss Handler}~(PMH)
 performs a \textit{page walk} (page table / EPT traversal) to translate the
 virtual address, and the result is stored in the TLB.
 

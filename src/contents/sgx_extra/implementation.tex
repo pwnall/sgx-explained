@@ -1,0 +1,122 @@
+\subsection{SGX Implementation Overview}
+
+An under-documented and overlooked feat achieved by the SGX design is that
+implementing it on an Intel processor has a very low impact on the chip's
+hardware design. SGX's modifications to the processor's execution
+cores~(\S~\ref{sec:cpu_core}) are either very small or completely inexistent.
+The CPU's uncore~(\S~\ref{sec:cpu_die}, \S~\ref{sec:cache_coherence}) receives
+a new module, the  Memory Encryption Engine, which appears to be fairly
+self-contained.
+
+The bulk of the SGX implementation is relegated to the processor's
+microcode~(\S~\ref{sec:microcode}), which supports a much higher development
+speed than the chip's electrical circuitry.
+
+
+\subsubsection{Execution Core Modifications}
+
+The SGX design may require a very small modification to the processor's
+execution cores~(\S~\ref{sec:cpu_core}), in the Page Miss
+Handler~(PMH,~\S~\ref{sec:tlbs}). The PMH resolves TLB misses, and consists of
+a fast path that relies on an FSM page walker, and a microcode assist fallback
+that handles the edge cases (\S~\ref{sec:microcode_pmh}).
+
+The bulk of SGX's memory access checks, which are discussed in
+\S~\ref{sec:sgx_protection}, can be implemented in the microcode assist. The
+only modification to the PMH hardware is having it trigger the microcode assist
+when the physical address produced by the page walker FSM matches the Processor
+Reserved Memory~(PRM,~\S~\ref{sec:sgx_prm}) range.
+
+We state that SGX \textbf{may} require a hardware modification to the PMH
+because there is a possibility that the behavior described above can be
+achieved solely with microcode configuration, as explained below.
+
+The PRM range is configured by the PRM Range Registers~(\S~\ref{sec:sgx_prm}),
+which have exactly the same semantics as the Memory Type Range
+Registers~(MTRRs,~\S~\ref{sec:cacheability_config}) used to configure a
+variable memory range. The page walker FSM in the PMH is already configured to
+issue a microcode assist when the page tables are in uncacheable
+memory~(\S~\ref{sec:memory_io}). Therefore, the PRMRR can be represented as an
+extra MTRR pair.
+
+
+\subsubsection{Uncore Modifications}
+
+The SDM states that DMA transactions~(\S~\ref{sec:motherboard}) that target the
+PRM range are aborted by the processor. The SGX patents disclose that the PRMRR
+protection aginst unauthorized DMA is implemented by having the SGX microcode
+set up entries in the Source Address Decoder~(SAD) in the uncore CBoxes and in
+the Target Address Decoder~(TAD) in the integrated Memory Controller~(MC).
+
+\S~\ref{sec:cache_coherence} mentions that Intel's Trusted Execution
+Technology~(TXT)~\cite{grawrock2009txt} already takes advantage of the
+integrated MC to protect a DRAM range from DMA. It is highly likely that the
+SGX implementation reuses the mechanisms brought by TXT, and only requires the
+extension of the SADs and TADs by one entry.
+
+SGX's major hardware modification is the Memory Encryption Engine~(MEE) that is
+added to the processor's uncore~(\S~\ref{sec:cpu_die},
+\S~\ref{sec:cache_coherence}) to protect SGX's Enclave Page
+Cache~(EPC,~\S~\ref{sec:sgx_epc}) against physical attacks.
+
+% ISCA SGX Slides 163-201
+
+The MEE is briefly described in the ISCA 2015 SGX
+tutorial~\cite{intel2015iscasgx}. According to the information presented there,
+the MEE roughly follows the approach introduced by Aegis \cite{suh2003aegis}
+\cite{aegis_impl}, which relies on a variation of Merkle trees to provide the
+EPC with privacy, integrity, and freshness
+guarantees~(\S~\ref{sec:crypto_primitives}). Unlike Aegis, the MEE uses
+non-standard cryptographic primitives that include a slightly modified AES
+operating mode~(\S~\ref{sec:privacy_crypto}) and a
+Carter-Wegman~\cite{carter1977mac, wegman1981mac}
+MAC~(\S~\ref{sec:integrity_crypto}) construction.
+
+% ISCA SGX Slide 167
+
+Both the ISCA SGX tutorial and the patents state that the MEE is connected to
+to the Memory Controller (MC) integrated in the CPU's uncore. However, all
+sources are completely silent on further implementation details. The
+MEE overview slide states that ``the Memory Controller detects [the] address
+belongs to the MEE region, and routes transaction to MEE'', which suggests that
+the MEE is fairly self-contained and has a narrow interface to the rest of the
+MC.
+
+
+\subsubsection{Microcode Modifications}
+
+According to the SGX patents, all the SGX instructions are implemented in
+microcode. This can also be deduced by reading the SDM's pseuodocode for all
+the instructions, and realizing that it is highly unlikely that any SGX
+instruction can be implemented in 4 or fewer
+micro-ops~(\S~\ref{sec:out_of_order}), which is the most that can be
+handled by the simple decoders used in the hardware fast paths
+(S~\ref{sec:microcode_role}).
+
+The Asynchronous Enclave Exit~(AEX,~\S~\ref{sec:sgx_aex}) behavior is also
+implemented in microcode. \S~\ref{sec:microcode_structure} draws on an
+assortment of Intel patents to conclude that hardware
+exceptions~(\S~\ref{sec:faults}), including both faults and interrupts,
+trigger microcode events~(\S~\ref{sec:microcode_structure}). It follows that
+the SGX implementation can implement AEX by modifying the hardware exception
+handlers in the microcode.
+
+% ISCA SGX Slide 166
+
+Last, the SGX initialization sequence is also implemented in microcode. It is
+likely that the boot sequence in microcode~(\S~\ref{sec:microcode_sec}) was
+modified to initialize the registers associated with the SGX microcode. The
+ISCA SGX tutorial states that the MEE's keys are initialized during the boot
+process.
+
+% Intel SGX Opt-In Configuration: SDM S 37.7.1
+
+The SDM states that SGX instructions are enabled by setting a bit in a
+Model-Specific Register~(MSR,~\S~\ref{sec:address_spaces}). Initializing SGX
+requires enabling the MEE and configuring the SAD and TAD to protect the PRM
+range, and both tasks are amenable to a microcode implementation.
+
+The SGX patents state that SGX requires very few hardware changes, and most of
+the implementation is in microcode, as a positive fact. We therefore suspect
+that minimizing hardware changes was a high priority in the SGX design, and
+that any SGX modification proposals need to be aware of this priority.

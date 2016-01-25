@@ -248,10 +248,10 @@ microcode-visible registers \cite{intel2009pipeline}.
 %   US 5,636,374 - 5:59-64, 6:5-8
 %   US 13/730,563 - 0072, 0073, 0074, Fig. 10
 
-When a TLB miss (\S~\ref{sec:tlbs}) occurs, the memory execution unit forwards
-the virtual address to the \textit{Page Miss Handler} (PMH), which performs the
+When a TLB miss~(\S~\ref{sec:tlbs}) occurs, the memory execution unit forwards
+the virtual address to the \textit{Page Miss Handler}~(PMH), which performs the
 page walk needed to obtain a physical address. In order to minimize the latency
-of a page walk, the PMH is implemented as a finite-state machine (FSM)
+of a page walk, the PMH is implemented as a \textit{Finite-State Machine}~(FSM)
 \cite{hildesheim2014ptm, raikin2014tlb}. Furthermore, the PMH fetches the
 page table entries from memory by issuing ``stuffed loads'', which are special
 micro-ops that bypass the reorder buffer (ROB) and go straight to the memory
@@ -275,7 +275,7 @@ associated with out-of-order scheduling
 %                  15:1-12, 15:16-39
 
 The FSM in the PMH handles the fast path of the entire address translation
-process, which assumes no address translation fault (\S~\ref{sec:faults})
+process, which assumes no address translation fault~(\S~\ref{sec:faults})
 occurs
 \cite{intel1996dtlb, intel1997pmh, intel1999exceptions, intel1999events}, and
 no page table entry needs to be modified \cite{intel1997pmh}.
@@ -283,7 +283,7 @@ no page table entry needs to be modified \cite{intel1997pmh}.
 When the PMH FSM detects the conditions that trigger a Page Fault or a General
 Protection Fault, it communicates a microcode event code, corresponding to the
 detected fault condition, to the execution unit (\S~\ref{sec:out_of_order})
-responsible for memory operations \cite{intel1996dtlb, intel1997pmh,
+responsible for memory operations~\cite{intel1996dtlb, intel1997pmh,
 intel1999exceptions, intel1999events}. In turn, the execution unit triggers the
 fault by associating the event code with the micro-op that caused the address
 translation, as described in the previous section.
@@ -305,9 +305,9 @@ proving their relevance to newer CPU models.
 % Microcode can prevent PMH writes
 %   US 7,552,255 - 7:52-55
 
-Two 2014 patents \cite{hildesheim2014ptm, raikin2014tlb} mention that the PMH
+Two 2014 patents~\cite{hildesheim2014ptm, raikin2014tlb} mention that the PMH
 is executing a FSM which issues stuffing loads to obtain page table entries.
-A 2009 patent \cite{intel2009pipeline} mentions that microcode is invoked after
+A 2009 patent~\cite{intel2009pipeline} mentions that microcode is invoked after
 a PMH walk, and that the microcode can prevent the translation result produced
 by the PMH from being written to the TLB.
 
@@ -317,12 +317,12 @@ by the PMH from being written to the TLB.
 % Scatter / gather implemented in microcode and hardware
 %   US 8,447,962 - 11:28-30, 12:15-17, 12:20-23, 12:25-28
 
-A 2013 patent \cite{intel2013scattergather} and a 2014 patent
+A 2013 patent~\cite{intel2013scattergather} and a 2014 patent
 \cite{intel2014gather} on scatter / gather instructions disclose that the newly
 introduced instructions use a combination of hardware in the execution units
 that perform memory operations, which include the PMH. The hardware issues
 microcode assists for slow paths, such as gathering vector elements stored in
-un-cacheable memory (\S~\ref{sec:memory_io}), and operations that cause Page
+uncacheable memory~(\S~\ref{sec:memory_io}), and operations that cause Page
 Faults.
 
 % Microcode used when vAPIC memory checks fail
