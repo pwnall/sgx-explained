@@ -7,7 +7,10 @@ The paper is guaranteed to build with [MacTeX](https://tug.org/mactex/) and
 `latexmk` using the following command.
 
 ```bash
-brew install latexmk
+xcode-select --install
+brew tap Caskroom/cask
+brew cask install mactex
+brew install latex-mk
 ```
 
 ### Fedora

@@ -83,10 +83,10 @@ translation result is written into the TLBs~(\S~\ref{sec:tlbs}). This aspect
 is generally downplayed throughout the SDM, but it becomes visible when
 explaining SGX's EPC page eviction mechanism.
 
-A full discussion of SGX's access control checks merits its own section, and is
-defered to \S~\ref{sec:xxx}. The EPC page eviction mechanisms can be explained
-using only two requirements from SGX's security model. First, when a logical
-processor exits an enclave, either via
+A full discussion of SGX's memory access protections checks merits its own
+section, and is defered to \S~\ref{sec:sgx_access_protection}. The EPC page
+eviction mechanisms can be explained using only two requirements from SGX's
+security model. First, when a logical processor exits an enclave, either via
 \texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}) or via an AEX~(\S~\ref{sec:sgx_aex}),
 its TLBs are flushed. Second, when an EPC page is deallocated from an enclave,
 all logical processors executing that enclave's code must be directed to exit

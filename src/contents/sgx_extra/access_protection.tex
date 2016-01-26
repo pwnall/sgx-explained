@@ -41,10 +41,6 @@ When modifying the page tables, the system software has to consider TLB
 coherence issues~(\S~\ref{sec:tlbs}) and perform TLB shootdowns when
 appropriate.
 
-% Enclave Page Cache Map (EPCM): SDM S 37.5.1, SDM S 38.19
-% SECINFO.FLAGS: SDM S 38.11.1
-% PAGE_TYPE Field Definition: SDM S 38.11.2
-
 SGX leaves page table management under the system software's control, but it
 cannot trust the software to set up the page tables in any particular way.
 Therefore, the hypothetical design described above cannot be used by SGX as-is.
@@ -55,14 +51,71 @@ The address translations that do not obey SGX's access control restrictions
 are rejected before they have a chance to reach the TLBs and be used to service
 load and store instructions.
 
-When an address translation (\S~\ref{sec:paging}) result is the physical
-address of an EPC page, the CPU ensures\footnote{A mismatch triggers a general
-protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
-to the address translation process matches the expected virtual address
-recorded in the page's EPCM entry, as shown in
-Figure~\ref{fig:sgx_tlb_miss_checks}. This prevents the system software, which
-manages the page tables and EPT, from modifying an enclave's virtual address
-space in a manner that is inconsistent with the enclave author's expectations.
+% Enclave Page Cache Map (EPCM): SDM S 37.5.1, SDM S 38.19
+% Security Information (SECINFO): SDM S 38.11, S 38.11.{1,2}
+% SECINFO.FLAGS: SDM S 38.11.1
+% PAGE_TYPE Field Definition: SDM S 38.11.2
+
+The SGX address translation checks use the information in the Enclave Page
+Cache Map~(EPCM,~\S~\ref{sec:sgx_epcm}), which is effectively an inverted page
+table that covers the entire EPC. This means that each EPC page is accounted
+for by an EPCM entry, using the structure is summarized in
+Table~\ref{fig:sgx_epcm_entry}. The EPCM fields were described in detail in
+\S~\ref{sec:sgx_epcm}, \S~\ref{sec:sgx_paging}, \S~\ref{sec:sgx_tcs},
+\S~\ref{sec:sgx_eblock}, and \S~\ref{sec:sgx_va}.
+
+\begin{table}[hbt]
+  \centering
+  \begin{tabularx}{\columnwidth}{| l | r | X |}
+  \hline
+  \textbf{Field} & \textbf{Bits} & \textbf{Description}\\
+  \hline
+  VALID & 1 & 0 for un-allocated EPC pages \\
+  \hline
+  BLOCKED & 1 & page is being evicted \\
+  \hline
+  R & 1 & enclave code can read \\
+  \hline
+  W & 1 & enclave code can write \\
+  \hline
+  X & 1 & enclave code can execute \\
+  \hline
+  PT & 8 & page type (Table~\ref{fig:sgx_pt_values}) \\
+  \hline
+  ADDRESS & 48 & the virtual address used to access this page \\
+  \hline
+  ENCLAVESECS & 52 & the physical address of the SECS of the enclave owning the
+                     page \\
+  \hline
+  \end{tabularx}
+  \caption{
+    The fields in an EPCM entry.
+  }
+  \label{fig:sgx_epcm_entry}
+\end{table}
+
+\begin{table}[hbt]
+  \centering
+  \begin{tabularx}{\columnwidth}{| l | l | X |}
+  \hline
+  \textbf{Type} & \textbf{Allocated by} & \textbf{Contents}\\
+  \hline
+  PT\_REG & \texttt{EADD} & enclave code and data \\
+  \hline
+  PT\_SECS & \texttt{ECREATE} & SECS (\S~\ref{sec:sgx_secs}) \\
+  \hline
+  PT\_TCS & \texttt{EADD} & TCS (\S~\ref{sec:sgx_tcs}) \\
+  \hline
+  PT\_VA & \texttt{EPA} & VA (\S~\ref{sec:sgx_va}) \\
+  \hline
+  \end{tabularx}
+  \caption{Values of the PT (page type) field in an EPCM entry.}
+  \label{fig:sgx_pt_values}
+\end{table}
+
+SGX's extensions to the PMH spring into life every time when the physical
+address produced by the page walker FSM falls into the PRM range, and perform
+the security checks illustrated in Figure~\ref{fig:sgx_tlb_miss_checks}.
 
 \begin{figure}[hbt]
   \centering
@@ -72,6 +125,17 @@ space in a manner that is inconsistent with the enclave author's expectations.
   }
   \label{fig:sgx_tlb_miss_checks}
 \end{figure}
+
+The EPCM is inspected every time when
+translation result is the physical
+address of an EPC page, the CPU ensures\footnote{A mismatch triggers a general
+protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
+to the address translation process matches the expected virtual address
+recorded in the page's EPCM entry, as shown in
+Figure~\ref{fig:sgx_tlb_miss_checks}. This prevents the system software, which
+manages the page tables and EPT, from modifying an enclave's virtual address
+space in a manner that is inconsistent with the enclave author's expectations.
+
 
 SGX's security revolves around maintaining the following
 invariant. \textbf{At all times, a logical processor's TLB

@@ -106,19 +106,39 @@ the SGX implementation can implement AEX by modifying the hardware exception
 handlers in the microcode.
 
 % ISCA SGX Slide 166
-
-Last, the SGX initialization sequence is also implemented in microcode. It is
-likely that the boot sequence in microcode~(\S~\ref{sec:microcode_sec}) was
-modified to initialize the registers associated with the SGX microcode. The
-ISCA SGX tutorial states that the MEE's keys are initialized during the boot
-process.
-
 % Intel SGX Opt-In Configuration: SDM S 37.7.1
 
-The SDM states that SGX instructions are enabled by setting a bit in a
-Model-Specific Register~(MSR,~\S~\ref{sec:address_spaces}). Initializing SGX
-requires enabling the MEE and configuring the SAD and TAD to protect the PRM
-range, and both tasks are amenable to a microcode implementation.
+The SGX initialization sequence is also implemented in microcode. SGX is
+initialized in two phases. First, it is very likely that the boot sequence in
+microcode~(\S~\ref{sec:microcode_sec}) was modified to initialize the registers
+associated with the SGX microcode. The ISCA SGX tutorial states that the MEE'
+keys are initialized during the boot process. Second, SGX instructions are
+enabled by setting a bit in a Model-Specific
+Register~(MSR,~\S~\ref{sec:address_spaces}). This second phase involves
+enabling the MEE and configuring the SAD and TAD to protect the PRM range. Both
+tasks are amenable to a microcode implementation.
+
+The SGX description in the SDM implies that the SGX implementation uses a
+significant number of new registers, which are only exposed to microcode.
+However, the SGX patents reveal that most of these registers are actually
+stored in DRAM.
+
+% Internal CREGs: SDM S 41.1.4
+
+For example, the patents state that each TCS~(\S~\ref{sec:sgx_tcs}) has two
+fields that receive the values of the DR7 and IA32\_DEBUGCTL registers when the
+processor enters enclave mode~(\S~\ref{sec:sgx_eenter}), and are used to
+restore the original register values during enclave
+exit~(\S~\ref{sec:sgx_eexit}). The SDM documents these fields as ``internal
+CREGs'' (CR\_SAVE\_DR7 and CR\_SAVE\_DEBUGCTL). The SDM does not document the
+meaning of the CREG abbreviation, but one would be justified to assume that it
+means ``configuration register''.
+
+From a cost-performance standpoint, the cost of register memory might be
+justfied for the state used by the PMH microcode, which includes the enclave
+mode flag (CR\_ENCLAVE\_MODE) and the physical address of the current enclave's
+SECS (CR\_ACTIVE\_SECS). The other pieces of state listed as CREGs are accessed
+so infrequently that storing them in dedicated SRAM makes very little sense.
 
 The SGX patents state that SGX requires very few hardware changes, and most of
 the implementation is in microcode, as a positive fact. We therefore suspect

@@ -23,79 +23,12 @@ for each EPC page.
 
 
 
-\begin{table}[hbt]
-  \centering
-  \begin{tabularx}{\columnwidth}{| l | r | X |}
-  \hline
-  \textbf{Field} & \textbf{Bits} & \textbf{Description}\\
-  \hline
-  VALID & 1 & 0 for un-allocated EPC pages \\
-  \hline
-  BLOCKED & 1 & page is being evicted (\S~\ref{sec:sgx_ewb})\\
-  \hline
-  R & 1 & allow reads by enclave code\\
-  \hline
-  W & 1 & allow writes by enclave code\\
-  \hline
-  X & 1 & allow execution of code inside the page, inside enclave\\
-  \hline
-  PT & 8 & page type (\S~\ref{sec:key_structures})\\
-  \hline
-  ADDRESS & 48 & the virtual address used to access this page\\
-  \hline
-  EID & 64 & identifies the enclave owning the page\\
-  \hline
-  \end{tabularx}
-  \caption{
-    The fields in an EPCM entry.
-  }
-  \label{fig:sgx_epcm_entry}
-\end{table}
-
 % Access Control Requirements: SDM S 38.3
 
 SGX's main weapon against memory mapping attacks is the ENCLAVEADDRESS metadata
 field, which contains the expected virtual address (\S~\ref{sec:segments}) used
 to access the page. The expected virtual address must be specified when a page
 is allocated, and cannot be changed until the page is freed.
-
-
-% Security Information (SECINFO): SDM S 38.11, S 38.11.{1,2}
-
-The EPCM entry for a page has three access protection bits that must be set to
-1 to allow a page to be read (R), written to (W) and executed (X) by enclave
-code. When an address translation result points to an EPC page, the access
-protection bits in the page's EPCM entry influence the related bits in the
-page's TLB entry. For example, if X is 0, the XD bit (\S~\ref{sec:paging}) is
-set in the page's TLB entry.
-
-Table~\ref{fig:sgx_pt_values} shows currently defined types. The EPC pages that
-store an enclave's code or data have their type set to \textit{regular}
-(PT\_REG in the Intel documentation). Each page that is dedicated to an SGX key
-data structure has its EPCM entry's type set to the kind of data structure
-stored in the page. An EPC page's type is set when the page is allocated, and
-is immutable throughout the page's lifetime.
-
-\begin{table}[hbt]
-  \centering
-  \begin{tabularx}{\columnwidth}{| l | l | X |}
-  \hline
-  \textbf{Type} & \textbf{Created by} & \textbf{Description}\\
-  \hline
-  PT\_REG & \texttt{EADD} & enclave code / data \\
-  \hline
-  PT\_SECS & \texttt{ECREATE} & SECS (\S~\ref{sec:sgx_secs}) \\
-  \hline
-  PT\_TCS & \texttt{EADD} & TCS (\S~\ref{sec:sgx_tcs}) \\
-  \hline
-  PT\_VA & \texttt{EPA} & VA (\S~\ref{sec:sgx_va}) \\
-  \hline
-  \end{tabularx}
-  \caption{Values of the PT (page type) field in an EPCM entry.}
-  \label{fig:sgx_pt_values}
-\end{table}
-
-
 
 
 

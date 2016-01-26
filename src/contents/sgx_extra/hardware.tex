@@ -133,7 +133,7 @@ increases the cost of obtaining a chip's fuse key material, as an attacker must
 compromise both provisioning stages in order to be able to decrypt the fuse key
 material.
 
-The SDN~\cite{intel2015sdm} mentions a 16-byte CPU security version number
+The SDM~\cite{intel2015sdm} mentions a 16-byte CPU security version number
 (SVN), which contains the version numbers of various TCB components, and is a
 source in the key derivation process. The patents further specify that the SVN
 register is made up of (most likely 8-bit) sections that contain the SVNs of
@@ -190,9 +190,7 @@ their own SECS pages. They also state that the enclave key is used to encrypt
 the EPC pages when they are evicted to untrusted RAM. The patents also state
 that the enclave's SECS page contains the SVN of the launch permit creator.
 
-The Intel patents state that each TCS has two fields that store the values of
-the DR7 and IA32\_DEBUGCTL registers during EENTER, and are used to restore the
-original values during EEXIT and AEX.
+
 
 The Intel patents state that the enclave ID used in EPCM entries is the
 phyisical address of the page holding the enclave's SECS, without the bottom

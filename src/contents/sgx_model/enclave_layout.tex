@@ -99,8 +99,8 @@ enclave. These debugging features include the ability to read and modify most
 of the enclave's memory. Therefore, DEBUG should only be set in a development
 environment, as it causes the enclave to lose all the SGX security guarantees.
 
-SGX guarantees that enclave code will always run with the XCRO
-register~\ref{sec:registers} set to the value indicated by
+SGX guarantees that enclave code will always run with the XCR0
+register~(\S~\ref{sec:registers}) set to the value indicated by
 \textit{extended features request mask}~(XFRM). Enclave authors are expected to
 use XFRM to specify the set of architectural extensions enabled by the compiler
 used to produce the enclave's code. Having XFRM be explicitly specified allows
