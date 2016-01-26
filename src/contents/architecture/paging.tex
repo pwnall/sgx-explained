@@ -13,6 +13,7 @@ general presentation of address translation concepts and its other uses.
 
 
 \subsubsection{Address Translation Concepts}
+\label{sec:paging_concepts}
 \label{sec:paging_vpn}
 \label{sec:paging_ppn}
 
@@ -35,7 +36,7 @@ system software.
 \end{figure}
 
 Operating systems use address translation to implement the \textit{virtual
-memory} abstraction, illustrated by Figure~\ref{fig:virtual_memory}. The
+memory abstraction}, illustrated by Figure~\ref{fig:virtual_memory}. The
 virtual memory abstraction exposes the same interface as the memory abstraction
 in \S~\ref{sec:resources}, but each process uses a separate virtual address
 space that only references the memory allocated to that process. From an

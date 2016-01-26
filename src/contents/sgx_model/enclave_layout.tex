@@ -40,6 +40,12 @@ Figure~\ref{fig:sgx_elrange}.
   \label{fig:sgx_elrange}
 \end{figure}
 
+The SGX design guarantees that the enclave's memory accesses inside ELRANGE
+obey the virtual memory abstraction~(\S~\ref{sec:paging_concepts}), while
+memory accesses outside ELRANGE receive no guarantees. Therefore, enclaves must
+store all their code and private data inside ELRANGE, and must consider the
+memory outside ELRANGE to be an untrusted interface to the outside world.
+
 The word ``linear'' in ELRANGE references the linear addresses produced by the
 vestigial segmentation feature~(\S~\ref{sec:segments}) in the 64-bit Intel
 architecture. For most purposes, ``linear'' can be treated as a synonym for
@@ -49,10 +55,10 @@ ELRANGE is specified using a base (the BASEADDR field) and a size (the SIZE)
 in the enclave's SECS~(\S~\ref{sec:sgx_secs}). ELRANGE must meet the same
 constraints as a variable memory type range (\S~\ref{sec:cacheability_config})
 and as the PRM range~(\S~\ref{sec:sgx_prm}), namely the size must be a power of
-2, and the base must be aligned to the size. The main benefit of these
-restrictions is that checking whether an address belongs to an enclave's
-ELRANGE can be done very inexpensively in either
-hardware~(\S~\ref{sec:cacheability_config}) or software.
+2, and the base must be aligned to the size. These restrictions are in place
+so that checking whether an address belongs to an enclave's ELRANGE can be done
+very inexpensively in either hardware~(\S~\ref{sec:cacheability_config}) or
+software.
 
 When an enclave represents a dynamic library, it is natural to have ELRANGE be
 set to the memory range reserved for the library by the loader. The ability to
@@ -187,7 +193,6 @@ the corresponding EPCM entry's fields override the access permission attributes
 the W field in the EPCM entry overrides the writable (W) attribute, and the X
 field overrides the disable execution (XD) attribute.
 
-
 It follows that an enclave author must include memory layout information along
 with the enclave, in such a way that the system software loading the enclave
 will know the expected virtual memory address and access permissions for each
@@ -200,6 +205,13 @@ The \texttt{.so} and \texttt{.dll} file formats, which are SGX's intended
 enclave delivery vehicles, already have provisions for specifying the virtual
 addresses that a software module was designed to use, as well as the desired
 access permissions for each of the module's memory areas.
+
+Last, a SGX-enabled CPU will ensure that the virtual memory inside
+ELRANGE~(\S~\ref{sec:sgx_elrange}) is mapped to EPC pages. This prevents the
+system software from carrying out an address translation attack where it maps
+the enclave's entire virtual address space to DRAM pages outside the PRM, which
+do not trigger any of the checks above, and can be directly accessed by the
+system software.
 
 
 \subsubsection{The Thread Control Structure (TCS)}
@@ -246,6 +258,10 @@ Storage (TLS).
 \subsubsection{The State Save Area (SSA)}
 \label{sec:sgx_ssa}
 
+% Interactions with the Processor Extended State and Miscellaneous State:
+%     SDM S 42.7
+% Requirements and Architecture Overview: SDM S 42.7.1
+
 % State Save Area (SSA) Frame: SDM S 38.9
 
 When the processor encounters a hardware exception~(\S~\ref{sec:faults}), such
@@ -257,6 +273,7 @@ enclave code's execution context~(\S~\ref{sec:registers}), so that the
 information in the execution context is not revealed to the untrusted system
 software.
 
+% Relevant Fields in Various Data Structures: SDM S 42.7.2
 % SECS.SSAFRAMESIZE: SDM S 42.7.2.2
 
 In the SGX design, the area used to store an enclave thread's execution context
@@ -283,6 +300,9 @@ Each SSA starts at the beginning of an EPC page, and uses up the number of EPC
 pages that is specified in the SSAFRAMESIZE field of the enclave's SECS. These
 alignment and size restrictions most likely simplify the SGX implementation by
 reducing the number of special cases that it needs to handle.
+
+% Relevant Fields in Various Data Structures: SDM S 42.7.2
+% SECS.ATTRIBUTES.XFRM: SDM S 42.7.2.1
 
 An enclave thread's execution context consists of the general-purpose registers
 (GPRs) and the result of the XSAVE instruction~(\S~\ref{sec:registers}).

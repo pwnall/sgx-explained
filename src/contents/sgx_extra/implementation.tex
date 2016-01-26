@@ -17,31 +17,30 @@ speed than the chip's electrical circuitry.
 \subsubsection{Execution Core Modifications}
 \label{sec:sgx_core_modifications}
 
-The SGX design may require a very small modification to the processor's
-execution cores~(\S~\ref{sec:cpu_core}), in the Page Miss
-Handler~(PMH,~\S~\ref{sec:tlbs}). The PMH resolves TLB misses, and consists of
-a fast path that relies on an FSM page walker, and a microcode assist fallback
-that handles the edge cases (\S~\ref{sec:microcode_pmh}).
-
 % Minimal PMH support for enclaves is MTRR to protect CMA access.
 %   US 8,972,746 B2 - 31:65-67, 32:1-9
-%   US 8,972,746 B2 - Table 8-1, column 31
-% Better PMH support includes a linear access check to protect ELRANGE.
 %   US 8,972,746 B2 - Table 8-1, column 31
 % SERR register implemented in PMH
 %   US 8,972,746 B2 - 5:59-61
 % Outside enclave mode, PMH protects access to EPC using a range register
 %   US 8,972,746 B2 - 31:31-36
 
-The bulk of SGX's memory access checks, which are discussed in
-\S~\ref{sec:sgx_access_protection}, can be implemented in the microcode assist.
-The only modification to the PMH hardware is having it trigger the microcode
-assist when the physical address produced by the page walker FSM matches the
-Processor Reserved Memory~(PRM,~\S~\ref{sec:sgx_prm}) range.
+At a minimum, the SGX design requires a very small modification to the
+processor's execution cores~(\S~\ref{sec:cpu_core}), in the Page Miss
+Handler~(PMH,~\S~\ref{sec:tlbs}).
 
-We state that SGX \textbf{may} require a hardware modification to the PMH
-because there is a possibility that the behavior described above can be
-achieved solely with microcode configuration, as explained below.
+The PMH resolves TLB misses, and consists of a fast path that relies on an FSM
+page walker, and a microcode assist fallback that handles the edge cases
+(\S~\ref{sec:microcode_pmh}). The bulk of SGX's memory access checks, which are
+discussed in \S~\ref{sec:sgx_access_protection}, can be implemented in the
+microcode assist.
+
+The only modification to the PMH hardware that is absolutely necessary to
+implement SGX is developing an ability to trigger the microcode assist for all
+address translations when a logical processor is in enclave
+mode~(\S~\ref{sec:sgx_threads}), or when the physical address produced by the
+page walker FSM matches the Processor Reserved
+Memory~(PRM,~\S~\ref{sec:sgx_prm}) range.
 
 The PRM range is configured by the PRM Range Registers~(\S~\ref{sec:sgx_prm}),
 which have exactly the same semantics as the Memory Type Range
@@ -98,9 +97,46 @@ belongs to the MEE region, and routes transaction to MEE'', which suggests that
 the MEE is fairly self-contained and has a narrow interface to the rest of the
 MC.
 
+% Intel SGX Interactions with S States: SDM S 42.15
+
+% CMA protects EPC data when it is evicted to main memory from CPU package
+%   US 8,972,746 B2 - 7:3-9
+% Data in CMA lost when powered down
+%   US 8,972,746 B2 - 6:37-45
+% CMA uses a QPI link-level security protocol in multi-package systems
+%   US 9,087,200 B2 - 27:31-37
+%   US 8,972,746 B2 - 28:45-51
+
+Intel's SGX patents use the name Crypto Memory Aperture (CMA) to refer to the
+MEE. The CMA description matches the MEE and PRM concepts, as follows.
+According to the patents, the CMA is used to securely store the EPC, relies on
+crypto controllers in the MC, and loses its keys during deep sleep. These
+details align perfectly with the SDM's statements regarding the MEE and PRM.
+
+% EPC, EPCM, other SGX structures are in CMA
+%   US 9,087,200 B2 - 5:15-25, 27:17-31
+%   US 8,972,746 B2 - 5:10-20, 28:31-45
+
+The Intel patents also disclose that the EPCM~(\S~\ref{sec:sgx_epcm}) and
+other structures used by the SGX implementation are also stored in the PRM.
+This rules out the possibility that the EPCM requires on-chip memory resembling
+the last-level cache~(\S~\ref{sec:caching}, \S~\ref{sec:cache_coherence}).
+
+Last, the SGX patents shine a bit of light on an area that the official Intel
+documentation is completely silent about, namely the implementation concerns
+brought by computer systems with multiple processor chips. The patents state
+that the MEE also protects the
+Quick-Path Interconnect~(QPI,~\S~\ref{sec:motherboard}) traffic using
+link-layer encryption.
+
 
 \subsubsection{Microcode Modifications}
 \label{sec:sgx_microcode_modifications}
+
+% Most of SGX is implemented in microcode
+%   US 8,972,746 B2 - 5:20-24, 5:48-58
+% EPCM is managed by microcoded instructions
+%   US 8,972,746 B2 - 29:43-44
 
 According to the SGX patents, all the SGX instructions are implemented in
 microcode. This can also be deduced by reading the SDM's pseuodocode for all
@@ -109,6 +145,9 @@ instruction can be implemented in 4 or fewer
 micro-ops~(\S~\ref{sec:out_of_order}), which is the most that can be
 handled by the simple decoders used in the hardware fast paths
 (S~\ref{sec:microcode_role}).
+
+% AEX implemented in microcode
+%   US 8,972,746 B2 - 5:46-48
 
 The Asynchronous Enclave Exit~(AEX,~\S~\ref{sec:sgx_aex}) behavior is also
 implemented in microcode. \S~\ref{sec:microcode_structure} draws on an
@@ -145,20 +184,59 @@ fields that receive the values of the DR7 and IA32\_DEBUGCTL registers when the
 processor enters enclave mode~(\S~\ref{sec:sgx_eenter}), and are used to
 restore the original register values during enclave
 exit~(\S~\ref{sec:sgx_eexit}). The SDM documents these fields as ``internal
-CREGs'' (CR\_SAVE\_DR7 and CR\_SAVE\_DEBUGCTL). The SDM does not document the
-meaning of the CREG abbreviation, but one would be justified to assume that it
-means ``configuration register''.
+CREGs'' (CR\_SAVE\_DR7 and CR\_SAVE\_DEBUGCTL), which are stated to be
+``hardware specific registers''.
 
-% Packge registers: EPC_BASE / EPC_MASK, EPCM_BASE_OFFSET, EPC_SECS_BASE_OFFSET
+% Package registers
 %   US 8,972,746 B2 - Table 4-14, column 19
-% LP registers: ENCLAVE_MODE, SECS_PA, TCS_LA, TCS_PA, SSA_PA
+% LP registers
 %   US 8,972,746 B2 - Table 4-15, column 19
 
-From a cost-performance standpoint, the cost of register memory might be
-justfied for the state used by the PMH microcode, which includes the enclave
-mode flag (CR\_ENCLAVE\_MODE) and the physical address of the current enclave's
-SECS (CR\_ACTIVE\_SECS). The other pieces of state listed as CREGs are accessed
-so infrequently that storing them in dedicated SRAM makes very little sense.
+The SGX patents document a small subset of the CREGs described in the SDM,
+summarized in Table~\ref{fig:sgx_registers}, as microcode registers. While in
+general we trust official documentation over patents, in this case we use the
+CREG descriptions provided by the patents, because they appear to be more
+suitable for implementation purposes.
+
+% CR_XSAVE_PAGE_0 defined in AEX Operational Detail, SDM S 40.4.1
+
+\begin{table*}[hbt]
+  \centering
+  \begin{tabularx}{\textwidth}{| l | r | l | X |}
+  \hline
+  \textbf{SDM Name} & \textbf{Bits} & \textbf{Scope} & \textbf{Description} \\
+  \hline
+  CSR\_SGX\_OWNEREPOCH & 128 & CPU Chip Package &
+      Used by \texttt{EGETKEY}~(\S~\ref{sec:sgx_egetkey}) \\
+  \hline
+  CR\_ENCLAVE\_MODE & 1 & Logical Processor & 1 when executing code inside an
+      enclave \\
+  \hline
+  CR\_ACTIVE\_SECS & 16 & Logical Processor & The index of the EPC page storing
+      the current enclave's SECS \\
+  \hline
+  CR\_TCS\_LA & 64 & Logical Processor & The virtual address of the
+      TCS~(\S~\ref{sec:sgx_tcs}) used to enter~(\S~\ref{sec:sgx_eenter}) the
+      current enclave \\
+  \hline
+  CR\_TCS\_PH & 16 & Logical Processor & The index of the EPC page storing the
+      TCS used to enter the current enclave \\
+  \hline
+  CR\_XSAVE\_PAGE\_0 & 16 & Logical Processor & The index of the EPC page
+      storing the first page of the current SSA~(\S~\ref{sec:sgx_ssa}) \\
+  \hline
+  \end{tabularx}
+  \caption{
+    The fields in an EPCM entry.
+  }
+  \label{fig:sgx_registers}
+\end{table*}
+
+From a cost-performance standpoint, the cost of register memory only seems to
+be justfied for the state used by the PMH to implement SGX's memory access
+checks, which will be discussed in \S~\ref{sec:sgx_access_protection}). The
+other pieces of state listed as CREGs are accessed so infrequently that storing
+them in dedicated SRAM would make very little sense.
 
 The SGX patents state that SGX requires very few hardware changes, and most of
 the implementation is in microcode, as a positive fact. We therefore suspect

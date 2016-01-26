@@ -1,0 +1,26 @@
+\subsection{SGX Security Check Correctness}
+\label{sc:sgx_access_correctness}
+
+SGX's security revolves around maintaining the following
+invariant. \textbf{At all times, a logical processor's TLB
+entries can only map DRAM pages that can be accessed by the code executing on
+the processor.} Specifically, when a logical processor is in enclave mode, its
+TLB can include entries for the enclave's EPC pages, and for DRAM pages outside
+the PRM. The TLB of a logical processor outside enclave mode must not include
+any PRM entry.
+
+Without any special measures, the invariant described above would be broken
+when a logical processor exits an enclave, either via
+\texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}), or via an AEX~(\S~\ref{sec:sgx_aex}).
+This is because enclave mode allows TLB entries that point to the currently
+executing enclave's EPC pages, and these entries become disallowed the moment
+the processor leaves enclave mode. The SGX implementation solves this problem
+by flushing a logical processor's TLBs when it leaves enclave mode.
+
+
+% Enclave cannot read own SECS, because SECS contains enclave key
+%   US 8,972,746 B2 - 9:21-25, 9:51
+% Enclave cannot modify TCS
+%   US 8,972,746 B2 - 10:1-6
+
+
