@@ -23,6 +23,16 @@ Handler~(PMH,~\S~\ref{sec:tlbs}). The PMH resolves TLB misses, and consists of
 a fast path that relies on an FSM page walker, and a microcode assist fallback
 that handles the edge cases (\S~\ref{sec:microcode_pmh}).
 
+% Minimal PMH support for enclaves is MTRR to protect CMA access.
+%   US 8,972,746 B2 - 31:65-67, 32:1-9
+%   US 8,972,746 B2 - Table 8-1, column 31
+% Better PMH support includes a linear access check to protect ELRANGE.
+%   US 8,972,746 B2 - Table 8-1, column 31
+% SERR register implemented in PMH
+%   US 8,972,746 B2 - 5:59-61
+% Outside enclave mode, PMH protects access to EPC using a range register
+%   US 8,972,746 B2 - 31:31-36
+
 The bulk of SGX's memory access checks, which are discussed in
 \S~\ref{sec:sgx_access_protection}, can be implemented in the microcode assist.
 The only modification to the PMH hardware is having it trigger the microcode
@@ -44,6 +54,9 @@ extra MTRR pair.
 
 \subsubsection{Uncore Modifications}
 \label{sec:sgx_uncore_modifications}
+
+% SAD/TAD entry protects against DMA snoops.
+%   US 8,972,746 B2 - 6:15-19
 
 The SDM states that DMA transactions~(\S~\ref{sec:motherboard}) that target the
 PRM range are aborted by the processor. The SGX patents disclose that the PRMRR
@@ -124,6 +137,8 @@ However, the SGX patents reveal that most of these registers are actually
 stored in DRAM.
 
 % Internal CREGs: SDM S 41.1.4
+% TCS Layout has SAVE_DR7, SAVE_DEBUGCTL, SAVE_TF
+%   US 8,972,746 B2 - Table 4-2, columns 10 and 11
 
 For example, the patents state that each TCS~(\S~\ref{sec:sgx_tcs}) has two
 fields that receive the values of the DR7 and IA32\_DEBUGCTL registers when the
@@ -133,6 +148,11 @@ exit~(\S~\ref{sec:sgx_eexit}). The SDM documents these fields as ``internal
 CREGs'' (CR\_SAVE\_DR7 and CR\_SAVE\_DEBUGCTL). The SDM does not document the
 meaning of the CREG abbreviation, but one would be justified to assume that it
 means ``configuration register''.
+
+% Packge registers: EPC_BASE / EPC_MASK, EPCM_BASE_OFFSET, EPC_SECS_BASE_OFFSET
+%   US 8,972,746 B2 - Table 4-14, column 19
+% LP registers: ENCLAVE_MODE, SECS_PA, TCS_LA, TCS_PA, SSA_PA
+%   US 8,972,746 B2 - Table 4-15, column 19
 
 From a cost-performance standpoint, the cost of register memory might be
 justfied for the state used by the PMH microcode, which includes the enclave

@@ -41,6 +41,74 @@ When modifying the page tables, the system software has to consider TLB
 coherence issues~(\S~\ref{sec:tlbs}) and perform TLB shootdowns when
 appropriate.
 
+% EPC and EPCM
+%   US 8,972,746 B2 - 4:36-58
+
+% EPC, EPCM, other SGX structures are in CMA
+%   US 8,972,746 B2 - 5:10-20, 28:31-45
+% BIOS allocates EPC by setting base and size, locked by MCHECK until reboot
+%   US 8,972,746 B2 - 30:24-34
+
+% EPC pages are identified by 0-based slot numbers
+% SID = (page_phys_addr - epc_base_phys_addr) >> 2
+%   US 8,972,746 B2 - 29:5-23
+% EPCM contains SECS_SID (the SID for the owning SECS) for each EPC page
+%   US 8,972,746 B2 - 29:26-33
+% EPCM is managed by microcoded instructions
+%   US 8,972,746 B2 - 29:43-44
+
+% SGX relies on PMH to prevent unauthorized access to EPC pages
+%   US 8,972,746 B2 - 31:1-10
+
+% CMA protects EPC data when it is evicted to main memory from CPU package
+%   US 8,972,746 B2 - 7:3-9
+% Data in CMA lost when powered down
+%   US 8,972,746 B2 - 6:37-45
+% CMA uses a QPI link-level security protocol in multi-package systems
+%   US 8,972,746 B2 - 28:45-51
+
+% EMODIFY and EACCEPT to change the properties of an EPC page
+%   US 8,972,746 B2 - 7:66-77, 8:1-7
+% EACCEPTPOST and PENDING bit
+%   US 8,972,746 B2 - 8:63-67, 9:1-3
+% EUPSMAP and DIRTY bit (not the same as W)
+%   US 8,972,746 B2 - 9:12-19
+
+% Enclave cannot read own SECS, because SECS contains enclave key
+%   US 8,972,746 B2 - 9:21-25, 9:51
+% Enclave cannot modify TCS
+%   US 8,972,746 B2 - 10:1-6
+
+% FUSE_KEY
+%   US 8,972,746 B2 - Table 4-13, column 19
+
+% EPC accessible only inside microcode extension mode or enclave mode
+%   US 8,972,746 B2 - 8:26-29, 8:31-34
+% EPC can only be accessed using linear addresses in enclave range
+%   US 8,972,746 B2 - 8:29-31
+% ECREATE defines linear access range, all addresses in range are protected
+%   US 8,972,746 B2 - 31:12-25
+% Linear addresses in enclave range that do not resolve to EPC are bounced
+%   US 8,972,746 B2 - 8:35-40
+% Enclave accesses to EPC pages are validated using EPCM valid bit
+%   US 8,972,746 B2 - 8:41-45
+% EPC page ownership is verified by looking at the page's SECS
+%   US 8,972,746 B2 - 8:45-49
+% EPC accesses check the linear address in the EPCM, prevent attacks
+%   US 8,972,746 B2 - 8:50-62
+
+
+% TLB clear on EEXIT, alternative is TLB extension with extra bits
+%   US 8,972,746 B2 - 32:61-67, 33:1-8
+
+% Most of SGX is implemented in microcode
+%   US 8,972,746 B2 - 5:20-24, 5:48-58
+% AEX implemented in microcode
+%   US 8,972,746 B2 - 5:46-48
+% TLB flushes or extra bits in the TLB
+%   US 8,972,746 B2 - 5:62-67, 6:1-12
+
+
 SGX leaves page table management under the system software's control, but it
 cannot trust the software to set up the page tables in any particular way.
 Therefore, the hypothetical design described above cannot be used by SGX as-is.
@@ -84,7 +152,7 @@ Table~\ref{fig:sgx_epcm_entry}. The EPCM fields were described in detail in
   \hline
   ADDRESS & 48 & the virtual address used to access this page \\
   \hline
-  ENCLAVESECS & 52 & the physical address of the SECS of the enclave owning the
+  ENCLAVESECS &  & the EPC slot number for the SECS of the enclave owning the
                      page \\
   \hline
   \end{tabularx}
@@ -113,6 +181,8 @@ Table~\ref{fig:sgx_epcm_entry}. The EPCM fields were described in detail in
   \label{fig:sgx_pt_values}
 \end{table}
 
+% ISCA 2015 SGX: Slide 27
+
 SGX's extensions to the PMH spring into life every time when the physical
 address produced by the page walker FSM falls into the PRM range, and perform
 the security checks illustrated in Figure~\ref{fig:sgx_tlb_miss_checks}.
@@ -121,14 +191,16 @@ the security checks illustrated in Figure~\ref{fig:sgx_tlb_miss_checks}.
   \centering
   \includegraphics[width=85mm]{figures/sgx_tlb_miss_checks.pdf}
   \caption{
-    The access control logic added by SGX to the PMH
+    SGX adds a few security checks to the PMH. The checks ensure that all the
+    TLB entries created by the address translation unit meet SGX's memory
+    access restrictions.
   }
   \label{fig:sgx_tlb_miss_checks}
 \end{figure}
 
-The EPCM is inspected every time when
-translation result is the physical
-address of an EPC page, the CPU ensures\footnote{A mismatch triggers a general
+
+
+the CPU ensures\footnote{A mismatch triggers a general
 protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
 to the address translation process matches the expected virtual address
 recorded in the page's EPCM entry, as shown in

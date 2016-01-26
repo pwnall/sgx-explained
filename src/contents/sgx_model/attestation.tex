@@ -22,7 +22,7 @@ message.
 \end{figure}
 
 % EPID signing takes too long for microcode.
-%   US 8,972,746 B2 - 33:16-29, 33:58
+%   US 8,972,746 B2 - 21:8-16, 33:16-29, 33:58
 
 The cryptographic primitive used in SGX's attestation signature is too complex
 to be implemented in hardware, so signing process is performed by a privileged
@@ -121,7 +121,6 @@ MAC~(CMAC,~\cite{fips2005cmac}), but stops short of specifying the underlying
 cipher. One of the SGX papers~\cite{anati2013sgx} states that the CMAC is based
 on 128-bit AES.
 
-
 \begin{figure}[hbt]
   \centering
   \includegraphics[width=87mm]{figures/sgx_ereport_check.pdf}
@@ -174,6 +173,13 @@ Last, \texttt{EREPORT} sets the KEYID field in the key generation material to
 the contents of an SGX configuration register (CR\_REPORT\_KEYID) that is
 initialized with a random value when SGX is initialized. The KEYID value is
 also saved in the attestation report, but it is not covered by the MAC tag.
+
+% EREPORT key derivation
+%   US 8,972,746 B2 - 21:51-67, 22:1-6, Figure 12
+% EREPORT uses KeyID which is incremented after 2^32 AES operations
+%   US 8,972,746 B2 - 22:7-12
+% EREPORT's MAC is actually a GMAC, not a CMAC
+%   US 8,972,746 B2 - 21:64-67
 
 
 \subsubsection{Remote Attestation}
@@ -253,6 +259,13 @@ the Provisioning Seal Key from \texttt{EGETKEY} and uses it to decrypt the
 Attestation Key, which is received from system software. Last, the enclave
 uses the Attestation Key to sign the information in the local attestation
 report, producing an \textit{Attestation Signature}.
+
+% Quoting Enclave is a reference to the TPM
+%   US 8,972,746 B2 - 20:59-67
+
+The SGX patents state that the name ``Quoting Enclave'' was chosen as a
+reference to the TPM~(\S~\ref{sec:tpm})'s quoting feature, which is used to
+perform software attestation on a TPM-based system.
 
 The Attestation Key uses Intel's \textit{Enhanced Privacy ID}~(EPID)
 cryptosystem~\cite{brickell2009epid}, which is a group signature scheme that is

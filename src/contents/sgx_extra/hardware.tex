@@ -51,12 +51,6 @@ attacks. Enclaves are isolated from system software (the OS and hypervisor) by
 access control checks in the CPU, as described in \S~\ref{sec:sgx_epcm}. The
 patents specify the protection algorithm with more clarity.
 
-The patents also specify that the memory access checks are performed in the
-Page-Miss Handler (PMH) microcode, which is invoked during TLB misses. The PMH
-performs the SGX access checks described below. If the access checks succeed,
-the PMH creates a TLB entry, as it normally would. If the access checks fail,
-the PMH aborts, which results in a Page Fault.
-
 The desire to restrict SGX
 access checks to the PMH introduces the requirement to flush a logical
 processor's TLBs when it enters or exits enclave mode. This is accomplished by
@@ -151,7 +145,7 @@ a constant
 \cite{anati2013sgx} confirms that the attestation uses Intel's
 EPID~\cite{brickell2009epid} group signature scheme.
 
-
+brew tap Caskroom/cask
 Key Request Inputs
 
 \begin{table}[hbt]
