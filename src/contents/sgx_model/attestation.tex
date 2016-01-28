@@ -388,7 +388,7 @@ privileged Intel signing key on a single debug LE could invalidate SGX's
 security guarantees on all the CPU chips that accept that signing key.
 Concretely, if the issued SIGSTRUCT would be leaked, any attacker could build a
 debugging LE, use the SGX debugging features to modify the code inside it, and
-issue tokens that authorize malicious enclaves to access the Provisoning Key
+issue tokens that authorize malicious enclaves to access the Provisioning Key
 used by the software attestation process.
 
 A further advantage of the check described above is that Intel can supply SGX
@@ -438,7 +438,7 @@ were introduced to verify that the SIGSTRUCT certificates associated with
 production enclaves are issued by enclave authors who have a business
 relationship with Intel. In other words, the Launch Enclave is intended to be
 \textbf{an enclave licensing mechanism that allows Intel to force itself as an
-itermediary in the distribution of all enclave software}.
+intermediary in the distribution of all enclave software}.
 
 The SGX patents are likely to represent an early version of the SGX design, due
 to the lengthy timelines associated with patent application approval.

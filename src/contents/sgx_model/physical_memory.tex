@@ -103,7 +103,7 @@ The SDM does not disclose the storage medium or memory layout used by the EPCM.
 
 The EPCM uses the information in Table~\ref{fig:sgx_epcm_ownership_fields} to
 track the ownership of each EPC page. We defer a full discussion of the EPCM to
-a later section, because its contents is intimiately coupled with all of SGX's
+a later section, because its contents is intimately coupled with all of SGX's
 features, which will be described over the next few sections.
 
 \begin{table}[hbt]
@@ -178,7 +178,7 @@ instructions use SECS addresses to identify enclaves, the system software must
 create entries in its page tables pointing to the SECS of the enclaves it
 manages. However, the system software cannot access any SECS page, as these
 pages are stored in the PRM. SECS pages are not intended to be mapped inside
-their enclaves' virtual address spaces, and SGX-enabled processors explictly
+their enclaves' virtual address spaces, and SGX-enabled processors explicitly
 prevent enclave code from accessing SECS pages.
 
 % SGX Enclave Control Structure (SECS): SDM S 38.7, S 38.7.1

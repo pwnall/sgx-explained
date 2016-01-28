@@ -218,7 +218,7 @@ increase, as SGX allows secrets to be migrated freely between enclaves with
 matching SVN values. As explained above, a software module's SVN should only be
 incremented when a security vulnerability is found. SIGSTRUCT only allocates
 2 bytes to the ISVSVN field, which translates to 65,536 possible SVN values.
-This space can be exhausted if a large team (incorrectly) sets up a continunous
+This space can be exhausted if a large team (incorrectly) sets up a continuous
 build system to allocate a new SVN for every software build that it produces,
 and each code change triggers a build.
 
@@ -304,7 +304,7 @@ the ATTRIBUTES field of the SECS. As discussed in
 MRENCLAVE facilitates writing enclaves that have optimized implementations
 that can use architectural extensions when present, and also have fallback
 implementations that work on CPUs without the extensions. Such enclaves can
-execute corectly when built with a variety of values in the
+execute correctly when built with a variety of values in the
 XFRM~(\S~\ref{sec:sgx_secs_attributes}, \S~\ref{sec:sgx_ssa}) attribute. At
 the same time, allowing system software to use arbitrary values in the
 ATTRIBUTES field would compromise SGX's security guarantees.

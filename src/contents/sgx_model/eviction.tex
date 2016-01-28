@@ -83,7 +83,7 @@ is generally downplayed throughout the SDM, but it becomes visible when
 explaining SGX's EPC page eviction mechanism.
 
 A full discussion of SGX's memory access protections checks merits its own
-section, and is defered to \S~\ref{sec:sgx_access_protection}. The EPC page
+section, and is deferred to \S~\ref{sec:sgx_access_protection}. The EPC page
 eviction mechanisms can be explained using only two requirements from SGX's
 security model. First, when a logical processor exits an enclave, either via
 \texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}) or via an AEX~(\S~\ref{sec:sgx_aex}),
@@ -94,7 +94,7 @@ targeting the deallocated EPC.
 
 System software can cause a logical processor to exit an enclave by sending it
 an Inter-Processor Interrupt (IPI,~\S~\ref{sec:interrupts}), which will trigger
-an AEX when received. Essentially, this is a very coarse-grained TLB shootdown.
+an AEX when received. Essentially, this is a very coarse-grained TLB shoot down.
 
 SGX does not trust system software. Therefore, before marking an EPC page's
 EPCM entry as free, the SGX implementation must ensure that the OS kernel has
@@ -366,7 +366,7 @@ pointing to them. Therefore, \texttt{EWB} evicts VA pages without performing
 any \texttt{ETRACK}-related checks. The ability to evict VA pages has profound
 implications that will be discussed in \S~\ref{sec:sgx_eviction_trees}.
 
-\texttt{EWB}'s dataflow, shown in detail in Figure~\ref{fig:sgx_ewb}, has an
+\texttt{EWB}'s data flow, shown in detail in Figure~\ref{fig:sgx_ewb}, has an
 aspect that can be confusing to OS developers. The instruction reads the
 virtual address of the EPC page to be evicted from a register (RBX) and writes
 it to the LINADDR field of the PAGEINFO structure that it is provided. The
@@ -400,14 +400,14 @@ AEX~(\S~\ref{sec:sgx_aex}), and then invoke the OS kernel's page fault handler.
 
 Page faults receive special handling from the AEX process. While leaving the
 enclave, the AEX logic specifically checks if the hardware exception that
-triggerred the AEX was \#PF. If that is the case, the AEX implementation clears
+triggered the AEX was \#PF. If that is the case, the AEX implementation clears
 the least significant 12 bits of the CR2 register, which stores the virtual
 address whose translation caused a page fault.
 
 In general, the OS kernel's page handler needs to be able to extract the
 virtual page number~(VPN,~\S~\ref{sec:paging_vpn}) from CR2, so that it knows
 which memory page needs to be loaded back into DRAM. The OS kernel may also be
-able to use the 12 least signficant address bits, which are not part of the
+able to use the 12 least significant address bits, which are not part of the
 VPN, to better predict the application software's memory access patterns.
 However, unlike the bits that make up the VPN, the bottom 12 bits are not
 absolutely necessary for the fault handler to carry out its job. Therefore,
