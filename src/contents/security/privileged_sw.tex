@@ -16,6 +16,10 @@ pin (SMI\#) in the CPU's chip package. However, in modern systems, system
 software can generate an SMI by using the LAPIC's IPI mechanism. This opens up
 the avenue for SMM-based software exploits.
 
+% System Management Mode: SDM S 34
+% SMRAM: SDM S 34.4
+% SMRAM Caching: SDM S 34.4.2
+
 The SMM handler is stored in  \textit{System Management RAM} (SMRAM) which, in
 theory, is not accessible when the processor isn't running in SMM. However, its
 protection mechanisms were bypassed multiple times~\cite{duflot2006smm,

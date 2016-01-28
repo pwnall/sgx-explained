@@ -56,13 +56,14 @@ work exclusively with micro-ops.
 
 
 \subsubsection{Out-of-Order Execution}
+\label{sec:execution_units}
 
 % Out of Order Engine: Optimization S 2.2.23
 % The Execution Core: S 2.2.4
 
 Different types of instructions require different logic circuits, called
 \textit{functional units}. For example, the arithmetic logic unit (ALU), which
-performs arithmetic operations, is completely different from the load store
+performs arithmetic operations, is completely different from the load and store
 unit, which peforms memory operations. Different circuits can be used at the
 same time, so each CPU core can execute multiple micro-ops in parallel.
 

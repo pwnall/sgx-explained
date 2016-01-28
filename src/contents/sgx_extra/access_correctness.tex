@@ -1,26 +1,293 @@
 \subsection{SGX Security Check Correctness}
 \label{sc:sgx_access_correctness}
 
-SGX's security revolves around maintaining the following
-invariant. \textbf{At all times, a logical processor's TLB
-entries can only map DRAM pages that can be accessed by the code executing on
-the processor.} Specifically, when a logical processor is in enclave mode, its
-TLB can include entries for the enclave's EPC pages, and for DRAM pages outside
-the PRM. The TLB of a logical processor outside enclave mode must not include
-any PRM entry.
+In \S~\ref{sec:sgx_access_concepts}, we argued that SGX's security guarantees
+can be obtained by modifying the Page Miss Handler~(PMH,~\S~\ref{sec:tlbs}) to
+block undesirable address translations from reaching the TLB. This section
+builds on the result above and  outlines a correctness proof for SGX's memory
+access protection.
 
-Without any special measures, the invariant described above would be broken
-when a logical processor exits an enclave, either via
-\texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}), or via an AEX~(\S~\ref{sec:sgx_aex}).
-This is because enclave mode allows TLB entries that point to the currently
-executing enclave's EPC pages, and these entries become disallowed the moment
-the processor leaves enclave mode. The SGX implementation solves this problem
-by flushing a logical processor's TLBs when it leaves enclave mode.
+Specifically, we outline a proof for the following invariant. \textbf{At all
+times, all the TLB entries in every logical processor will be consistent with
+SGX's security guarantees.} By the argument in
+\S~\ref{sec:sgx_access_concepts}, the invariant translates into an assurance
+that all the memory accesses performed by software obey SGX's security model.
+The high-level proof structure is presented because it helps understand how the
+SGX security checks come together. By contrast, a a detailed proof would be
+incredibly tedious, and would do very little to boost the reader's
+understanding of SGX.
 
+
+\subsubsection{Top-Level Invariant Breakdown}
+
+We first break down the above invariant into specific cases based on whether
+a logical processor~(LP) is executing enclave code or not, and on whether the
+TLB entries translate virtual addresses in the current enclave's
+ELRANGE~(\S~\ref{sec:sgx_elrange}). When the processor is outside enclave mode,
+ELRANGE can be considered to be empty. This reasoning yields the three cases
+outlined below.
+
+\begin{enumerate}
+\item At all times when an LP is outside enclave mode, its TLB may only contain
+  physical addresses belonging to DRAM pages outside the PRM.
+\item At all times when an LP is inside enclave mode, the TLB entries for
+  virtual addresses outside the current enclave's ELRANGE must contain physical
+  addresses belonging to DRAM pages outside the PRM.
+\item At all times when an LP is in enclave mode, the TLB entries for virtual
+  addresses inside the current enclave's ELRANGE must match the virtual memory
+  layout specified by the enclave author.
+\end{enumerate}
+
+The first two invariant cases can be easily proven independently for each LP,
+by induction over the sequence of instructions executed by the LP. For
+simplicity, the reader can assume that instructions are executed in program
+mode. While the assumption is not true on processors with out-of-order
+execution~(\S~\ref{sec:out_of_order}), the arguments presented here also hold
+when the executed instruction sequence is considered in retirement order, for
+reasons that will be described below.
+
+% Invalidating the Translation Lookaside Buffers (TLBs): SDM S 11.9
+% MTRR Considerations in MP Systems: SDM S 11.11.8
+% Loading MSRs: SDM S 26.4, S 26.7
+% Implicit Accesses: SDM S 38.5.3.2
+% Synchronous Entry and Exit: SDM S 39.2.1
+% EENTER - Enters an Enclave: SDM S 41.4.1
+% EEXIT - Exits an Enclave: SDM S 41.4.1
+% ERESUME - Re-Enters an Enclave: SDM S 41.4.1
+% AEX Operational Detail: SDM S 40.4.1
+% Interactions with Caching of Linear-Address Translations: SDM S 42.13
+
+An LP will only transition between enclave mode and non-enclave mode at a few
+well-defined points, which are \texttt{EENTER}~(\S~\ref{sec:sgx_eenter}),
+\texttt{ERESUME}~(\S~\ref{sec:sgx_eresume}),
+\texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}),
+and Asynchronous Enclave Exits~(AEX,~\S~\ref{sec:sgx_aex}). According to the
+SDM, all the transition points flush the TLBs and the out-of-order execution
+pipeline. In other words, the TLBs are guaranteed to be empty after every
+transition between enclave mode and non-enclave mode, so we can consider all
+these transitions to be trivial base cases for our induction proofs.
+
+While SGX initialization is not thoroughly discussed, the SDM mentions that
+loading some Model-Specific Registers~(MSRs,~\S~\ref{sec:address_spaces})
+triggers TLB flushes, and that system software should flush TLBs when modifying
+Memory Type Range Registers~(MTRRs,~\S~\ref{sec:cacheability_config}). Given
+that all the possible SGX implementations described in
+\S~\ref{sec:sgx_pmh_hardware} entail adding a MTRR, it is safe to assume that
+enabling SGX mode also results in a TLB flush and out-of-order pipeline flush,
+and can be used by our induction proof as well.
+
+All the base cases in the induction proofs are serialization points for
+out-of-order execution, as the pipeline is flushed during both enclave mode
+transitions and SGX initialization. This makes the proofs below hold when the
+program order instruction sequence is replaced with the retirement order
+sequence.
+
+The first invariant case holds because while the LP is outside enclave mode,
+the SGX security checks added to the PMH (\S~\ref{sec:sgx_access_concepts},
+Figure~\ref{fig:sgx_tlb_miss_checks}) reject any address translation that would
+point into the PRM before it reaches the TLBs. A key observation for proving
+the induction step of this invariant case is that the PRM never changes after
+SGX is enabled on an LP.
+
+The second invariant case can be proved using a similar argument. While an LP
+is executing an enclave's code, the SGX memory access checks added to the PMH
+reject any address translation that resolves to a physical address inside the
+PRM, if the translated virtual address falls outside the current enclave's
+ELRANGE. The induction step for this invariant case can be proven by observing
+that a change in an LP's current ELRANGE is always accompanied by a TLB flush,
+which results in an empty TLB that trivially satisfies the invariant. This
+follows from the constraint that an enclave's ELRANGE never changes after it is
+established, and from the observation that the LP's current enclave can only be
+changed by an enclave entry, which must be preceded by an enclave exit, which
+triggers a TLB flush.
+
+The third invariant case is best handled by recognizing that the Enclave Page
+Cache Map~(EPCM,~\S~\ref{sec:sgx_epcm}) is an intermediate representation for
+the virtual memory layout specified by the enclave authors. This suggests
+breaking down the case into smaller sub-invariants centered around the EPCM,
+which will be proven in the sub-sections below.
+
+\begin{enumerate}
+\item At all times, each EPCM entry for a page that is allocated to an enclave
+  matches the virtual memory layout desired by the enclave's author.
+\item Assuming that the EPCM contents is constant, at all times when an LP is
+  in enclave mode, the TLB entries for virtual addresses inside the current
+  enclave's ELRANGE must match EPCM entries that belong to the enclave.
+\item An EPCM entry is only modified when there is no mapping for it in any
+  LP's TLB.
+\end{enumerate}
+
+The second and third invariant combined prove that all the TLBs in an
+SGX-enabled computer always reflect the contents of the EPCM, as the third
+invariant essentially covers the gaps in the second invariant. This result, in
+combination with the first invariant, shows that the EPCM is a bridge between
+the memory layout specifications of the enclave authors and the TLB entries
+that regulate what memory can be accessed by software executing on the LPs.
+When further combined with the reasoning in \S~\ref{sec:sgx_access_concepts},
+the whole proof outlined here results in an end-to-end argument for the
+correctness of SGX's memory protection scheme.
+
+
+\subsubsection{EPCM Entries Reflect Enclave Author Design}
+
+This sub-section outlines the proof for the following invariant. \textbf{At
+all times, each EPCM entry for a page that is allocated to an enclave matches
+the virtual memory layout desired by the enclave's author.}
+
+A key observation, backed by the SDM pseudocode for SGX instructions, is that
+all the instructions that modify the EPCM pages allocated to an enclave are
+synchronized using a lock in the enclave's SECS. This entails the existence of
+a time ordering of the EPCM modifications associated with an enclave. We prove
+the invariant stated above using a proof by induction over this sequence of
+EPCM modifications.
+
+EPCM entries allocated to an enclave are created by instructions that can only
+be issued before the enclave is initialized, specifically
+\texttt{ECREATE}~(\S~\ref{sec:sgx_ecreate}) and
+\texttt{EADD}~(\S~\ref{sec:sgx_eadd}). The contents of the EPCM entries created
+by these instructions contributes to the enclave's
+measurement~(\S~\ref{sec:sgx_measurement}), together with the initial data
+loaded into the corresponding EPC pages.
+
+\S~\ref{sec:generic_measurement} argues that we can assume that enclaves with
+incorrect measurements do not exist, as they will be rejected by software
+attestation. Therefore, we can assume that the attributes used to initialize
+EPCM pages match the enclave authors' memory layout specifications.
+
+EPCM entries can be evicted to untrusted DRAM, together with their
+corresponding EPC pages, by the \texttt{EWB}~(\S~\ref{sec:sgx_ewb})
+instruction.  The \texttt{ELDU} / \texttt{ELDB}~(\S~\ref{sec:sgx_epc_eviction})
+instructions re-load evicted page contents and metadata back into the EPC and
+EPCM. By induction, we can assume that an EPCM entry matches the enclave
+author's specification when it is evicted. Therefore, if we can prove that the
+EPCM entry that is reloaded from DRAM is equivalent to the entry that was
+evicted, we can conclude that the reloaded enrtry matches the author's
+specification.
+
+A detailed analysis of the cryptographic primitives used by the SGX design to
+protect the evicted EPC page contents and its associated metadata is outside
+the scope of this work. Summarizing the description in
+\S~\ref{sec:sgx_epc_eviction}, the contents of evicted pages is encrypted using
+AES-GMAC~(\S~\ref{sec:integrity_crypto}), which is an authenticated encryption
+mechanism. The MAC tag produced by AES-GMAC covers the EPCM metadata as well as
+the page data, and includes a 64-bit version that is stored in a version tree
+whose nodes are Version Array~(VA,~(\S~\ref{sec:sgx_va}) pages.
+
+Assuming no cryptographic weaknesses, SGX's scheme does appear to guarantee the
+privacy, integrity, and freshness of the EPC page contents and associated
+metadata while it is evicted in untrusted memory. It follows that \texttt{EWB}
+will only reload an EPCM entry if the contents is equivalent to the contents of
+an evicted entry.
+
+The equivalence notion invoked here is slightly different from perfect
+equality, in order to account for the allowable operation of evicting an EPC
+page and its associated EPCM entry, and then reloading the page contents to a
+different EPC page and a different EPCM entry, as illustrated in
+Figure~\ref{fig:sgx_page_eviction}. Loading the contents of an EPC page at a
+different physical address than it had before does not break the virtual memory
+abstraction, as long as the contents is mapped at the same virtual address
+(the LINEARADDRESS EPCM field), and has the same access control attributes
+(R, W, X, PT EPCM fields) as it had when it was evicted.
+
+
+\subsubsection{TLB Entries for ELRANGE Reflect EPCM Contents}
+
+This sub-section sketches a proof for the following invariant. \textbf{At all
+times when an LP is in enclave mode, the TLB entries for virtual addresses
+inside the current  enclave's ELRANGE must match EPCM entries that belong to
+the enclave.} The argument makes the assumption that \textbf{the EPCM contents
+is constant}, which will be justified in the following sub-section.
+
+The invariant can be proven by induction over the sequence of TLB insertions
+that occur in the LP. This sequence is well-defined because an LP has a single
+PMH, so the address translation requests triggered by TLB misses must be
+serialized to be processed by the PMH.
+
+The proof's induction step depends on the fact that the TLB on hyper-threaded
+cores~(\S~\ref{sec:cpu_core}) is dynamically partitioned between the two LPs
+that share the core, and no TLB entry is shared between the LPs. This allows
+our proof to consider the TLB insertions associated with one LP independently
+from the other LP's insertions, which means we don't have to worry about the
+state (e.g., enclave mode) of the other LP on the core.
+
+The proof is further simplified by observing that when an LP exits enclave
+mode, both its TLB and its out-of-order instruction pipeline are flushed.
+Therefore, the enclave mode and current enclave register values used by address
+translations are guaranteed to match the values obtained by performing the
+translations in program order.
+
+Having eliminated all the complexities associated with
+hyper-threaded~(\S~\ref{sec:cpu_core}) out-of-order~(\S~\ref{sec:out_of_order})
+execution cores, it is easy to see that the security checks outlined in
+Figure~\ref{fig:sgx_tlb_miss_checks} and \S~\ref{sec:sgx_access_concepts}
+ensure that TLB entries that target EPC pages are guaranteed to reflect the
+constraints in the corresponding EPCM entries.
+
+Last, the SGX access checks implemented in the PMH reject any address
+translation for a virtual address in ELRANGE that does not resolve to an EPC
+page. It follows that memory addresses inside ELRANGE can only map to EPC
+pages which, by the argument above, must follow the constraints of the
+corresponding EPCM entries.
+
+
+\subsubsection{EPCM Entries are Not In TLBs When Modified}
+
+In this sub-section, we outline a proof that \textbf{an EPCM entry is only
+modified when there is no mapping for it in any LP's TLB.}. This proof analyzes
+each of the instructions that modify EPCM entries.
+
+For the purposes of this proof, we consider that setting the BLOCKED attribute
+does not count as a modification to an EPCM entry, as it does not change the
+EPC page that the entry is associated with, or the memory layout specification
+associated with the page.
+
+The instructions that modify EPCM entries in such a way that the resulting EPCM
+entries have the VALID field set to true require that the EPCM entries were
+invalid before they were modified. These instructions are
+\texttt{ECREATE}~(\S~\ref{sec:sgx_ecreate}),
+\texttt{EADD}~(\S~\ref{sec:sgx_eadd}), \texttt{EPA}~(\S~\ref{sec:sgx_epa}),
+and \texttt{ELDU} / \texttt{ELDB}~(\S~\ref{sec:sgx_epc_eviction}). The EPCM
+entry targeted by any these instructions must have had its VALID field set to
+false, so the invariant proved in the previous sub-section implies that the
+EPCM entry had no TLB entry associated with it.
+
+Conversely, the instructions that modify EPCM entries and result in entries
+whose VALID field is false start out with valid entries. These instructions are
+\texttt{EREMOVE}~(\S~\ref{sec:sgx_eremove}) and
+\texttt{EWB}~(\S~\ref{sec:sgx_ewb}).
+
+The EPCM entries associated with EPC pages that store Version
+Arrays~(VA,~\S~\ref{sec:sgx_va}) represent a special case for both instructions
+mentioned above, as these pages are not associated with any enclave. As these
+pages can only be accessed by the microcode used to implement SGX, they never
+have TLB entries representing them. Therefore, both \texttt{EREMOVE} and
+\texttt{EWB} can invalidate EPCM entries for VA pages without additional
+checks.
+
+\texttt{EREMOVE} only invalidates an EPCM entry associated with an enclave when
+there is no LP executing in enclave mode using a TCS associated with the same
+enclave. An EPCM entry can only result in TLB translations when an LP is
+executing code from the entry's enclave, and the TLB translations are flushed
+when the LP exits enclave mode. Therefore, when \texttt{EREMOVE} invalidates
+an EPCM entry, any associated TLB entry is guaranteed to have been flushed.
+
+\texttt{EWB}'s correctness argument is more complex, as it relies on the
+\texttt{EBLOCK} / \texttt{ETRACK} sequence described in \S~\ref{sec:sgx_eblock}
+to ensure that any TLB entry that might have been created for an EPCM entry is
+flushed before the EPCM entry is invalidated.
+
+Unfortunately, the SDM pseudocode for the instructions mentioned above leaves
+out the algorithm used to verify that the relevant TLB entries have been
+flushed. Thus, we must base our proof on the assumption that the SGX
+implementation produced by Intel's engineers matches the claims in the SDM.
+In \S~\ref{sec:sgx_ewb_guess}, we propose a method for ensuring that
+\texttt{EWB} will only succeed when all the LPs executing an enclave's code at
+the time when \texttt{ETRACK} is called have exited enclave mode at least once
+between the \texttt{ETRACK} call and the \texttt{EWB} call. Having proven the
+existence of a correct algorithm by construction, we can only hope that the SGX
+implementation uses our algorithm, or a better algorithm that is still correct.
 
 % Enclave cannot read own SECS, because SECS contains enclave key
 %   US 8,972,746 B2 - 9:21-25, 9:51
 % Enclave cannot modify TCS
 %   US 8,972,746 B2 - 10:1-6
-
-

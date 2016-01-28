@@ -34,6 +34,7 @@ only handles TLB misses.
 
 
 \subsubsection{Functional Description}
+\label{sec:sgx_access_concepts}
 
 The intuition behind SGX's memory access protections can be built by
 considering what it would take to implement the same protections in a trusted
@@ -55,8 +56,18 @@ Instead, at a conceptual level, the SGX implementation approximates the effect
 of having the page tables set up correctly by inspecting every address
 translation that comes out of the Page Miss Handler~(PMH,~\S~\ref{sec:tlbs}).
 The address translations that do not obey SGX's access control restrictions
-are rejected before they have a chance to reach the TLBs and be used to service
-load and store instructions.
+are rejected before they reach the TLBs.
+
+SGX's approach relies on the fact that software always references memory using
+virtual addresses, so all the micro-ops~(\S~\ref{sec:out_of_order}) that reach
+the memory execution units~(\S~\ref{sec:execution_units}) use virtual addresses
+that must be resolved using the TLBs before the actual memory accesses are
+carried out. By contrast, the processor's microcode~(\S~\ref{sec:microcode})
+has the ability to issue physical memory accesses, which bypass the TLBs.
+Conveniently, SGX instructions are implemented in microcode
+(\S~\ref{sec:sgx_microcode_modifications}), so they can bypass the TLBs and
+access memory that is off limits to software, such as the EPC page holding an
+enclave's SECS\~(\S~\ref{sec:sgx_secs}).
 
 % Enclave Page Cache Map (EPCM): SDM S 37.5.1, SDM S 38.19
 % Security Information (SECINFO): SDM S 38.11, S 38.11.{1,2}
@@ -162,12 +173,12 @@ produced by the page walker FSM.
 % EPC accesses check the linear address in the EPCM, prevent attacks
 %   US 8,972,746 B2 - 8:50-62
 
-SGX's security checks depend on whether the logical processor is in enclave
-mode~(\S~\ref{sec:sgx_threads}) or not. While the processor is outside enclave
-mode, the PMH allows any address translation that does not target the PRM
-range~(\S~\ref{sec:sgx_prm}). When the processor is inside enclave mode, the
-PMH performs the checks described below, which provide the security guarantees
-described in \S~\ref{sec:sgx_paging}.
+SGX's security checks depend on whether the logical
+processor~(\S~\ref{sec:cpu_core}) is in enclave mode~(\S~\ref{sec:sgx_threads})
+or not. While the processor is outside enclave mode, the PMH allows any address
+translation that does not target the PRM range~(\S~\ref{sec:sgx_prm}). When the
+processor is inside enclave mode, the PMH performs the checks described below,
+which provide the security guarantees described in \S~\ref{sec:sgx_paging}.
 
 First, virtual addresses inside the enclave's virtual memory
 range~(ELRANGE,~\S~\ref{sec:sgx_elrange}) must always translate into physical
@@ -223,6 +234,7 @@ bits R, W, and X.
 
 
 \subsubsection{EPCM Entry Representation}
+\label{sec:sgx_epcm_format}
 
 % EPC and EPCM
 %   US 8,972,746 B2 - 4:36-58
@@ -265,7 +277,8 @@ supported by the CPU. The ISCA 2015 SGX tutorial slides mention an EPC size of
 today's typical processors, which is $2^{36}$ - $2^{40}$ bytes.
 
 
-\subsubsection{Security Check Implementation}
+\subsubsection{PMH Hardware Modifications}
+\label{sec:sgx_pmh_hardware}
 
 % SERR register implemented in PMH
 %   US 8,972,746 B2 - 5:59-61
@@ -281,7 +294,7 @@ The SDM describes the memory access checks performed after SGX is enabled, but
 does not provide any insight into their implementation. Intel's patents hint at
 three possible implementations that make different cost-performance tradeoffs.
 This section summarizes the three approaches and argues in favor of the
-implementation that requires the fewest hardware modifications.
+implementation that requires the fewest hardware modifications to the PMH.
 
 All implementations of SGX's security checks entail adding a pair of memory
 type range registers~(MTRRs,~\S~\ref{sec:cacheability_config}) to the PMH.

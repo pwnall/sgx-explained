@@ -37,9 +37,9 @@ microcode assist.
 
 The only modification to the PMH hardware that is absolutely necessary to
 implement SGX is developing an ability to trigger the microcode assist for all
-address translations when a logical processor is in enclave
-mode~(\S~\ref{sec:sgx_threads}), or when the physical address produced by the
-page walker FSM matches the Processor Reserved
+address translations when a logical processor~(\S~\ref{sec:cpu_core}) is in
+enclave mode~(\S~\ref{sec:sgx_threads}), or when the physical address produced
+by the page walker FSM matches the Processor Reserved
 Memory~(PRM,~\S~\ref{sec:sgx_prm}) range.
 
 The PRM range is configured by the PRM Range Registers~(\S~\ref{sec:sgx_prm}),
