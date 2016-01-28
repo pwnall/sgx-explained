@@ -1,4 +1,224 @@
-\subsection{TLB Shootdown Verification}
+\subsection{Tracking TLB Flushes}
 \label{sec:sgx_ewb_guess}
 
+This section proposes a straightforward method that the SGX implementation can
+use to verify that the system software plays its part correctly the an EPC page
+eviction~(\S~\ref{sec:sgx_epc_eviction}) process. Our method meets the SDM's
+specification for \texttt{EBLOCK}~(\S~\ref{sec:sgx_eblock}),
+\texttt{ETRACK}~(\S~\ref{sec:sgx_eblock}) and
+\texttt{EWB}~(\S~\ref{sec:sgx_ewb}).
 
+The motivation behind this section is that, at least at the time of this
+writing, there is no official SGX documentation that contains a description of
+the mechanism used by \texttt{EWB} to ensure that all the Logical
+Processors~(LPs,~\S~\ref{sec:cpu_core}) running an enclave's code exit enclave
+mode~(\S~\ref{sec:sgx_threads}) between an \texttt{ETRACK} invocation and a
+\texttt{EWB} invocation. Knowing that there exists a correct mechanism that has
+the same interface as the SGX instructions described in the SDM gives us a
+reason to hope that the SGX implementation is also correct.
+
+Our method relies on the fact that an enclave's SECS~(\S~\ref{sec:sgx_secs}) is
+not accessible by software, and is already used to store information used by
+the SGX microcode implementation~(\S~\ref{sec:sgx_microcode_modifications}).
+We store the following fields in the SECS. \id{tracking} and
+\id{done-tracking} are Boolean variables. \id{tracked-threads} and
+\id{active-threads} are non-negative integers that start at zero and must store
+numbers up to the number of LPs in the computer. \id{lp-mask} is an array of
+Boolean flags that has one member per LP in the computer. The fields are
+initialized as shown in Figure~\ref{fig:sgx_tracking_ecreate}.
+
+\begin{figure}[hbt]
+  \begin{codebox}
+  \Procname{$\proc{ECREATE}(\id{SECS})$}
+  \zi \Comment Initialize the SECS state used for tracking.
+  \li $\id{SECS}.\id{tracking} \gets \const{false}$
+  \li $\id{SECS}.\id{done-tracking} \gets \const{false}$
+  \li $\id{SECS}.\id{active-threads} \gets 0$
+  \li $\id{SECS}.\id{tracked-threads} \gets 0$
+  \li $\id{SECS}.\id{lp-mask} \gets 0$
+  \end{codebox}
+  \caption{
+    The algorithm used to initialize the SECS fields used by the TLB flush
+    tracking method presented in this section.
+  }
+  \label{fig:sgx_tracking_ecreate}
+\end{figure}
+
+The \id{active-threads} SECS field tracks the number of LPs that are currently
+executing the code of the enclave who owns the SECS. The field is is atomically
+incremented by \texttt{EENTER}~(\S~\ref{sec:sgx_eenter}) and
+\texttt{ERESUME}~(\S~\ref{sec:sgx_eresume}) and is atomically decremented by
+\texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}) and Asynchronous Enclave
+Exits~(AEXs,~\S~\ref{sec:sgx_aex}). Asides from helping track TLB flushes, this
+field can also be used by \texttt{EREMOVE}~(\S~\ref{sec:sgx_eremove}) to decide
+when it is safe to free an EPC page that belongs to an enclave.
+
+As specified in the SDM, \texttt{ETRACK} activates TLB flush tracking for an
+enclave. In our method, this is accomplished by setting the \id{tracking} field
+to \const{true} and the \id{done-tracking} field to \const{false}.
+
+When tracking is enabled, \id{tracked-threads} is the number of LPs that were
+executing the enclave's code when the \texttt{ETRACK} instruction was issued,
+and have not yet exited enclave mode. Therefore, executing \texttt{ETRACK}
+atomically reads \id{active-threads} and writes the result into
+\id{tracked-threads}. Also, \id{lp-mask} keeps track of the LPs that have
+exited the current enclave after the \texttt{ETRACK} instruction was issued.
+Therefore, the \texttt{ETRACK} implementation atomically zeroes \id{lp-mask}.
+The full \texttt{ETRACK} algorithm is listed in
+Figure~\ref{fig:sgx_tracking_etrack}.
+
+\begin{figure}[hbt]
+  \begin{codebox}
+  \Procname{$\proc{ETRACK}(\id{SECS})$}
+  \zi \Comment Abort if tracking is already active.
+  \li \If $\id{SECS}.\id{tracking} = \const{true}$
+  \li   \Then \Return $\const{sgx-prev-trk-incmpl}$
+        \End
+  \zi \Comment Activate TLB flush tracking.
+  \li $\id{SECS}.\id{tracking} \gets \const{true}$
+  \li $\id{SECS}.\id{done-tracking} \gets \const{false}$
+  \li $\id{SECS}.\id{tracked-threads} \gets$
+      \Indentmore
+  \zi $\proc{atomic-read}(\id{SECS}.\id{active-threads})$
+      \End
+  \li \For $i \gets 0$ \To $\const{max-lp-id}$
+  \li   \Do
+          $\proc{atomic-clear}(\id{SECS}.\id{lp-mask}[i])$
+        \End
+  \end{codebox}
+  \caption{
+    The algorithm used by \texttt{ETRACK} to activate TLB flush tracking.
+  }
+  \label{fig:sgx_tracking_etrack}
+\end{figure}
+
+When an LP exits an enclave that has TLB flush tracking activated, we
+atomically test and set the current LP's flag in \id{lp-mask}. If the flag was
+not previously set, it means that an LP that was executing the enclave's code
+when \texttt{ETRACK} was invoked just exited enclave mode for the first time,
+and we atomically decrement \id{tracked-threads} to reflect this fact. In other
+words, \id{lp-mask} prevents us from double-counting an LP when it exits the
+same enclave while TLB flush tracking is active.
+
+Once \id{active-threads} reaches zero, we are assured that all the LPs running
+the enclave's code when \texttt{ETRACK} was issued have exited enclave mode at
+least once, and can set the \id{done-tracking} flag.
+Figure~\ref{fig:sgx_tracking_eexit} enumerates all the steps taken on enclave
+exit.
+
+\begin{figure}[hbt]
+  \begin{codebox}
+  \Procname{$\proc{enclave-exit}(\id{SECS})$}
+  \zi \Comment Track an enclave exit.
+  \li $\proc{atomic-decrement}(\id{SECS}.\id{active-threads})$
+  \li \If $\proc{atomic-test-and-set}($
+        \Indentmore
+  \zi     $\id{SECS}.\id{lp-mask}[\const{lp-id}])$
+        \End
+  \li   \Then $\proc{atomic-decrement}($
+          \Indentmore
+  \zi     $\id{SECS}.\id{tracked-threads})$
+          \End
+  \li   \If $\id{SECS}.\id{tracked-threads} = 0$
+  \li     \Then $\id{SECS}.\id{done-tracking} \gets \const{true}$
+          \End
+        \End
+  \end{codebox}
+  \caption{
+    The algorithm that updates the TLB flush tracking state when an LP exits an
+    enclave via \texttt{EEXIT} or AEX.
+  }
+  \label{fig:sgx_tracking_eexit}
+\end{figure}
+
+Without any compensating measure, the method above will incorrectly decrement
+\id{tracked-threads}, if the LP exiting the enclave had entered it after
+\texttt{ETRACK} was issued. We compensate for this with the following trick.
+When an LP starts executing code inside an enclave that has TLB flush tracking
+activated, we set its corresponding flag in \id{lp-mask}. This is sufficient to
+avoid counting the LP when it exits the enclave.
+Figure~\ref{fig:sgx_tracking_eenter} lists the steps required by our method
+when an LP enters an enclave.
+
+\begin{figure}[hbt]
+  \begin{codebox}
+  \Procname{$\proc{enclave-enter}(\id{SECS})$}
+  \zi \Comment Track an enclave entry.
+  \li $\proc{atomic-increment}(\id{SECS}.\id{active-threads})$
+  \li $\proc{atomic-set}(\id{SECS}.\id{lp-mask}[\const{lp-id}])$
+  \end{codebox}
+  \caption{
+    The algorithm that updates the TLB flush tracking state when an LP enters
+    an enclave via \texttt{EENTER} or \texttt{ERESUME}.
+  }
+  \label{fig:sgx_tracking_eenter}
+\end{figure}
+
+With these algorithms in place, \texttt{EWB} can simply verify that both
+\id{tracking} and \id{done-tracking} are \const{true}. This ensures that the
+system software has triggered enclave exits on all the LPs that were running
+the enclave's code when \texttt{ETRACK} was executed.
+Figure~\ref{fig:sgx_tracking_ewb} lists the algorithm used by the \texttt{EWB}
+tracking verification step.
+
+\begin{figure}[hbt]
+  \begin{codebox}
+  \Procname{$\proc{EWB-verify}(\id{virtual-addr})$}
+  \li $\id{physical-addr} \gets \proc{translate}(\id{virtual-addr})$
+  \li $\id{epcm-slot} \gets \proc{epcm-slot}(\id{physical-addr})$
+  \li \If $\id{EPCM}[\id{slot}].\id{BLOCKED} = \const{false}$
+  \li   \Then \Return $\const{sgx-not-blocked}$
+        \End
+  \li $\id{SECS} \gets \proc{epcm-addr}($
+      \Indentmore
+  \zi   $\id{EPCM}[\id{slot}].\id{ENCLAVESECS})$
+      \End
+  \zi \Comment Verify that the EPC page can be evicted.
+  \li \If $\id{SECS}.\id{tracking} = \const{false}$
+  \li   \Then \Return $\const{sgx-not-tracked}$
+        \End
+  \li \If $\id{SECS}.\id{done-tracking} = \const{false}$
+  \li   \Then \Return $\const{sgx-not-tracked}$
+        \End
+  \end{codebox}
+  \caption{
+    The algorithm that ensures that all LPs running an enclave's code when
+    \texttt{ETRACK} was executed have exited enclave mode at least once.
+  }
+  \label{fig:sgx_tracking_ewb}
+\end{figure}
+
+Last, \texttt{EBLOCK} marks the end of a TLB flush tracking cycle by clearing
+the \id{tracking} flag. This ensures that system software must go through
+another cycle of \texttt{ETRACK} and enclave exits before being able to use
+\texttt{EWB} on the page whose BLOCKED EPCM field was just set to \const{true}
+by \texttt{EBLOCK}.
+Figure~\ref{fig:sgx_tracking_eblock} shows the details.
+
+\begin{figure}[hbt]
+  \begin{codebox}
+  \Procname{$\proc{EBLOCK}(\id{virtual-addr})$}
+  \li $\id{physical-addr} \gets \proc{translate}(\id{virtual-addr})$
+  \li $\id{epcm-slot} \gets \proc{epcm-slot}(\id{physical-addr})$
+  \li \If $\id{EPCM}[\id{slot}].\id{BLOCKED} = \const{true}$
+  \li   \Then \Return $\const{sgx-blkstate}$
+        \End
+  \li \If $\id{SECS}.\id{tracking} = \const{true}$
+  \li   \Then
+          \If $\id{SECS}.\id{done-tracking} = \const{false}$
+  \li       \Then \Return $\const{sgx-entryepoch-locked}$
+            \End
+  \li     $\id{SECS}.\id{tracking} \gets \const{false}$
+        \End
+  \li $\id{EPCM}[\id{slot}].\id{BLOCKED} \gets \const{true}$
+  \end{codebox}
+  \caption{
+    The algorithm that marks the end of a TLB flushing cycle when
+    \texttt{EBLOCK} is executed.
+  }
+  \label{fig:sgx_tracking_eblock}
+\end{figure}
+
+Our method's correctness can be easily proven by arguing that each SECS field
+introduced in this section has its intended value throughout enclave entries
+and exits.
