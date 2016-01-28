@@ -1,0 +1,66 @@
+\subsection{Key Hierarchy and Derivation}
+
+%% FUSE_KEY
+%   US 8,972,746 B2 - Table 4-13, column 19
+
+According to Intel's patents, the SGX implementation relies on a complex key
+derivation process rooted on global secret keys in the CPU circuitry, and on
+secrets embedded in the processor's eFUSEs. eFUSE information can be extracted
+efficiently (Chipworks quoted us \$50-250k for extracting the entire eFUSE
+contents from an Intel i5 processor), so some of the eFUSE secrets are
+encrypted with a master key (referred to as a ``global wrapping logic key'' in
+the patents).
+
+The SGX patents describe two ``logic keys'' embedded in the CPU's circuitry,
+which are the same for all CPUs in a stepping, making them essentially global
+keys. The \textit{global wrapping logic key} (GWK) is a 128-bit AES key, and it is
+used to encrypt a subset a 256-bit A.x value used to re-create the CPU's EPID
+key, and a 128-bit \textit{pre-seed key 0}. The eFUSEs also contain a 128-bit
+\textit{pre-seed key 1} and a 32-bit EPID group ID, which are stored in
+cleartext.
+
+\cite{shanbhogue2015gdxcsgx}, which describes mechanisms for proctecting SGX
+keys in the presence of hardware debuggers, states that some hardware secrets
+are stored in ``metal tie-ups and tie-downs'', while other secrets are stored
+in e-fuses or in \textit{physically uncloneable function} (PUF) circuits.
+\cite{brickell2014hardening, gotze2014provisioning} state that the GWK is
+embedded into a chip using ``metal tie-ups and tie-downs'', and is shared by
+all chips manufactured from the same mask set.
+
+The SGX patents state that encrypting the eFUSE secrets by the logic key makes
+them harder to extract via hardware monitoring tools, and protects them while
+in transit to the CPU during the manufacturing process. This assumes that it is
+very expensive to obtain the global key from a CPU, by virtue of the low
+feature size. \cite{gotze2014provisioning} expresses concerns that the GWK can
+be reverse-engineered.
+
+\cite{gotze2014provisioning, gotze2014provisioning2} disclose that SGX
+processors also employ a PUF, which generates a symmetric key that is used
+during the provisioning process.  Specifically, at an early provisioning stage,
+the PUF key is encrypted with the GWK and transmitted to the key generation
+server. At a later stage, the key generation server encrypts the chip's fuse
+key material with the PUF key, and transmits it to the chip. The PUF key
+increases the cost of obtaining a chip's fuse key material, as an attacker must
+compromise both provisioning stages in order to be able to decrypt the fuse key
+material.
+
+The SDM~\cite{intel2015sdm} mentions a 16-byte CPU security version number
+(SVN), which contains the version numbers of various TCB components, and is a
+source in the key derivation process. The patents further specify that the SVN
+register is made up of (most likely 8-bit) sections that contain the SVNs of
+each layer in the SGX initialization process, and that each initialization step
+sets the corresponding section to its SVN, and then locks it for the duration
+of the power-up cycle.
+
+Intel's patents disclose that the key derivation process uses 128-bit AES in
+ECB mode as a pseudo-random function (PRF). When an SVN is an input to a key
+derivation process, a \textit{PRF loop} is used, where the PRF is applied to
+a constant
+
+\cite{anati2013sgx} confirms that the attestation uses Intel's
+EPID~\cite{brickell2009epid} group signature scheme.
+
+The Intel patents indicate that EREPORT's KeyID is initialized to a random
+value on each processor power cycle, and is incremented after $2^{32}$ AES
+operations that use the value. They also indicate that each EREPORT may
+increment the KeyID by 1.

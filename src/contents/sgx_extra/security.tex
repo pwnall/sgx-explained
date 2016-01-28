@@ -1,9 +1,35 @@
-\section{Security Analysis}
-\label{sec:security}
+\section{SGX Security Properties}
+\label{sec:sgx_security_analysis}
 
 The rest of this section describes the security properties of
 enclaves, discussing the trade-offs made while trying to balance security with
 backwards compatibility.
+
+
+The memory controller is
+integrated on the CPU die (see Figure~\ref{fig:cpu_die}), so it can be trusted
+to prevent devices attached to the system bus from performing DMA transfers
+to/from the PRM.
+
+
+
+
+% PRMRR documented in HASP papers and both SGX manuals, completely removed from
+% SDM. It still exists in Coreboot. Couldn't find other Skywell code.
+The SGX manual states that the EPC (the memory used to store enclave data) can
+only be set up as UC or WB. While no further explanation is provided, we assume
+that the UC option was provided in order to attempt to mitigate against some
+cache-timing attacks.
+
+
+% Access Control Requirements: SDM S 38.3
+
+Pages that store key SGX structures cannot be accessed directly, even by the
+code executing inside their enclaves. Furthermore, the SGX instructions that
+operate on SGX data structures check the EPCM type fields of their inputs
+against the expected types. This type system prevents software from
+intentionally or accidentally corrupting the key SGX data structures.
+
 
 
 
@@ -16,16 +42,10 @@ backwards compatibility.
 % ERESUME can be replaced by normal EENTER, XRESTOR and accounting. Describe
 % and argue against ERESUME.
 
-
 % The use of the page version (nonce) as counter in AES-GCM makes it impossible
 % for malicious system software to determine whether an EPC page's contents has
 % changed between two evictions.
 % However, the dirty bit in the EPC page's PTE will leak that information.
-
-% According to the ECREATE pseudo-code in the Intel manual, EIDs are assigned
-% using a counter that is atomically incremented on every ECREATE. This makes
-% the field predictible to system software.
-
 
 % The SGX instruction that evicts an EPC page, EWB, ensures that the VA slot it
 % is supposed to write is unused.
@@ -39,17 +59,6 @@ information about private data. Therefore, the SGX programming model prescribes
 that code which accesses private data must be entirely contained inside an
 enclave. Jumping into and out of enclave code must be performed explicitly
 using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
-
-
-% Victor 2 scheme for ETRACK / EBLOCK / EWB.
-%
-% ETRACK - sets tracking to 1, sets CPUmask in SECS to 0, sets LPleft to number
-%          of logical processors executing enclave code, sets canEvict to 0
-% EEXIT / AEX - if tracking is set to 1 and CPUmask bit in SECS for current LP
-%               is set to 0, decrement LPleft; if LPleft is 0, set canEvict to
-%               1
-% EENTER - if tracking is set to 1, set CPUmask bit in SECS for current LP to 1
-% EWB - check that canEvict is 1; set tracking to 0
 
 
 \begin{figure}[hbt]
@@ -66,49 +75,6 @@ using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
   }
   \label{fig:cache_partitions}
 \end{figure}
-
-
-\subsection {Page Eviction Security}
-
-The most obvious attack is prevented by having the MAC cover the contents of
-the evicted EPC page, so the untrusted OS cannot modify the data in the page
-while it is stored in untrusted DRAM. The MAC also covers the metadata that
-makes up the EPCM entry, which prevents the more subtle attacks described
-below.
-
-The enclave ID (EID) field is covered by the MAC tag, so the OS cannot evict an
-EPC page belonging to one enclave, and assign the page to a different enclave
-when it is loaded back into the EPC. If EID was not covered by authenticity
-guarantees, a malicious OS could read any enclave's data by evicting an EPC
-page belonging to the victim enclave, and loading it into a malicious enclave
-that would copy the page's contents to untrusted DRAM.
-
-The virtual address (LINADDR) field is covered by the MAC tag, so the OS cannot
-modify the virtual memory layout of an enclave by evicting an EPC page and
-specifying a different LINADDR when loading it back. If LINADDR was not covered
-by authenticity guarantees, a malicious OS could perform the exact attack shown
-in Figure~\ref{fig:swap_mapping_attack} and described in
-\S~\ref{sec:page_swapping_attacks}.
-
-The page access permission flags (R, W, X) are also covered by the MAC tag.
-This prevents the OS from changing the access permission bits in a page's EPCM
-entry by evicting the page and loading it back in. If the permission flags were
-not covered by authenticity guarantees, the OS could use the ability to change
-EPCM access permissions to facilitate exploiting vulnerabilities in enclave
-code. For example, exploiting a stack overflow vulnerability is generally
-easier if OS can make the stack pages executable.
-
-The nonce stored in the VA slot is also covered by the MAC. This prevents the
-OS from mounting a replay attack that reverts the contents of an EPC page to an
-older version. If the nonce would not be covered by integrity guarantees, the
-OS could evict the target EPC page at different times $t_1$ and $t_2$ in the
-enclave's life, and then provide the \texttt{EWB} outputs at $t_1$ to the
-\texttt{ELDU} / \texttt{ELDB} instruction. Without the MAC verification, this
-attack would successfully revert the contents of the EPC page to its version
-at $t_1$.
-
-While replay attacks look relatively benign, they can be quite devastating when
-used to facilitate double spending.
 
 
 \subsubsection{On Measuring Enclave Attributes}
