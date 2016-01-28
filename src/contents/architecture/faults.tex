@@ -132,9 +132,9 @@ which is an array of 8 stack pointers stored in the TSS described in
 When a hardware exception occurs, the execution state may be corrupted, and the
 current stack cannot be relied on. Therefore, the CPU first uses the handler's
 IDT entry to set up a known good stack. SS is loaded with a null descriptor,
-and RSP is set to the IST value pointed by the IDT entry. After switching to a
-reliable stack, the CPU pushes the snapshot in Table~\ref{fig:fault_stack} on
-the stack, then loads the IDT entry's values into the CS and RIP registers,
+and RSP is set to the IST value to which the IDT entry points. After switching
+to a reliable stack, the CPU pushes the snapshot in Table~\ref{fig:fault_stack}
+on the stack, then loads the IDT entry's values into the CS and RIP registers,
 which trigger the execution of the exception handler.
 
 \begin{table}[hbt]

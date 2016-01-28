@@ -74,7 +74,7 @@ is used to create both TCS pages (\S~\ref{sec:sgx_tcs}) and regular pages.
 
 \texttt{EADD} reads its input data from a \textit{Page Information}~(PAGEINFO)
 structure, illustrated in Figure~\ref{fig:sgx_pageinfo}. The structure's
-contents is only used to communicate information to the SGX implementation, so
+contents are only used to communicate information to the SGX implementation, so
 it is entirely architectural and documented in the SDM.
 
 \begin{figure}[hbt]
@@ -90,17 +90,17 @@ it is entirely architectural and documented in the SDM.
 Currently, the PAGEINFO structure contains the virtual address of the EPC page
 that will be allocated (LINADDR), the virtual address of the non-EPC page whose
 contents will be copied into the newly allocated EPC page (SRCPGE), a virtual
-address that resolves to the SECS of the enclave which will own the page
-(SECS), and values for some of the fields of the EPCM entry associated with the
-newly allocated EPC page (SECINFO).
+address that resolves to the SECS of the enclave that will own the page (SECS),
+and values for some of the fields of the EPCM entry associated with the newly
+allocated EPC page (SECINFO).
 
 The SECINFO field in the PAGEINFO structure is actually a virtual memory
 address, and points to a \textit{Security Information}~(SECINFO) structure,
 some of which is also illustrated in Figure~\ref{fig:sgx_pageinfo}. The SECINFO
 structure contains the newly allocated EPC page's access permissions (R, W, X)
 and its EPCM page type (PT\_REG or PT\_TCS). Like PAGEINFO, the SECINFO
-structure is solely used to communicate data to the SGX implementation, so it
-its contents is also entirely architectural. However, most of the structure's
+structure is solely used to communicate data to the SGX implementation, so its
+contents are also entirely architectural. However, most of the structure's
 64 bytes are reserved for future use.
 
 Both the PAGEINFO and the SECINFO structures are prepared by the system
@@ -113,9 +113,9 @@ implementation by reducing the number of special cases that must be handled.
 
 \texttt{EADD} validates its inputs before modifying the newly allocated EPC
 page or its EPCM entry. Most importantly, attempting to \texttt{EADD} a page to
-an enclave whose SECS is in the initialized state will result in \#GP.
+an enclave whose SECS is in the initialized state will result in a \#GP.
 Furthermore, attempting to \texttt{EADD} an EPC page that is already allocated
-(the VALID field in its EPCM entry is 1) results in \#PF. \texttt{EADD} also
+(the VALID field in its EPCM entry is 1) results in a \#PF. \texttt{EADD} also
 ensures that the page's virtual address falls within the enclave's ELRANGE, and
 that all the reserved fields in SECINFO are set to zero.
 
@@ -146,7 +146,7 @@ hard-coded into the SGX implementation, and that causes \texttt{EINIT} to
 initialize the LE  without checking for a valid EINIT Token Structure.
 
 When \texttt{EINIT} completes successfully, it sets the enclave's INIT
-attribute to true. This opens the way for ring 3~\S~\ref{sec:rings})
+attribute to true. This opens the way for ring 3~(\S~\ref{sec:rings})
 application software to execute the enclave's code, using the SGX instructions
 described in \S~\ref{sec:sgx_threads}. On the other hand, once INIT is set to
 true, \texttt{EADD} cannot be invoked on that enclave anymore, so the system

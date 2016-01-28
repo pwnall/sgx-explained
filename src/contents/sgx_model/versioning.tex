@@ -8,13 +8,13 @@ hash, to identify the software inside a container. The downside of using
 content hashes for identity is that there is no relation between the identities
 of containers that hold different versions of the same software.
 
-In practice, it is highly desirable that systems based on secure containers
-can handle software updates without having access to the remote party in the
-initial software attestation process. This entails having the ability to
-migrate secrets between the container that has the old version of the software
-and the container that has the updated version. This requirement translates
-into a need for a separate identity system that can recogize the relationship
-between two versions of the same software.
+In practice, it is highly desirable for systems based on secure containers to
+handle software updates without having access to the remote party in the initial
+software attestation process. This entails having the ability to migrate secrets
+between the container that has the old version of the software and the container
+that has the updated version. This requirement translates into a need for a
+separate identity system that can recognize the relationship between two versions
+of the same software.
 
 SGX supports the migration of secrets between enclaves that represent different
 versions of the same software, as shown in
@@ -74,8 +74,8 @@ attestation
 
 % Enclave Signature Structure (SIGSTRUCT): SDM S 38.13
 
-The SGX design requires that each enclave must have a certificate issued by its
-author. This requirement is enforced by
+The SGX design requires each enclave to have a certificate issued by its author.
+This requirement is enforced by
 \texttt{EINIT}~(\S~\ref{sec:sgx_einit_overview}), which refuses to operate on
 enclaves without valid certificates.
 
@@ -121,7 +121,7 @@ revealed in the following sections.
   \hline
   \end{tabularx}
   \caption{
-    A subset of the metadata fields in a SIGSTRUCT enclave certificate.
+    A subset of the metadata fields in a SIGSTRUCT enclave certificate
   }
   \label{fig:sgx_sigstruct_info}
 \end{table}
@@ -146,7 +146,7 @@ revealed in the following sections.
   \hline
   \end{tabularx}
   \caption{
-    The format of the RSA signature used in a SIGSTRUCT enclave certificate.
+    The format of the RSA signature used in a SIGSTRUCT enclave certificate
   }
   \label{fig:sgx_sigstruct_rsa}
 \end{table}
@@ -209,7 +209,7 @@ as follows.
 If a security vulnerability is discovered in an enclave, the author can release
 a fixed version with a higher SVN. As users upgrade, SGX will facilitate the
 migration of secrets from the vulnerable version of the enclave to the fixed
-version. Once an user's secrets are migrated, the SVN restrictions in SGX will
+version. Once a user's secrets have migrated, the SVN restrictions in SGX will
 deflect any attack based on building the vulnerable enclave version and using
 it to read the migrated secrets.
 
@@ -284,14 +284,14 @@ its RSA signature. The SIGSTRUCT fields Q1 and Q2, along with the RSA exponent
 If the SIGSTRUCT certificate is found to be properly signed, \texttt{EINIT}
 follows the steps discussed in the following few paragraphs to ensure that the
 certificate was issued to the enclave that is being initialized. Once the
-checks are completed, \texttt{EINIT} computes MRSIGNER, the 256-bit SHA-2 hash
+checks have completed, \texttt{EINIT} computes MRSIGNER, the 256-bit SHA-2 hash
 of the MODULUS field in the SIGSTRUCT, and writes it into the enclave's SECS.
 \texttt{EINIT} also copies the ISVPRODID and ISVSVN fields from SIGSTRUCT into
 the enclave's SECS. As explained in \S~\ref{sec:sgx_certificate_identity},
 these fields make up the enclave's certificate-based identity.
 
 \texttt{EINIT} performs a few checks to make sure that the enclave undergoing
-initialization was indeed authorized by provided the SIGSTRUCT certificate. The
+initialization was indeed authorized by the provided SIGSTRUCT certificate. The
 most obvious check involves making sure that the MRENCLAVE value in SIGSTRUCT
 equals the enclave's measurement, which is stored in the MRENCLAVE field in
 the enclave's SECS.
@@ -302,7 +302,7 @@ However, MRENCLAVE does not cover the enclave's attributes, which are stored in
 the ATTRIBUTES field of the SECS. As discussed in
 \S~\ref{sec:sgx_ecreate_mrenclave_no_attributes}, omitting ATTRIBUTES from
 MRENCLAVE facilitates writing enclaves that have optimized implementations
-which can use architectural extensions when present, and also have fallback
+that can use architectural extensions when present, and also have fallback
 implementations that work on CPUs without the extensions. Such enclaves can
 execute corectly when built with a variety of values in the
 XFRM~(\S~\ref{sec:sgx_secs_attributes}, \S~\ref{sec:sgx_ssa}) attribute. At
@@ -318,7 +318,7 @@ with an undesirable ATTRIBUTES value. However, when secrets are obtained using
 the migration process facilitated by certificate-based identities, there is no
 remote party that can check the enclave's attributes.
 
-The SGX design solves this problem having enclave authors convey the set of
+The SGX design solves this problem by having enclave authors convey the set of
 acceptable attribute values for an enclave in the ATTRIBUTES and ATTRIBUTEMASK
 fields of the SIGSTRUCT certificate issued for the enclave. \texttt{EINIT} will
 refuse to initialize an enclave using a SIGSTRUCT if the bitwise AND between
@@ -327,15 +327,15 @@ SIGSTRUCT does not equal the SIGSTRUCT's ATTRIBUTES field. This check prevents
 enclaves with undesirable attributes from obtaining and potentially leaking
 secrets using the migration process.
 
-Any enclave author can use SIGSTRUCT to request that any of the bits in an
-enclave's ATTRIBUTES field is zero. However, certain bits can only be set to
-one for enclaves that are signed by Intel. \texttt{EINIT} has a mask of
-restricted ATTRIBUTES bits, discussed in \S~\ref{sec:sgx_attestation}. The
-\texttt{EINIT} implementation contains a hard-coded MRSIGNER value that is used
-to identify Intel's privileged enclaves, and only allows privileged enclaves to
-be built with an ATTRIBUTES value that matches any of the bits in the
-restricted mask. This check is essential to the security of the SGX software
-attestation process, which is described in \S~\ref{sec:sgx_attestation}.
+Any enclave author can use SIGSTRUCT to request any of the bits in an enclave's
+ATTRIBUTES field to be zero. However, certain bits can only be set to one for
+enclaves that are signed by Intel. \texttt{EINIT} has a mask of restricted
+ATTRIBUTES bits, discussed in \S~\ref{sec:sgx_attestation}. The \texttt{EINIT}
+implementation contains a hard-coded MRSIGNER value that is used to identify
+Intel's privileged enclaves, and only allows privileged enclaves to be built
+with an ATTRIBUTES value that matches any of the bits in the restricted mask.
+This check is essential to the security of the SGX software attestation process,
+which is described in \S~\ref{sec:sgx_attestation}.
 
 Last, \texttt{EINIT} also inspects the VENDOR field in SIGSTRUCT. The SDM
 description of the VENDOR field in the section dedicated to SIGSTRUCT suggests
@@ -427,7 +427,7 @@ of data used in the key derivation material.
 
 The KEYNAME field in KEYREQUEST always participates in the key generation
 material. It indicates the type of the key to be generated. While the SGX
-design define a few key types, the secret migration feature always uses ``Seal
+design defines a few key types, the secret migration feature always uses ``Seal
 keys''. The other key types are used by the SGX software attestation process,
 which will be outlined in \S~\ref{sec:sgx_attestation}.
 
@@ -460,7 +460,7 @@ SVN~(ISVSVN,~\S~\ref{sec:sgx_certificate_identity}) and SGX implementation
 SVN~(CPUSVN,~\S~\ref{sec:sgx_cpusvn}) that will be used in the key derivation
 process. However, \texttt{EGETKEY} will reject the derivation request and
 produce an error code if the desired enclave SVN is greater than the current
-enclave's SVN, or if the desired SGX implementation SVN is greater than the
+enclave's SVN, or if the desired SGX implementation's SVN is greater than the
 current implementation's SVN.
 
 The SVN restrictions prevent the migration of secrets from enclaves with higher

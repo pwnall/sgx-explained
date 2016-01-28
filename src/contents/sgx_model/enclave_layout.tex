@@ -12,8 +12,8 @@ files on Unix, and \texttt{.dll} files on Windows.
 For simplicity, we describe the interaction between enclaves and non-enclave
 software assuming that each enclave is used by exactly one application process,
 which we shall refer to as the enclave's \textit{host process}. We do note,
-however, that the SGX design does not explicitly prohibit having an enclave be
-shared by multiple application processes.
+however, that the SGX design does not explicitly prohibit multiple application
+processes from sharing an enclave.
 
 
 \subsubsection{The Enclave Linear Address Range (ELRANGE)}
@@ -55,25 +55,25 @@ ELRANGE is specified using a base (the BASEADDR field) and a size (the SIZE)
 in the enclave's SECS~(\S~\ref{sec:sgx_secs}). ELRANGE must meet the same
 constraints as a variable memory type range (\S~\ref{sec:cacheability_config})
 and as the PRM range~(\S~\ref{sec:sgx_prm}), namely the size must be a power of
-2, and the base must be aligned to the size. These restrictions are in place
-so that checking whether an address belongs to an enclave's ELRANGE can be done
-very inexpensively in either hardware~(\S~\ref{sec:cacheability_config}) or
-software.
+2, and the base must be aligned to the size. These restrictions are in place so
+that the SGX implementation can inexpensively check whether an address belongs
+to an enclave's ELRANGE, in either hardware~(\S~\ref{sec:cacheability_config})
+or software.
 
-When an enclave represents a dynamic library, it is natural to have ELRANGE be
-set to the memory range reserved for the library by the loader. The ability to
-access non-enclave memory from enclave code makes it easy to reuse existing
-library code that expects to work with pointers to memory buffers managed by
-code in the host process.
+When an enclave represents a dynamic library, it is natural to set ELRANGE to
+the memory range reserved for the library by the loader. The ability to access
+non-enclave memory from enclave code makes it easy to reuse existing library
+code that expects to work with pointers to memory buffers managed by code in the
+host process.
 
 
 \subsubsection{SGX Enclave Attributes}
 \label{sec:sgx_secs_attributes}
 
 The execution environment of an enclave is heavily influenced by the value of
-the ATTRIBUTES field in the enclave's SECS~(\ref{sec:sgx_secs}). The rest of
+the ATTRIBUTES field in the enclave's SECS~(\S~\ref{sec:sgx_secs}). The rest of
 this work will refer to the field's sub-fields, shown in
-Table~\ref{fig:sgx_secs_attributes}), as \textit{enclave attributes}.
+Table~\ref{fig:sgx_secs_attributes}, as \textit{enclave attributes}.
 
 % ATTRIBUTES: SDM S 37.8.1
 
@@ -121,8 +121,8 @@ supporting a secondary architecture adds unnecessary complexity to the SGX
 implementation, and increases the probability that security vulnerabilities
 will creep in. In the interest of mental sanity, this work does not analyze the
 behavior of SGX for enclaves whose MODE64BIT flag is cleared. However, a
-security researcher that wishes to find vulnerabilities in SGX might wish to
-study this area.
+security researcher who wishes to find vulnerabilities in SGX might study this
+area.
 
 Last, the INIT flag is always false when the enclave's SECS is created. The
 flag is set to true at a certain point in the enclave lifecycle, which will be
@@ -140,7 +140,7 @@ page tables and EPTs, and each enclave's code uses the same address translation
 process and page tables~(\S~\ref{sec:paging}) as its host application. This
 minimizes the amount of changes required to add SGX support to existing system
 software. At the same time, having the page tables managed by untrusted system
-software opens up SGX to the address translation attacks described in
+software opens SGX up to the address translation attacks described in
 \S~\ref{sec:address_translation_attacks}. As future sections will reveal, a
 good amount of the complexity in SGX's design can be attributed to the need to
 prevent these attacks.
@@ -157,7 +157,7 @@ protection fault (\#GP, \S~\ref{sec:faults}).} that the virtual address given
 to the address translation process matches the expected virtual address
 recorded in the page's EPCM entry.
 
-SGX also prevents against some passive memory mapping attacks and fault
+SGX also protects against some passive memory mapping attacks and fault
 injection attacks by ensuring that the access permissions of each EPC page
 always match the enclave author's intentions. The access permissions for each
 EPC page are specified when the page is allocated, and recorded in the
@@ -238,15 +238,15 @@ The rest of the TCS is not documented.
 % EDBGRD, EDBGWR: SDM S 41.3
 
 The contents of an EPC page that holds a TCS cannot be directly accessed, even
-by the code of the enclave who owns the TCS. This restriction is similar to the
+by the code of the enclave that owns the TCS. This restriction is similar to the
 restriction on accessing EPC pages holding SECS instances. However, the
 architectural fields in a TCS can be read by enclave debugging instructions.
 
-The architectural fields in the TCS layout  the context
+The architectural fields in the TCS lay out the context
 switches~(\S~\ref{sec:registers}) performed by a logical processor when it
 transitions between executing non-enclave and enclave code.
 
-For example, the OENTRY field specified the value loaded in the instruction
+For example, the OENTRY field specifies the value loaded in the instruction
 pointer (RIP) when the TCS is used to start executing enclave code, so the
 enclave author has strict control over the entry points available to enclave's
 host application. Furthermore, the OFSBASGX and OFSBASGX fields specify the
@@ -308,8 +308,9 @@ An enclave thread's execution context consists of the general-purpose registers
 (GPRs) and the result of the XSAVE instruction~(\S~\ref{sec:registers}).
 Therefore, the size of the execution context depends on the requested-feature
 bitmap~(RFBM) used by to XSAVE. All the code in an enclave uses the same RFBM,
-which is declared in the XFRM enclave attribute~\ref{sec:sgx_secs_attributes}.
-The number of EPC pages reserved for each SSA, specified in SSAFRAMESIZE,
+which is declared in the XFRM enclave
+attribute~(\S~\ref{sec:sgx_secs_attributes}). The number of EPC pages reserved
+for each SSA, specified in SSAFRAMESIZE,
 must\footnote{\texttt{ECREATE}~(\S~\ref{sec:sgx_ecreate}) fails if SSAFRAMESIZE
 is too small.} be large enough to fit the XSAVE output for the feature bitmap
 specified by XFRM.

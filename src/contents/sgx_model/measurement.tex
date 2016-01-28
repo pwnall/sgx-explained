@@ -16,7 +16,7 @@ expected measurement, and only proceeds if the two values match.
 the \texttt{ECREATE}~(\S~\ref{sec:sgx_ecreate}),
 \texttt{EADD}~(\S~\ref{sec:sgx_eadd}) and \texttt{EEXTEND} instructions.
 After the enclave is initialized via
-\texttt{EINIT}~(\S~\ref{sec:sgx_einit_overview}) the instructions mentioned
+\texttt{EINIT}~(\S~\ref{sec:sgx_einit_overview}), the instructions mentioned
 above cannot be used anymore. As the SGX measurement scheme follows the
 principles outlined in \S~\ref{sec:generic_measurement}, the measurement of an
 SGX enclave is obtained by computing a secure
@@ -91,7 +91,7 @@ measurement. This feature can be combined with a compiler that generates
 position-independent enclave code to obtain relocatable enclaves.
 
 The enclave's measurement includes the \texttt{SSAFRAMESIZE} field, which
-guarantees that the SSAs~\ref{sec:sgx_ssa} created by AEX and used by
+guarantees that the SSAs~(\S~\ref{sec:sgx_ssa}) created by AEX and used by
 \texttt{EENTER}~(\S~\ref{sec:sgx_eenter}) and
 \texttt{ERESUME}~(\S~\ref{sec:sgx_eresume}) have the size that is expected by
 the enclave's author. Leaving this field out of an enclave's measurement would
@@ -114,7 +114,7 @@ The SGX software attestation definitely needs to cover the enclave attributes.
 For example, if XFRM~(\S~\ref{sec:sgx_secs_attributes}, \S~\ref{sec:sgx_ssa})
 would not be covered, a malicious enclave loader could attempt to subvert an
 enclave's security checks by setting XFRM to a value that enables architectural
-extensions which change the semantics of instructions used by the enclave, but
+extensions that change the semantics of instructions used by the enclave, but
 still produces an \texttt{XSAVE} output that fits in SSAFRAMESIZE.
 
 The special treatment applied to the ATTRIBUTES SECS field seems questionable
@@ -188,7 +188,7 @@ Measuring the relative addresses still preserves all the information about the
 memory layout inside ELRANGE, and therefore has no negative security impact.
 
 \texttt{EADD} also measures the first 48 bytes of the SECINFO
-structure~(\S~\ref{sec:sgx_eadd}) provided to \texttt{EADD}, which contains the
+structure~(\S~\ref{sec:sgx_eadd}) provided to \texttt{EADD}, which contain the
 page type (PT) and access permissions (R, W, X) field values used to initialize
 the page's EPCM entry. By the same argument as above, including these values in
 the measurement guarantees that the memory layout built by the system software
@@ -220,8 +220,8 @@ code supplied by the enclave's author.
 The \texttt{EEXTEND} instruction exists solely for the reason of measuring data
 loaded inside the enclave's EPC pages. The instruction reads in a virtual
 address, and extends the enclave's measurement hash with the five 64-byte
-blocks in Table~\ref{fig:eextend_mrenclave}, which have the effect of
-guaranteeing the contents of a 256-byte chunk of data in the enclave's memory.
+blocks in Table~\ref{fig:eextend_mrenclave}, which effectively guarantee the
+contents of a 256-byte chunk of data in the enclave's memory.
 
 \begin{table}[hbt]
   \centering
@@ -260,7 +260,7 @@ Before examining the details of \texttt{EEXTEND}, we note that SGX's security
 guarantees only hold when the contents of the enclave's key pages is measured.
 For example, \texttt{EENTER}~(\S~\ref{sec:sgx_eenter}) is only guaranteed to
 perform controlled jumps inside an enclave's code if the contents of all the
-Thread Control Structure~(TCS,~\S~\ref{sec:sgx_tcs}) pages is measured.
+Thread Control Structure~(TCS,~\S~\ref{sec:sgx_tcs}) pages are measured.
 Otherwise, a malicious enclave loader can change the OENTRY
 field~(\S~\ref{sec:sgx_tcs}, \S~\ref{sec:sgx_eenter}) in a TCS while building
 the enclave, and then a malicious OS can use the TCS to perform an arbitrary
@@ -318,7 +318,7 @@ OGSBASGX.
 
 The \texttt{EINIT} instruction~(\S~\ref{sec:sgx_einit_overview}) concludes the
 enclave building process. After \texttt{EINIT} is successfully invoked on an
-enclave, the enclave's contents is ``sealed'', meaning that the system software
+enclave, the enclave's contents are ``sealed'', meaning that the system software
 cannot use the \texttt{EADD} instruction to load code and data into the
 enclave, and cannot use the \texttt{EEXTEND} instruction to update the
 enclave's measurement.

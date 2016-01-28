@@ -4,8 +4,7 @@
 Modern OS kernels take advantage of address translation~(\S~\ref{sec:paging})
 to implement page swapping, also referred to as paging~(\S~\ref{sec:paging}).
 In a nutshell, paging allows the OS kernel to over-commit the computer's DRAM
-by evicting rarely used memory pages to a slower storage medium that is
-referred to as the disk.
+by evicting rarely used memory pages to a slower storage medium called the disk.
 
 Paging is a key contributor to utilizing a computer's resources effectively.
 For example, a desktop system whose user runs multiple programs concurrently
@@ -119,7 +118,7 @@ bits are zero, \textit{in use} when VALID is zero and BLOCKED is one, and
     The VALID and BLOCKED bits in an EPC page's EPCM entry can be in one of
     three states. \texttt{EADD} and its siblings allocate new EPC pages.
     \texttt{EREMOVE} permanently deallocates an EPC page. \texttt{EBLOCK}
-    blocks an EPC page so it can be evicted using \texttt{EWB}.\texttt{ELDB}
+    blocks an EPC page so it can be evicted using \texttt{EWB}. \texttt{ELDB}
     and \texttt{ELDU} load an evicted page back into the EPC.
   }
   \label{fig:sgx_page_states}
@@ -131,8 +130,8 @@ translation to result in a Page Fault~(\#PF,~\S~\ref{sec:faults}). This
 guarantees that once a page is blocked, the CPU will not create any new TLB
 entries pointing to it.
 
-Furthermore, every SGX instruction makes sure that the EPC pages that it
-operates on are not blocked. For example, \texttt{EENTER} ensures that the TCS
+Furthermore, every SGX instruction makes sure that the EPC pages on which it
+operates are not blocked. For example, \texttt{EENTER} ensures that the TCS
 it is given is not blocked, that its enclave's SECS is not blocked, and that
 every page in the current SSA is not blocked.
 
@@ -152,7 +151,7 @@ must issue an \texttt{ETRACK} for each enclave.
 Following the \texttt{ETRACK} instructions, the OS kernel must induce enclave
 exits on all the logical processors that are executing code inside the enclaves
 that have been \texttt{ETRACK}ed. The SGX design expects that the OS will use
-IPIs to cause AEXes in the logical processors whose TLBs must be flushed.
+IPIs to cause AEXs in the logical processors whose TLBs must be flushed.
 
 The EPC page eviction process is completed when the OS executes an \texttt{EWB}
 instruction for each EPC page to be evicted. This instruction, which will be
@@ -239,14 +238,14 @@ concept by comparing the two values and their uses.
 
 The SDM states that ENCLAVESECS field in an EPCM entry is used to identify the
 SECS of the enclave owning the associated EPC page, but stops short of
-describing its format. SGX instructions never expose the value of the
-ENCLAVESECS field to software so, in theory, its representation can even change
-between SGX implementations.
+describing its format. In theory, the ENCLAVESECS field can change its
+representation between SGX implementations since SGX instructions never expose
+its value to software.
 
 % ENCLAVESECS compared with CR_ACTIVE_SECS
 % EENTER: TMP_SECS <- address of SECS for TCS; CR_ACTIVE_SECS <- TMP_SECS
 
-However, we will later argue that the most plausible representation for the
+However, we will later argue that the most plausible representation of the
 ENCLAVESECS field is the physical address of the enclave's SECS. Therefore, the
 ENCLAVESECS value associated with a given enclave will change if the enclave's
 SECS is evicted from the EPC and loaded back at a different location. It
@@ -324,13 +323,13 @@ been replaced by a PCMD field, which contains the virtual address of a
 \end{figure}
 
 The LINADDR field in the PAGEINFO structure is used to store the ADDRESS field
-in the EPCM entry, which indicates expected virtual address used to access the
-page. The PCMD structure embeds the \textit{Security Information}~(SECINFO)
+in the EPCM entry, which indicates the virtual address intended for accessing
+the page. The PCMD structure embeds the \textit{Security Information}~(SECINFO)
 described in \S~\ref{sec:sgx_eadd}, which is used to store the page type~(PT)
 and the access permission flags~(R, W, X) in the EPCM entry. The PCMD structure
 also stores the enclave's ID~(EID,~\S~\ref{sec:sgx_eid}). These fields are
 later used by \texttt{ELDU} or \texttt{ELDB} to populate the EPCM entry for the
-EPC page that is loaded back in.
+EPC page that is reloaded.
 
 The metadata described above is stored unencrypted, so the OS has the option of
 using the information inside as-is for its own bookkeeping. This has no
@@ -370,9 +369,9 @@ implications that will be discussed in \S~\ref{sec:sgx_eviction_trees}.
 \texttt{EWB}'s dataflow, shown in detail in Figure~\ref{fig:sgx_ewb}, has an
 aspect that can be confusing to OS developers. The instruction reads the
 virtual address of the EPC page to be evicted from a register (RBX) and writes
-it to the LINADDR field of the PAGEINFO structure that it is provded. The
-separate input (RBX) could have been removed by having the EPC page's address
-be provided in the LINADDR field.
+it to the LINADDR field of the PAGEINFO structure that it is provided. The
+separate input (RBX) could have been removed by providing the EPC page's address
+in the LINADDR field.
 
 \begin{figure}[hbt]
   \centering
@@ -441,7 +440,7 @@ associated with these nonces cannot be restored by \texttt{ELDB} until the
 OS loads the VA page back into the EPC.
 
 In other words, an evicted page depends on the VA page storing its nonce, and
-cannot be loaded back into the EPC until the VA page is loaded back in as well.
+cannot be loaded back into the EPC until the VA page is reloaded as well.
 The dependency graph created by this relationship is a forest of
 \texttt{eviction trees}. An eviction tree, shown in
 Figure~\ref{fig:sgx_eviction_tree}, has enclave EPC pages as leaves, and VA

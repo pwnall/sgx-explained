@@ -40,7 +40,7 @@ enclave code. When the enclave code finishes performing its task, it uses the
 \texttt{EEXIT} instruction, covered in \S~\ref{sec:sgx_eexit}, to return the
 execution control to the host process that invoked the enclave.
 
-If a hardware exception occurs in while a logical processor is in enclave mode,
+If a hardware exception occurs while a logical processor is in enclave mode,
 the processor is taken out of enclave mode using an
 \textit{Asynchronous Enclave Exit}~(AEX), summarized in \S~\ref{sec:sgx_aex},
 before the system software's exception handler is invoked. After the system
@@ -94,7 +94,7 @@ buggy or malicious software.
 that the TCS is \textit{available} (not busy), and that at least one State Save
 Area~(SSA,~\S~\ref{sec:sgx_ssa}) is available in the TCS. The latter check is
 implemented by making sure that the \textit{current SSA index}~(CSSA) field in
-the TCS is less than the number of SSAs (NSSA) field. The SSA indicated by
+the TCS is less than the number of SSAs (NSSA) field. The SSA indicated by the
 CSSA, which shall be called the \textit{current SSA}, is used in the event that
 a hardware exception occurs while enclave code is executed.
 
@@ -103,7 +103,7 @@ the instruction pointer (RIP) to the value indicated by the \textit{entry point
 offset}~(OENTRY) field in the TCS that it receives. \textit{EENTER} is used by
 an untrusted caller to execute code in a protected environment, and therefore
 has the same security considerations as
-\texttt{SYSCALL}~(\S~\ref{sec:privilege_switches}, which is used to call into
+\texttt{SYSCALL}~(\S~\ref{sec:privilege_switches}), which is used to call into
 system software. Setting RIP to the value indicated by OENTRY guarantees to the
 enclave author that the enclave code will only be invoked at well defined
 points, and prevents a malicious host application from bypassing any security
@@ -114,7 +114,7 @@ checks that the enclave author may perform.
 
 \texttt{EENTER} also sets XCR0~(\S~\ref{sec:registers}), the register that
 controls which extended architectural features are in use, to the value of the
-XFRM enclave attribute~(\S~\ref{sec:sgx_secs_attributes}. Ensuring that XCR0 is
+XFRM enclave attribute~(\S~\ref{sec:sgx_secs_attributes}). Ensuring that XCR0 is
 set according to the enclave author's intentions prevents a malicious operating
 system from bypassing an enclave's security by enabling architectural features
 that the enclave is not prepared to handle.
@@ -132,7 +132,7 @@ that it modifies, so they can be restored when the enclave finishes its
 computation. Just like \texttt{SYSCALL}, \texttt{EEENTER} saves the address of
 the following instruction in the RCX register.
 
-Interestingly, the SDM states that the old values of the XCR0, FS and GS
+Interestingly, the SDM states that the old values of the XCR0, FS, and GS
 registers are saved in new registers dedicated to the SGX implementation.
 However, given that they will only be used on an enclave exit, we expect that
 the registers are saved in DRAM, in the reserved area in the TCS.
@@ -142,8 +142,8 @@ register (RSP). To avoid any security exploits, enclave code should set RSP to
 point to a stack area that is entirely contained in EPC pages. Multi-threaded
 enclaves can easily implement per-thread stack areas by setting up each
 thread's TLS area to include a pointer to the thread's stack, and by setting
-RSP to the value obtained by reading the TLS area pointed by the FS or GS
-segment.
+RSP to the value obtained by reading the TLS area at which the FS or GS segment
+points.
 
 Last, when \texttt{EENTER} enters enclave mode, it suspends some of the
 processor's debugging features, such as hardware breakpoints and Precise Event
@@ -157,10 +157,9 @@ sees the enclave's execution as one single processor instruction.
 % EEXIT - Exits an Enclave: SDM S 41.4.1
 
 \texttt{EEXIT} can only be executed while the logical processor is in enclave
-mode, and results in an undefined instruction (\#UD) fault if is executed in
-any other circumstances. In a nutshell, the instruction returns the processor
-to ring 3 outside enclave mode and restores the registers saved by
-\texttt{EENTER}, which were described above.
+mode, and results in a (\#UD) if executed in any other circumstances. In a
+nutshell, the instruction returns the processor to ring 3 outside enclave mode
+and restores the registers saved by \texttt{EENTER}, which were described above.
 
 Unlike \texttt{SYSRET}, \texttt{EEXIT} sets RIP to the value read from RBX,
 after exiting enclave mode. This is inconsistent with \texttt{EENTER}, which
@@ -180,12 +179,11 @@ calls into a dynamically loaded module. More specifically, the module's code is
 also responsible for preserving stack-related registers, and a buggy module
 might jump anywhere in the application code of the host process.
 
-At a first glance, it may seem elegant to have \texttt{EENTER} store the
-contents of the XCR0, FS, and GS registers in the current SSA, and have
-\texttt{EEXIT} restore them from the current SSA. However, this approach would
-break the Intel architecture's guarantees that only system software can modify
-XCR0, and application software can only load segment registers using selectors
-that index
+At first glance, it may seem elegant to have \texttt{EENTER} store the contents
+of the XCR0, FS, and GS registers in the current SSA, and have \texttt{EEXIT}
+restore them from the current SSA. However, this approach would break the Intel
+architecture's guarantees that only system software can modify XCR0, and
+application software can only load segment registers using selectors that index
 into the GDT or LDT set up by system software (\S~\ref{sec:segments}).
 Specifically, a malicious application could modify these privileged registers
 by creating an enclave that writes the desired values to the current SSA
@@ -195,14 +193,14 @@ This section describes the \texttt{EENTER} behavior for 64-bit enclaves. The
 \texttt{EENTER} implementation for 32-bit enclaves is significantly more
 complex, due to the extra special cases introduced by the full-fledged
 segmentation model that is still present in the 32-bit Intel architecture. As
-stated in the introduction, we are not interested in legacy aspects like this.
+stated in the introduction, we are not interested in such legacy aspects.
 
 
 \subsubsection{Asynchronous Enclave Exit (AEX)}
 \label{sec:sgx_aex}
 
 If a hardware exception, like a fault~(\S~\ref{sec:faults}) or an
-interrupt~(\S~\ref{sec:interrupts}) occurs while a logical processor is
+interrupt~(\S~\ref{sec:interrupts}), occurs while a logical processor is
 executing an enclave's code, the processor performs an
 \textit{Asynchronous Enclave Exit}~(AEX) before invoking the system software's
 exception handler, as shown in Figure~\ref{fig:sgx_aex_setup}.
@@ -237,15 +235,15 @@ the value in RCX in the \textit{Asynchronous Exit handler Pointer}~(AEP) field
 in the current SSA.
 
 When a hardware exception occurs in enclave mode, the SGX implementation
-performs a sequence of steps that take the logical processor out of enclave
-mode and invoke the hardware exception handler in the system software.
+performs a sequence of steps that takes the logical processor out of enclave
+mode and invokes the hardware exception handler in the system software.
 Conceptually, the SGX implementation first performs an AEX to take the logical
 processor out of enclave mode, and then the hardware exception is handled
 using the standard Intel architecture's behavior described in
-\S~\ref{sec:faults}). Actual Intel processors may interleave the AEX
+\S~\ref{sec:faults}. Actual Intel processors may interleave the AEX
 implementation with the exception handling implementation. However, for
-simplicity, this work describes AEX this work describes AEX as a separate
-process that is performed before any exception handling steps are taken.
+simplicity, this work describes AEX as a separate process that is performed
+before any exception handling steps are taken.
 
 In the Intel architecture, if a hardware exception occurs, the application
 code's execution context can be read and modified by the system software's
@@ -294,8 +292,8 @@ The AEX sets up the execution context in such a way that when the system
 software finishes processing the exception, it returns into an asynchronous
 exit handler in the enclave's host process. The asynchronous exception handler
 usually executes the \texttt{ERESUME} instruction, which causes the logical
-processor to go back back into enclave mode and continue the computation that
-was interrupted by the hardware exception.
+processor to go back into enclave mode and continue the computation that was
+interrupted by the hardware exception.
 
 \texttt{ERESUME} shares much of its functionality with \texttt{EENTER}. This is
 best illustrated by the similarity between Figures
@@ -313,27 +311,27 @@ best illustrated by the similarity between Figures
 \end{figure}
 
 \texttt{EENTER} and \texttt{ERESUME} receive the same inputs, namely a pointer
-to a TCS, described in \S~\ref{sec:sgx_eenter} and an AEP, described in
+to a TCS, described in \S~\ref{sec:sgx_eenter}, and an AEP, described in
 \S~\ref{sec:sgx_aex}. The most common application design will pair each
 \texttt{EENTER} instance with an asynchronous exit handler that invokes
 \texttt{ERESUME} with exactly the same arguments.
 
 The main difference between \texttt{ERESUME} and \texttt{EENTER} is that the
-former uses a SSA that was ``filled out'' by an AEX~(\S~\ref{sec:sgx_aex},
+former uses an SSA that was ``filled out'' by an AEX~(\S~\ref{sec:sgx_aex}),
 whereas the latter uses an empty SSA. Therefore, \texttt{ERESUME} results in a
 \#GP fault if the CSSA field in the provided TCS is 0 (zero), whereas
 \texttt{EENTER} fails if CSSA is greater than or equal to NSSA.
 
 When successful, \texttt{ERESUME} decrements the CSSA field of the TCS, and
-restores the execution context backed up in the SSA pointed by CSSA.
-Speficially, the \texttt{ERESUME} implementation restores the
+restores the execution context backed up in the SSA pointed to by the CSSA field
+in the TCS. Specifically, the \texttt{ERESUME} implementation restores the
 GPRs~(\S~\ref{sec:registers}) from the GPRSGX field in the SSA, and performs an
 \texttt{XRSTOR}~(\S~\ref{sec:registers}) to load the execution state
 associated with the extended architectural features used by the enclave.
 
 \texttt{ERESUME} shares the following behavior with
 \texttt{EENTER}~(\S~\ref{sec:sgx_eenter}). Both instructions write the U\_RSP,
-U\_RBP and AEP fields in the current SSA. Both instructions follow the same
+U\_RBP, and AEP fields in the current SSA. Both instructions follow the same
 process for backing up XCR0 and the FS and GS segment registers, and set them
 to the same values, based on the current TCS and its enclave's SECS. Last, both
 instructions disable the same subset of the logical processor's debugging

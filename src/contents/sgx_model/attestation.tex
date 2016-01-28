@@ -25,17 +25,17 @@ message.
 %   US 8,972,746 B2 - 21:8-16, 33:16-29, 33:58
 
 The cryptographic primitive used in SGX's attestation signature is too complex
-to be implemented in hardware, so signing process is performed by a privileged
-\textit{Quoting Enclave}, which is issued by Intel, and can access the SGX
-attestation key. This enclave is discused in \S~\ref{sec:sgx_quoting_enclave}.
+to be implemented in hardware, so the signing process is performed by a
+privileged \textit{Quoting Enclave}, which is issued by Intel, and can access
+the SGX attestation key. This enclave is discussed in
+\S~\ref{sec:sgx_quoting_enclave}.
 
 Pushing the signing functionality into the Quoting Enclave creates the need for
-a secure communication path between an enclave that desires to undergo
-software attestation and the Quoting Enclave. The SGX design solves this
-problem with a local attestation mechanism that can be used by an enclave to
-prove its identity to any other enclave hosted by the same SGX-enabled CPU.
-This scheme, described in \S~\ref{sec:sgx_ereport}, is implemented by the
-\texttt{EREPORT} instruction.
+a secure communication path between an enclave undergoing software attestation
+and the Quoting Enclave. The SGX design solves this problem with a local
+attestation mechanism that can be used by an enclave to prove its identity to
+any other enclave hosted by the same SGX-enabled CPU. This scheme, described in
+\S~\ref{sec:sgx_ereport}, is implemented by the \texttt{EREPORT} instruction.
 
 % Keys: SDM S 39.4.3
 % ISCA SGX Slides 104, 105, 106
@@ -112,7 +112,7 @@ and a 64-byte (512-bit) message supplied by the enclave.
 % Keys: SDM S 39.4.3
 
 The target enclave that receives the attestation report can convince itself of
-the report's authenticy as shown in Figure~\ref{fig:sgx_ereport_check}. The
+the report's authenticity as shown in Figure~\ref{fig:sgx_ereport_check}. The
 report's authenticity proof is its MAC tag. The key required to verify the MAC
 can only be obtained by the target enclave, by asking
 \texttt{EGETKEY}~(\S~\ref{sec:sgx_egetkey}) to derive report key. The SDM
@@ -125,7 +125,7 @@ on 128-bit AES.
   \centering
   \includegraphics[width=87mm]{figures/sgx_ereport_check.pdf}
   \caption{
-    The authenticty of the REPORT structure created by \texttt{EREPORT} can and
+    The authenticity of the REPORT structure created by \texttt{EREPORT} can and
     should be verified by the report's target enclave. The target's code uses
     \texttt{EGETKEY} to obtain the key used for the MAC tag embedded in the
     REPORT structure, and then verifies the tag.
@@ -139,7 +139,7 @@ target enclave's measurement. The target enclave can be assured that the MAC
 tag in the report was produced by the SGX implementation, for the following
 reasons. The cryptographic properties of the underlying key derivation and
 MAC algorithms ensure that only the SGX implementation can produce the MAC tag,
-as it is the only entity who can access the processor's secret, and it would be
+as it is the only entity that can access the processor's secret, and it would be
 impossible for an attacker to derive the report key without knowing the
 processor's secret. The SGX design guarantees that the key produced by
 \texttt{EGETKEY} depends on the calling enclave's measurement, so only the
@@ -161,13 +161,13 @@ the fields corresponding to the enclave's certificate-based identity (MRSIGNER,
 ISVPRODID, ISVSVN), and the KEYPOLICY field in the KEYREQUEST structure is
 ignored. It follows that the report can only be verified by the target enclave.
 
-Furthermore, the SGX implementation SVN~(CPUSVN) value used for key generation
-is determined by the current CPUSVN, instead from being read from the Key
-Request structure. Therefore, SGX implementation upgrades that increase the
-CPUSVN invalidate all outstanding reports. Given that CPUSVN increases are
-associated with security fixes, the argument in
-\S~\ref{sec:sgx_certificate_identity} suggests that this restriction may reduce
-the impact of vulnerabilities in the SGX implementation.
+Furthermore, the SGX implementation's SVN~(CPUSVN) value used for key generation
+is determined by the current CPUSVN, instead of being read from the Key Request
+structure. Therefore, SGX implementation upgrades that increase the CPUSVN
+invalidate all outstanding reports. Given that CPUSVN increases are associated
+with security fixes, the argument in \S~\ref{sec:sgx_certificate_identity}
+suggests that this restriction may reduce the impact of vulnerabilities in the
+SGX implementation.
 
 Last, \texttt{EREPORT} sets the KEYID field in the key generation material to
 the contents of an SGX configuration register (CR\_REPORT\_KEYID) that is
@@ -188,8 +188,8 @@ also saved in the attestation report, but it is not covered by the MAC tag.
 The SDM paints a complete picture of the local attestation mechanism that was
 described in \S~\ref{sec:sgx_ereport}. In comparison, the remote attestation
 process, which includes the Quoting Enclave and the underlying keys, is
-shrouded in mistery. This section presents the information that can be gleaned
-from the SDM and in the ISCA 2015 SGX tutorial~\cite{intel2015iscasgx}.
+shrouded in mystery. This section presents the information that can be gleaned
+from the SDM and the ISCA 2015 SGX tutorial~\cite{intel2015iscasgx}.
 
 % Keys: SDM S 39.4.3
 % ISCA SGX Slides 104, 105, 106
@@ -269,7 +269,7 @@ perform software attestation on a TPM-based system.
 
 The Attestation Key uses Intel's \textit{Enhanced Privacy ID}~(EPID)
 cryptosystem~\cite{brickell2009epid}, which is a group signature scheme that is
-intended to preserve the anonimity of the signer. Analyzing the correctness of
+intended to preserve the anonymity of the signer. Analyzing the correctness of
 cryptographic schemes such as EPID, is outside the scope of this work, even
 though the security of SGX hinges on EPID.
 
@@ -279,7 +279,7 @@ that each SGX processor has an EPID key called the Device Attestation Key~(DAK)
 burned in its fuses. The DAK can be used to produce attestation signatures as
 soon as the processor leaves the factory, without the need to communicate with
 any online service. According to the patents, Intel's provisioning service is
-only used to re-prosivion keys when the DAK is revoked.
+only used to re-provision keys when the DAK is revoked.
 
 The picture painted by the SGX patents is more enticing, as it entails more
 anonymity for the owners of SGX-enabled processors. Using EPID for the DAK
@@ -309,7 +309,7 @@ the attestation process.
 The logic embedded in the circuitry of SGX-enabled processors does not directly
 control the use of the PROVISIONKEY attribute. Instead, the SGX design requires
 that all enclaves be vetted by a \textit{Launch Enclave}~(LE) that implements
-the access control checkes needed for the PROVISIONKEY attribute, and for any
+the access control checks needed for the PROVISIONKEY attribute, and for any
 other privileged attributes that may be introduced in future designs.
 
 The LE is only briefly mentioned in Intel's official documentation. Neither its
@@ -349,7 +349,7 @@ LE that had access to the Launch Key.
 
 The SDM does not document the MAC algorithm used to confer integrity guarantees
 to the EINITTOKEN structure. However, the \texttt{EINIT} pseudocode verifies
-the token's MAC tag using same function that the \textit{EREPORT} pseudocode
+the token's MAC tag using the same function that the \textit{EREPORT} pseudocode
 uses to create the REPORT structure's MAC tag. It follows that the reasoning in
 \S~\ref{sec:sgx_ereport} can be reused to conclude that EINITTOKEN structures
 are MACed using AES-CMAC with 128-bit keys.
@@ -358,8 +358,8 @@ are MACed using AES-CMAC with 128-bit keys.
 % Key Derivation: SDM Table 41-43
 
 The \texttt{EGETKEY} instruction only derives the Launch Key for enclaves that
-have the LAUNCHKEY attribute set to true. The Launch Key is using the same
-process as the Seal Key~(\S~\ref{sec:sgx_egetkey}). The derivation material
+have the LAUNCHKEY attribute set to true. The Launch Key is derived using the
+same process as the Seal Key~(\S~\ref{sec:sgx_egetkey}). The derivation material
 includes the current enclave's versioning information (ISVPRODID and ISVSVN)
 but it does not include the main fields that convey an enclave's identity,
 which are MRSIGNER and MRENCLAVE. The rest of the derivation material follows
