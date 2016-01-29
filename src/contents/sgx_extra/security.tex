@@ -322,52 +322,24 @@ a malicious computer owner who knows the CBox mapping can use the uncore
 performance counters to learn about an enclave's memory access patterns.
 
 The SGX papers mention that SGX's threat model includes attacks that overwrite
-the flash memory chip that stores the computer's boot firmware, which result in
+the flash memory chip that stores the computer's firmware, which result in
 malicious code running in System Management Mode~(SMM,~\S~\ref{sec:rings}).
 However, all the official SGX documentation is silent about the implications of
 an attack that compromises the firmware executed by the Intel ME.
 
 \S~\ref{sec:firmware_attacks} states that the ME's firmware is stored in the
-same flash memory as the boot firmware, and explains that the ME has a very
-broad
+same flash memory as the boot firmware, and enumerates some of ME's special
+privileges that enable it to help system administrators remotely diagnose and
+fix hardware and software issues. Given that the SGX design is concerned about
+the possibility of malicious computer firmware, it is reasonable to be
+concerned about malicious ME firmware.
 
-% Key Structures and Provisioning: Ruan 2014 Ch 5
-
-\cite{ruan2014intelme}
-
-This firmware
-is stored in
-
-
-Attacks on the Boot Firmware and Intel ME~()
-
-\cite{costan2011spchip}
-
-
-
-\subsubsection{Privileged Software Attacks}
-\label{sec:sgx_vs_privileged_sw_attacks}
-
-
-Modern Intel CPUs feature hyper-threading, which means that each core has two
-(or more) sets of register files and local APICs, presented as logical
-processors running separate threads (see Figure \ref{fig:cpu_core}). The
-threads share the other core resources, such as the fetch and decode units,
-execution units and L1 and L2 caches. SGX does not prevent hyper-threading, so
-a malicious OS kernel or hypervisor can schedule a thread executing enclave
-code and a snooping thread on logical processors on same core. The snooping
-thread can use the processor's high-resolution performance counter
-\cite{petters1999making} to get information about the instructions and memory
-access patterns of the thread executing enclave code.
-
-A promising approach for preventing against hyper-threading leaks is to
-effectively disable hyper-threading, by using \texttt{CPUID} to find out the
-number of logical processors in the current core, and to require the OS to
-schedule threads in the same enclave on all the logical processors. This could
-be implemented by having the main thread spinlock waiting for the other threads
-to start, before any protected computation is performed. However, a malicious
-kernel or hypervisor can de-schedule the other threads after the main thread
-performed the spinlock check, so this defense is not reliable.
+\S~\ref{sec:firmware_attacks} argues that an attacker who compromises the ME
+can carry out actions that are usually classified as physical attacks.
+Fortunately, the most scary attack vector afforted by an ME takeover appears to
+be direct DRAM access, and SGX already assumes that the DRAM is untrusted.
+Therefore, an ME compromise would be equivalent to the DRAM attacks analyzed in
+\S~\ref{sec:sgx_vs_physical_attacks}.
 
 
 \subsubsection{Cache Timing Attacks}
@@ -406,36 +378,6 @@ only be set up as UC or WB. While no further explanation is provided, we assume
 that the UC option was provided in order to attempt to mitigate against some
 cache-timing attacks.
 
-
-% Access Control Requirements: SDM S 38.3
-
-Pages that store key SGX structures cannot be accessed directly, even by the
-code executing inside their enclaves. Furthermore, the SGX instructions that
-operate on SGX data structures check the EPCM type fields of their inputs
-against the expected types. This type system prevents software from
-intentionally or accidentally corrupting the key SGX data structures.
-
-
-
-
-% ECREATE forces R, W, X to 0 in the page's EPCM. EADD also forces R/W/X to 0
-% if the page type in SECINFO is PT_TCS (the only special type it can create).
-%
-%
-% EPA doesn't read any SECINFO, and uses 0 for R, W, X.
-
-% ERESUME can be replaced by normal EENTER, XRESTOR and accounting. Describe
-% and argue against ERESUME.
-
-Enclaves were designed to contain and protect the privacy-sensitive parts of an
-application. All the code that handles private data must receive integrity
-protection. Otherwise, a hostile environment could modify the code to leak
-information about private data. Therefore, the SGX programming model prescribes
-that code which accesses private data must be entirely contained inside an
-enclave. Jumping into and out of enclave code must be performed explicitly
-using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
-
-
 \begin{figure}[hbt]
   \centering
   \includegraphics[width=85mm]{figures/cache_partitions.pdf}
@@ -450,6 +392,31 @@ using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
   }
   \label{fig:cache_partitions}
 \end{figure}
+
+
+\subsubsection{Privileged Software Attacks}
+\label{sec:sgx_vs_privileged_sw_attacks}
+
+
+Modern Intel CPUs feature hyper-threading, which means that each core has two
+(or more) sets of register files and local APICs, presented as logical
+processors running separate threads (see Figure \ref{fig:cpu_core}). The
+threads share the other core resources, such as the fetch and decode units,
+execution units and L1 and L2 caches. SGX does not prevent hyper-threading, so
+a malicious OS kernel or hypervisor can schedule a thread executing enclave
+code and a snooping thread on logical processors on same core. The snooping
+thread can use the processor's high-resolution performance counter
+\cite{petters1999making} to get information about the instructions and memory
+access patterns of the thread executing enclave code.
+
+A promising approach for preventing against hyper-threading leaks is to
+effectively disable hyper-threading, by using \texttt{CPUID} to find out the
+number of logical processors in the current core, and to require the OS to
+schedule threads in the same enclave on all the logical processors. This could
+be implemented by having the main thread spinlock waiting for the other threads
+to start, before any protected computation is performed. However, a malicious
+kernel or hypervisor can de-schedule the other threads after the main thread
+performed the spinlock check, so this defense is not reliable.
 
 
 \subsubsection{DOS Prevention}

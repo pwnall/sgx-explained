@@ -64,3 +64,60 @@ The Intel patents indicate that EREPORT's KeyID is initialized to a random
 value on each processor power cycle, and is incremented after $2^{32}$ AES
 operations that use the value. They also indicate that each EREPORT may
 increment the KeyID by 1.
+
+
+% Key Structures and Provisioning: Ruan 2014 Ch 5
+
+Neither the ISCA 2015 SGX tutorial nor the SDM mention the DAK described above.
+However, an Intel-sponsored book on the Management Engine (ME)
+\cite{ruan2014intelme}, which is the closest thing we have to an official
+documentation for the ME, mentions that the ME contains e-fuses that store an
+EPID key which is used by the virtual TPM's software attestation feature.
+
+Many aspects in the description of the ME's EPID key match the SGX patents'
+depiction of the DAK. Both sources use the same compressed representation of
+the EPID key. Also, both documents mention that the EPID key is encrypted with
+an AES key.
+
+This coincidence, combined with the apparent lack of an SGX instruction that
+can be used to retrieve the DAK, prompts us to consider the possibility that
+the DAK mentioned in the SGX patent is actually stored in the Intel ME's flash
+memory or e-fuses. This approach would make sense from a cost standpoint, as
+the ME's core uses a larger feature size than the CPU, so adding e-fuses or
+NVRAM to the ME die is cheaper than adding them to the CPU die.
+
+While this approach seems attractive from a cost standpoint, if it were to be
+true, it would have significant implications on SGX's security properties. The
+DMI bus~(\S~\ref{sec:motherboard}) that connects the CPU to the chipset that
+contains the ME is untrusted, so the EPID key cannot be transmitted between the
+CPU and the ME in plaintext. Below, we outline two possibilities for building a
+secure system where the DAK is stored in the ME's flash memory.
+
+The most straightforward approach is having the Provision Enclave encrypt the
+DAK using the Provisioning Seal Key, as described in
+\S~\ref{sec:sgx_quoting_enclave}. Under this approach, the ME would effectively
+be an untrusted flash memory, so it would not be able to run the virtual TPM
+application described in \cite{ruan2014intelme}.
+
+Another approach that preserves the virtual TPM functionality would entail
+having the ME authenticate the CPU as described in \cite{costan2011spchip}, and
+using a key agreement protocol~(\S~\ref{sec:key_agreement}) to establish a
+secure communication channel over the DMI bus. In this case, the ME firmware is
+reponsible for storing the DAK, as described in \cite{ruan2014intelme}, and
+can implement a virtual TPM.
+
+The downside of the latter approach is that the ME must be counted as belonging
+to the SGX's TCB, as it is trusted to access the DAK. An attack that
+successfully plants malicious firmware into the ME, as described in
+\S~\ref{sec:device_attacks} and briefly analyzed in
+\S~\ref{sec:sgx_vs_device_attacks}, would result in an exposed DAK, and a total
+compromise of SGX's security.
+
+% Dynamic Application Loader: Ruan 2014 Ch 11
+% Software Guard Extensions: Ruan 2014 Ch 11
+
+In its last chapter, \cite{ruan2014intelme} mentions that the SGX architecture
+takes advantage of the ME using its Dynamic Application Loader (DAL) interface.
+This may refer to the Protected Audio/Video Path mentioned in an SGX
+paper~\cite{hoekstra2013sgx}, or it may refer to the DAK provisioning methods
+speculated above.
