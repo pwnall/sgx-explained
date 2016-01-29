@@ -1,6 +1,10 @@
 \subsection{SGX Implementation Overview}
 \label{sec:sgx_implementation_overview}
 
+% ISCA 2015 SGX Slide 204:
+%   "Close Collabaoration between micro-architecture team and ISA team" -- no
+%   mention of other teams e.g. the folks responsible for the execution units
+
 An under-documented and overlooked feat achieved by the SGX design is that
 implementing it on an Intel processor has a very low impact on the chip's
 hardware design. SGX's modifications to the processor's execution
@@ -74,7 +78,7 @@ added to the processor's uncore~(\S~\ref{sec:cpu_die},
 \S~\ref{sec:cache_coherence}) to protect SGX's Enclave Page
 Cache~(EPC,~\S~\ref{sec:sgx_epc}) against physical attacks.
 
-% ISCA SGX Slides 163-201
+% ISCA 2015 SGX Slides 163-201
 
 The MEE is briefly described in the ISCA 2015 SGX
 tutorial~\cite{intel2015iscasgx}. According to the information presented there,
@@ -87,7 +91,7 @@ operating mode~(\S~\ref{sec:privacy_crypto}) and a
 Carter-Wegman~\cite{carter1977mac, wegman1981mac}
 MAC~(\S~\ref{sec:integrity_crypto}) construction.
 
-% ISCA SGX Slide 167
+% ISCA 2015 SGX Slide 167
 
 Both the ISCA SGX tutorial and the patents state that the MEE is connected to
 to the Memory Controller (MC) integrated in the CPU's uncore. However, all
@@ -157,7 +161,7 @@ trigger microcode events~(\S~\ref{sec:microcode_structure}). It follows that
 the SGX implementation can implement AEX by modifying the hardware exception
 handlers in the microcode.
 
-% ISCA SGX Slide 166
+% ISCA 2015 SGX Slide 166
 % Intel SGX Opt-In Configuration: SDM S 37.7.1
 
 The SGX initialization sequence is also implemented in microcode. SGX is

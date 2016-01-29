@@ -1,9 +1,168 @@
-\section{SGX Security Properties}
+\subsection{SGX Security Properties}
 \label{sec:sgx_security_analysis}
 
-The rest of this section describes the security properties of
-enclaves, discussing the trade-offs made while trying to balance security with
-backwards compatibility.
+We have summarized SGX's programming model and the implementation details
+that are publicly documented in Intel's official documentation and published
+patents. We are now ready to bring this the information together in an analysis
+of SGX's security properties. We start the analysis by re-starting SGX's
+security guarantees, and spend the bulk of this section discussing how SGX
+fares when pitted against the attacks described in
+\S~\ref{sec:security_background}.
+
+
+\subsubsection{Overview}
+
+Intel's Software Guard Extensions (SGX) is Intel's latest iteration of a
+trusted hardware solution to the secure remote computation problem. The SGX
+design is centered around the ability to create an isolated container whose
+contents receives special hardware protections that are intended to translate
+into privacy, integrity, and freshness guarantees.
+
+% ISCA 2015 SGX: Slide 93
+
+An enclave's initial contents is loaded by the system software on the computer,
+and therefore cannot contain secrets in plain text. Once initialized, an
+enclave is expected to participate in a software attestation process, where it
+authenticates itself to a remote server. Upon successful authentication, the
+remote server is expected to disclose some secrets to an enclave over a
+secure communication channel. The SGX design attempts to guarantee that the
+measurement presented during software attestation accurately represents the
+contents loaded into the enclave.
+
+SGX also offers a certificate-based identity system that can be used to migrate
+secrets between enclaves that have certificates issued by the same authority.
+The migration process involves securing the secrets via authenticated
+encryption before handing them off to the untrusted system software, which
+passes them to another enclave that can decrypt them.
+
+The same mechanism used for secret migration can also be used to cache the
+secrets obtained via software attestation in an untrusted storage medium
+managed by system software. This caching can reduce the number of times that
+the software attestation process needs to be performed in a distributed system.
+In fact, SGX's software attestation process is implemented by enclaves with
+special privileges that use the certificate-based identity system to securely
+store the CPU's attestation key in untrusted memory.
+
+
+\subsubsection{Physical Attacks}
+\label{sec:sgx_vs_physical_attacks}
+
+We beging by discussing SGX's resilience to the physical attacks described in
+\S~\ref{sec:physical_attacks}. Unfortunately, this section is set to disappoint
+readers expecting definitive statements. The lack of publicly available details
+around the hardware implementation aspects of SGX precludes any rigurous
+analysis. However, we do know enough about SGX's implementation to point out a
+few avenues for future exploration.
+
+Due to insufficient documentation, one can only hope that the SGX security
+model is not trivially circumvented by a port
+attack~(\S~\ref{sec:physical_port_attacks}). We are particularly concerned
+about the Generic Debug eXternal
+Connection~(GDXC)~\cite{yuffe2011sandybridge, intel2011gdxc}, which collects
+and filters the data transfered by the uncore's ring bus
+(\S~\ref{sec:cache_coherence}), and reports it to an external debugger.
+
+The SGX memory protection measures are implemented at the core level, in the
+PMH (\S~\ref{sec:sgx_access_protection}) and at the chip die level, in the
+memory controller (\S~\ref{sec:sgx_uncore_modifications}). Therefore, the code
+and data inside enclaves is stored in plaintext in on-chip
+caches~(\S~\ref{sec:caching}), which entails that the enclave contents travels
+without any cryptographic protection on the uncore's ring bus
+(\S~\ref{sec:cache_coherence}).
+
+Fortunately, a recent Intel patent~\cite{shanbhogue2015gdxcsgx} indicates that
+Intel engineers are tackling at least some classes of attacks targeting
+debugging ports.
+
+The SDM and SGX papers discuss the most obvious class of bus tapping
+attacks~(\S~\ref{sec:physical_bus_attacks}), which is the DRAM bus tapping
+attack. SGX's threat model considers DRAM and the bus connecting it to the CPU
+chip to be untrusted. Therefore, SGX's Memory Encryption
+Engine~(MEE,~\S~\ref{sec:sgx_uncore_modifications}) provides privacy, integrity
+and freshness guarantees to the EPC data while it is stored in DRAM.
+
+However, both the SGX papers and the ISCA 2015 tutorial on SGX admit that the
+MEE does not protect the addresses of the DRAM locations accessed when cache
+lines holding EPC data are evicted or loaded. This provides an opportunity for
+a malicious computer owner to observe an enclave's memory access patterns by
+combining a DRAM address line bus tap with carefully crafted system software
+that creates artifical pressure on the last-level
+cache~(LLC~,\S~\ref{sec:caching}) lines that hold the enclave's EPC pages.
+
+On a brighter note, as mentioned in \S~\ref{sec:physical_bus_attacks}, we are
+not aware of any successful DRAM address line bus tapping attack. Furthermore,
+SGX is vulnerable to cache timing attacks that can be carried out completely in
+software, so malicious computer owners do not need to bother setting up a
+physical attack to obtain an enclave's memory access patterns.
+
+While the SGX documentation addresses DRAM bus tapping attacks, it makes no
+mention of the System Management bus~(SMBus,~\S~\ref{sec:intel_me}) that
+connects the Intel Management Engine~(ME,~\S~\ref{sec:intel_me}) to various
+components on the computer's motherboard.
+
+In \S~\ref{sec:sgx_vs_device_attacks}, we will explain that the ME might play a
+role in SGX's software attestation process. This makes us concerned about the
+possibility of an attack that taps the SMBus to reach into the Intel ME. The
+SMBus is much more accessible than the DRAM bus, as it has fewer wires that
+operate at a significantly lower speed. Unfortunately, without more information
+about the role that the Intel ME plays in a computer, we cannot move beyond
+speculation on this topic.
+
+The threat model stated by the SGX design excludes physical attacks targeting
+the CPU chip~(\S~\ref{sec:physical_chip_attacks}). Fortunately, Intel's patents
+disclose an array of countermeasures aimed at increasing the cost of chip
+attacks.
+
+For example, the original SGX patents~\cite{intel2013patent1, intel2013patent2}
+disclose that the Fused Seal Key and the Provisioning Key, which are stored in
+e-fuses (\S~\ref{sec:sgx_quoting_enclave}), are encrypted with a \textit{global
+wrapping logic key}~(GWK). The GWK is a 128-bit AES key that is hard-coded in
+the processor's circuitry, and serves to increase the cost of extracting the
+keys from an SGX-enabled processor.
+
+As explained in \S~\ref{sec:physical_chip_attacks}, e-fuses have a large
+feature size, which makes them relatively easy to ``read'' using a
+high-resolution microscope. In comparison, the circuitry on the latest Intel
+processors has a significantly smaller feature size, and is more difficult to
+reverse engineer. Unfortunately, the GWK is shared among all the chip dies
+created from the same mask, so it has all the drawbacks of global secrets
+explaiend in \S~\ref{sec:physical_chip_attacks}.
+
+Newer Intel patents~\cite{gotze2014provisioning, gotze2014provisioning2}
+disclose that SGX-enabled processors also employ a
+\textit{Physically Unclonable Function}~(PUF,~\cite{suh2007puf}), which
+generates a symmetric key that is used during the provisioning process.
+
+Specifically, at an early provisioning stage, the PUF key is encrypted with the
+GWK and transmitted to the key generation server. At a later stage, the key
+generation server encrypts the key material that will be burned into the
+processor chip's e-fuses with the PUF key, and transmits the encrypted material
+to the chip. The PUF key increases the cost of obtaining a chip's fuse key
+material, as an attacker must compromise both provisioning stages in order to
+be able to decrypt the fuse key material.
+
+As mentioned in previous sections, patents reveal design possibilities
+considered by the SGX engineers. However, due to the length timelines involved
+in patent applications, patents necessarily describe earlier versions of the
+SGX implementation plans, which might not match the shipping implementation. We
+expect this might be the case with the PUF provisioning patents, as it makes
+little sense to include a PUF in a chip die and rely on e-fuses and a GWK to
+store SGX's root keys. Deriving the root keys from the PUF would be more
+resilient to chip imaging attacks.
+
+SGX's threat model excludes power analysis
+attacks~(\S~\ref{sec:power_analysis_attacks}) and other side-channel attacks.
+This is understandable, as power attacks cannot be addressed at the
+architectural level. Defending against power attacks requires expensive
+countermeasures at the lowest levels of hardware implementation, which can only
+be designed by engineers who have deep expertise in both system security and
+Intel's manufacturing process. It follows that defending against power analysis
+attacks has a very high cost-to-benefit ratio.
+
+
+\subsubsection{Software Attacks on Peripherals}
+\label{sec:sgx_vs_device_attacks}
+
 
 
 The memory controller is
@@ -77,20 +236,7 @@ using the dedicated instructions \texttt{EENTER} and \texttt{EEXIT}.
 \end{figure}
 
 
-\subsubsection{On Measuring Enclave Attributes}
-
-At a very high level, the exponential explosion described here seems similar to
-the measurement problem that plauges the Trusted Platform
-Module~(TPM,~\S~\ref{sec:tpm}). However, they are quite different. The TPM's
-measurement must account for all the system \textbf{software} loaded on the
-computer, including all the drivers. The explosion of potentially valid TPM
-measurement is due to the fact that every new OS kernel release and driver
-release creates new potentially valid measurements. If SGX were to include XFRM
-values into the enclave's measurement, the number of possible \textbf{hardware}
-
-
-
-\subsection{DOS Prevention}
+\subsubsection{DOS Prevention}
 % NOTE: This is a slightly edited answer to a question we received.
 
 SGX enclaves execute at the lowest privilege level (user mode / ring 3), so
