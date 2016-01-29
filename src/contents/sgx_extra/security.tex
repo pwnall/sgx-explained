@@ -285,12 +285,63 @@ freshness of the EPC contents that is stored into DRAM. This protects against
 software attacks on DRAM's integrity, like the rowhammer attack described in
 \S~\ref{sec:rowhammer_attack}.
 
+% Interaction with Performance Monitoring: SDM S 43.6
+
+The SDM describes an array of measures that SGX takes to disable processor
+features intended for debugging when a LP starts executing an enclave's code.
+For example, enclave entry~(\S~\ref{sec:sgx_eenter}) disables Precise Event
+Based Sampling (PEBS) for the LP, as well as any hardware breakpoints placed
+inside the enclave's virtual address range~(ELRANGE,~\S~\ref{sec:sgx_elrange}).
+This addresses some of the attacks described in \S~\ref{sec:perfmon_attacks},
+which take advantage of performance monitoring features to get information that
+typically requires access to hardware probes.
+
 % ISCA 2015 SGX Slide 115:
 %   "Software Side-Channel Adversary"
 
-The Performance Monitoring Side Channel~(\S~\ref{sec:perfmon_attacks})
+At the same time, the SDM does not mention anything about uncore PEBS counters,
+which can be used to learn about an enclave's LLC activity. Furthermore, the
+ISCA 2015 tutorial slides mention that \textbf{SGX does not protect against
+software side-channel attacks} that rely on performance counters.
 
-Attacks on the Boot Firmware and Intel ME~(\S~\ref{sec:firmware_attacks})
+This limitation in SGX's threat model leaves security-conscious enclave authors
+in a rather terrible situation. These authors know that SGX does not protect
+their enclaves against a class of software attacks. At the same time, they
+cannot even contemplate attempting to defeat these attacks on their own, due to
+lack of information. Specifically, the documentation that is publicly available
+from Intel does not provide enough information to model the information leakage
+due to performance counters.
+
+For example, Intel does not document the mapping implemented in
+CBoxes~(\S~\ref{sec:cache_coherence}) between physical DRAM addresses and the
+LLC slices used to cache the addresses. This mapping impacts several uncore
+performance counters, and the impact is strong enough to allow security
+researches to reverse-engineer the mapping \cite{inci2015rsachannel,
+maurice2015intelhash, yarom2015intelhash}. Therefore, it is safe to assume that
+a malicious computer owner who knows the CBox mapping can use the uncore
+performance counters to learn about an enclave's memory access patterns.
+
+The SGX papers mention that SGX's threat model includes attacks that overwrite
+the flash memory chip that stores the computer's boot firmware, which result in
+malicious code running in System Management Mode~(SMM,~\S~\ref{sec:rings}).
+However, all the official SGX documentation is silent about the implications of
+an attack that compromises the firmware executed by the Intel ME.
+
+\S~\ref{sec:firmware_attacks} states that the ME's firmware is stored in the
+same flash memory as the boot firmware, and explains that the ME has a very
+broad
+
+% Key Structures and Provisioning: Ruan 2014 Ch 5
+
+\cite{ruan2014intelme}
+
+This firmware
+is stored in
+
+
+Attacks on the Boot Firmware and Intel ME~()
+
+\cite{costan2011spchip}
 
 
 
