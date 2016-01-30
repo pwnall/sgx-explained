@@ -155,3 +155,48 @@ implementation via special ring 0 CPU instructions
 untrusted DRAM and later load them back, using dedicated CPU instructions. SGX
 uses cryptographic protections to assure the privacy, integrity and freshness
 of the evicted EPC pages while they are stored in untrusted memory.
+
+
+\subsection{Outline and Troubling Findings}
+\label{sec:intro_troubles}
+
+Reasoning about the security properties of Intel's SGX requires a significant
+amount of background information that is currently scattered across many
+sources. For this reason, a signficant portion of this work is dedicated to
+summarizing this prerequisite knowledge.
+
+Section \ref{sec:architecture_background} summarizes the relevant subset of the
+Intel architecture and the micro-architectural properties of recent Intel
+processors. Section \ref{sec:security_background} outlines the security
+landscape around trusted hardware system, including cryptographic tools and
+relevant attack classes. Last, section \ref{sec:related} briefly describes the
+trusted hardware systems that make up the context in which SGX was created.
+
+After having reviewed the background information, section \ref{sec:sgx_model}
+provides a (sometimes painstakingly) detailed description of SGX's programming
+model, mostly based on Intel's Software Development Manual.
+
+Section \ref{sec:sgx_extra} analyzes other public sources of information, such
+as Intel's SGX-related patents, to fill in some of the missing details in the
+SGX description. The section culminates in a detailed review of SGX's security
+properties that draws on information presented in the rest of the paper. This
+review outlines some troubling gaps in SGX's security guarantees, as well as
+some areas where no conclusions can be drawn without additional information
+from Intel.
+
+That being said, perhaps the most troubling finding in our security analysis is
+that Intel included a licensing mechanism in SGX that prevents software
+developers who cannot or will not enter a (yet unspecified) business agreement
+with Intel from authoring software that takes advantage of SGX's protections.
+All the official documentation carefully sidesteps this issue, and has a
+minimal amount of hints that lead to the Intel's patents on SGX. Only these
+patents disclose the existence of licensing plans.
+
+The licensing issue might not bear much relevance right now, because our
+security analysis reveals that the limitations in SGX's guarantees mean that a
+security-conscious software developer cannot in good conscience rely on SGX for
+secure remote computation. At the same time, should SGX ever develop better
+security properties, the licensing scheme described above becomes a major
+problem, given Intel's near-monopoly market share of desktop and server CPUs.
+Speficially, the licensing limitations effectively give Intel the power to
+choose winners and losers in industries that rely on cloud computing.

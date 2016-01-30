@@ -433,36 +433,72 @@ Therefore, an ME compromise would be equivalent to the DRAM attacks analyzed in
 \subsubsection{Cache Timing Attacks}
 \label{sec:sgx_vs_cache_timing_attacks}
 
-\S~\ref{sec:cache_timing}
+The SGX threat model excludes the cache timing attacks described in
+\S~\ref{sec:cache_timing}. The SGX documentation bundles these attacks together
+with other side-channel attacks and summarily dismissesthem as complex physical
+attacks. However, cache timing attacks can be mounted entirely by unprivileged
+software running at ring 3. This section describes the implications of SGX's
+environment and threat model on cache timing attacks.
 
-The SGX documentation bundles
-these attacks together with other side-channel attacks and summarily dismisses
-them as complex physical attacks. However, cache timing attacks can be mounted
-entirely by unprivileged software that measures the latency of its memory
-accesses and determines whether the accesses caused misses in a cache that is
-shared with a victim program. The attacker carefully plans memory accesses to
-reveal the victim's memory access pattern.
+The main difference between SGX and a standard architecture is that SGX's
+threat model considers the system software to be untrusted. As explained
+earlier, this accurately captures the situation in remote computation
+scenarios, such as cloud computing. SGX's threat model implies that the system
+software can be carrying out a cache timing attack on the software inside an
+enclave.
 
-Given this pattern of vulnerabilities, ignoring cache timing attacks is
-dangerously akin to ignoring the string of demonstrated attacks which led to
-the deprecation of SHA-1 \cite{nist2014sha1policy, google2014sha1deprecation,
-microsoft2014sha1deprecation}. We must also recognize the imminent threat, and
-remove the root cause of resource sharing between mutually distrustful
-processes.
+A malicious system software translates into significantly more powerful cache
+timing attacks, compared to those described in \S~\ref{sec:cache_timing}. The
+system software is in charge of scheduling threads on LPs, and also in charge
+of setting up the page tables used by address
+translation~(\S~\ref{sec:paging}), which control cache
+placement~(\S~\ref{sec:tlbs}).
 
+For example, the malicious kernel set out to trace an enclave's memory access
+patterns described in \S~\ref{sec:sgx_vs_memory_mapping_attacks} can improve
+the accuracy of a cache timing attack by partitioning the
+sets~(\S~\ref{sec:cache_org}) of the cache targeted by the attacks into two
+disjoint regions, as shown in Figure~\ref{fig:cache_partitions}.
 
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/cache_partitions.pdf}
+  \caption{
+    A malicious OS can partition a cache between the software running inside an
+    enclave and its own malicious code. Both the OS and the enclave software
+    have cache sets dedicated to them. When allocating DRAM to itself and to
+    the enclave software, the malicious OS is careful to only use DRAM regions
+    that map to the appropriate cache sets. On a system with an Intel CPU, the
+    the OS can partition the L2 cache by manipulating the page tables in a way
+    that is completely oblivious to the enclave's software.
+  }
+  \label{fig:cache_partitions}
+\end{figure}
 
-The AEX process and the \texttt{ERESUME} instructions do not flush the CPU
-caches. A tracing kernel can take advantage of cache timing to narrow down
-the addresses in an application's memory access trace to cache line
-granularity, by extending the method described above with the steps below.
+The system software would store all the victim enclave's code and data in DRAM
+addresses that map to the cache sets in one of the regions, and would store its
+own code and data in DRAM addresses that map to the other region's cache sets.
+The snooping thread's code is assumed to be a part of the OS. For example, in
+a typical 256~KB (per-core) L2 cache organized as 512 8-way sets of 64-byte
+lines, the tracing kernel could allocate lines 0-63 for the enclave's code
+page, lines 64-127 for the enclave's data page, and use lines 128-511 for its
+own pages.
 
-The tracing kernel controls the mapping between virtual addresses and physical
-addresses, so it can make sure that its own code and data use different sets
-in the L2 cache from the enclave's code and data. For example, in a typical
-256~KB (per-core) L2 cache organized as 512 8-way sets of 64-byte lines, the
-tracing kernel could allocate lines 0-63 for the enclave's code page, lines
-64-127 for the enclave's data page, and use lines 128-511 for its own pages.
+To the best of our knowledge, there is no minor modification to SGX that would
+provably defend against cache timing attacks. However, the SGX design could
+take a few steps to increase the cost of cache timing attacks. For example,
+SGX's enclave entry implementation could flush the core's private caches, which
+would prevent cache timing attacks from targeting them. This measure would
+defeat the cache timing attacks described below, and would only be vulnerable
+to more sophisticated attacks that target the shared LLC, such as
+\cite{yarom2013llctiming, liu2015llctiming}. The description above assumes that
+multi-threading has been disabled, for the reasons explained in
+\S~\ref{sec:sgx_vs_privileged_sw_attacks}.
+
+Barring the additional protection measures described above, a tracing kernel
+can extend the attack described in \S~\ref{sec:sgx_vs_memory_mapping_attacks}
+with the steps outlined to take advantage of cache timing and narrow down the
+addresses in an application's memory access trace to cache line granularity.
 
 Right before entering an enclave via \texttt{EENTER} or \texttt{ERESUME}, the
 kernel would issue \texttt{CLFLUSH} instructions to flush the enclave's code
@@ -475,133 +511,14 @@ tracing kernel, it can read the 16 bogus pages, and exploit the time difference
 between an L2 cache hit and a miss to see which cache lines were evicted and
 replaced by the enclave's memory accesses.
 
-
 % PRMRR documented in HASP papers and both SGX manuals, completely removed from
 % SDM. It still exists in Coreboot. Couldn't find other Skywell code.
-The SGX manual states that the EPC (the memory used to store enclave data) can
-only be set up as UC or WB. While no further explanation is provided, we assume
-that the UC option was provided in order to attempt to mitigate against some
-cache-timing attacks.
 
-\begin{figure}[hbt]
-  \centering
-  \includegraphics[width=85mm]{figures/cache_partitions.pdf}
-  \caption{
-    Cache partitioning between two applications. Each application has some
-    cache sets allocated to it, and only uses RAM regions that map to its cache
-    sets. When partitioning the L1 cache, applications have to follow this
-    constraint themselves. When the L2 cache is partitioned, the OS can map the
-    pages in an application's virtual address space to the RAM regions that the
-    application can use, so applications are oblivious to the cache
-    partitioning.
-  }
-  \label{fig:cache_partitions}
-\end{figure}
-
-
-\subsubsection{DOS Prevention}
-% NOTE: This is a slightly edited answer to a question we received.
-
-SGX enclaves execute at the lowest privilege level (user mode / ring 3), so
-they cannot compromise the system software without exploiting a security
-vulnerability. Therefore, the only kind of malicious behavior that an enclave
-can exhibit is denial of service (DoS).
-
-The SGX design provides system software the tools it needs to protect itself
-from enclaves that engage into CPU hogging and DRAM hogging. As enclaves cannot
-perform I/O directly, these are the only two classes of DoS attacks available
-to them.
-
-An enclave that attempts to hog a logical processor (CPU core on most systems)
-assigned to it can be pre-empted by the system software via an Inter-Processor
-Interrupt (IPI) issued from another processor. This method is available as long
-as the system software reserves at least one logical processor for non-enclave
-computation.
-
-Furthermore, most OS kernels use tick schedulers, which use a real-time clock
-(RTC) configured to issue periodical interrupts (ticks) to all cores. The RTC
-interrupt handler invokes the kernel's scheduler, which choses the thread that
-will get to use the logical processor until the next RTC interrupt is received.
-Therefore, kernels that use tick schedulers always have the opportunity to
-de-schedule enclave threads, and don't need to rely on the ability to send
-IPIs.
-
-In SGX, the system software can always evict an enclave's EPC pages to non-EPC
-memory, and then to disk. The system software can also outright deallocate an
-enclave's EPC pages, though this will probably cause the enclave code to
-encounter page faults that cannot be resolved. The only catch is that the EPC
-pages that hold metadata for running enclave threads cannot be evicted or
-removed. However, this can easily be resolved, as the system software can
-always preempt enclave threads, using one of the methods described above.
-
-% TODO(pwnall): Move the following paragraphs into Sanctum.
-
-Sanctum gives the system software less control over the DRAM regions allocated
-to enclaves, in order to hide the enclaves' memory access patterns.
-Specifically, the system software cannot reclaim a DRAM region from an enclave
-without the enclave's cooperation. However, the system software can always
-completely terminate an enclave and reclaim all its memory.
-
-Sanctum's enclaves can only be terminated when all their threads are stopped.
-Therefore, when the system software decides that an enclave is hogging CPU or
-DRAM, it can pre-empt all the enclave's threads, using the methods described
-above, and then terminate the enclave.
-
-
-\subsection{Interaction with Anti-Virus Software}
-% NOTE: This is a slightly edited answer to a question we received.
-
-Today's anti-virus (AV) systems are glorified pattern matchers. AV software
-simply scans all the executable files on the system and the memory of running
-processes, looking for bit patterns that are thought to only occur in malicious
-software. These patterns are pompously called "virus signatures".
-
-SGX (and TXT, to some extent) provides a method for executing code in an
-isolated container that we refer to as an enclave. Enclaves are isolated from
-all the other software on the computer, including any AV software that might be
-installed.
-
-The isolation afforded by Sanctum (and SGX, etc.) opens up the possibility for
-bad actors to structure their attacks as a generic loader that would end up
-executing a malicious payload without tripping the AV's pattern matcher.  More
-specifically, the attack would create an enclave and initialize it with a
-generic loader that looks innocent to an AV. The loader inside the enclave
-would obtain an encrypted malicious payload, and would undergo software
-attestation with an Internet server to obtain the payload's encryption key. The
-loader would then decrypt the malicious payload and execute it inside the
-enclave.
-
-In the scheme suggested here, the malicious payload only exists in a decrypted
-form inside an enclave's memory, which cannot be accessed by the AV. Therefore,
-the AV's pattern matcher will not trip.
-
-This issue does not have a solution that maintains the status-quo for the AV
-vendors. The attack described above would be called a protection scheme if the
-payload would be a proprietary image processing algorithm, or a DRM scheme.
-
-On a brighter note, enclaves do not bring the complete extinction of AV, they
-merely require a change in approach. Enclave code always executes at the lowest
-privilege mode (ring 3 / user mode), so it cannot perform any I/O without
-invoking the services of system software. For all intents and purposes, this
-effectively means that enclave software cannot perform any malicious action
-without the complicity of system software. Therefore, enclaves can be policed
-effectively by intelligent AV software that records and filters the I/O
-performed by software, and detects malicious software according to the actions
-that it performs, rather than according to bit patterns in its code.
-
-Furthermore, SGX's enclave loading model allows the possibility of performing
-static analysis on the enclave's software. For simplicity, assume the existence
-of a standardized static analysis framework.  The initial enclave contents is
-not encrypted, so the system software can easily perform static analysis on it.
-Dynamically loaded code or Just-In-Time code generation (JIT) can be handled by
-requiring that all enclaves that use these techniques embed the static analysis
-framework and use it to analyze any dynamically loaded code before it is
-executed. The system software can use static verification to ensure that
-enclaves follow these rules, and refuse to initialize any enclaves that fail
-verification.
-
-In conclusion, enclaves in and of themselves don't introduce new attack vectors
-for malware. However, the enclave isolation mechanism is fundamentally
-incompatible with the approach employed by today's AV solutions. Fortunately,
-it is possible (though non-trivial) to develop more intelligent AV software for
-enclave software.
+An extreme approach that can provably defeat cache timing attacks is disabling
+caching for the PRM range, which contains the EPC. The SDM is almost completely
+silent about the PRM, but the SGX manuals that it is based on state that
+the allowable caching behaviors~(\S~\ref{sec:cacheability_config}) for the EPC
+are uncacheable (UC) and write-back (WB). This could become useful if the SGX
+implementation would make sure that the PRM's caching behavior cannot be
+changed while SGX is enabled, and if the selected behavior would be captured by
+the enclave's measurement~(\S~\ref{sec:sgx_measurement}).
