@@ -1,0 +1,187 @@
+\subsection{Misconceptions about SGX}
+\label{sec:sgx_misconceptions}
+
+This section sets out to disprove a few common misconceptions about SGX and its
+programming model. First, we dispute Intel's non-explicit claims that SGX's
+vulnerability to software side-channel attacks is inconsequentional. Second, we
+disprove commonly voiced concerns that might be used by Intel to justify its
+licensing scheme.
+
+
+\subsubsection{Software Side-Channel Attacks and SGX}
+
+The SGX design reuses a few terms from the Trusted Platform
+Module~(TPM,~\S~\ref{sec:tpm}) design. This helps software developers familiar
+with TPM understand SGX faster. At the same time, the term reuse invites the
+assumption that SGX's software attestation is implemented in tamper-resistant
+hardware, similarly to the TPM design.
+
+\S~\ref{sec:sgx_attestation} explains that, in fact, the SGX design delegates
+the creation of attestation signatures to software that runs inside a
+Quoting Enclave with special privileges that allows it to access the
+processor's attestation key. Re-stated, SGX includes an enclave whose
+software reads the attestation key and produces attestation signatures.
+
+Creating the Quoting Enclave is a very elegant way of reducing the complexity
+of the hardware implementation of SGX, assuming that the isolation guarantees
+provided by SGX are sufficient to protect the attestation key. However, the
+security analysis in \S~\ref{sec:sgx_security_analysis} reveals that enclaves
+are vulnerable to a vast array of software side-channel attacks, which have
+been demonstrated effective in extracting a variety of secrets from isolated
+environments.
+
+% ISCA 2015 SGX: Slides 122 - 134
+
+The gaps in the security guarantees provided to enclaves place a large amount
+of pressure on Intel's software developers, as they must attempt to implement
+the EPID signing scheme used by software attestation without leaking any
+information. Intel's ISCA 2015 SGX tutorial slides suggest that the SGX
+designers will advise developers to write their code in a way that avoids
+data-dependent memory accesses, as suggested in
+\S~\ref{sec:cache_timing_workarounds}, and perhaps provide analysis tools that
+detect code that performs data-dependent memory accesses.
+
+The main drawback of the approach described above is that it is extremely
+cumbersone. \S~\ref{sec:cache_timing_workarounds} describes that, while it may
+be possible to write simple pieces of software in such a way that they do not
+require data-dependent memory accesses, there is no known process that can
+scale this to large software systems. For example, each virtual method call in
+an object-oriented language results in data-dependent code fetches.
+
+The ISCA 2015 SGX tutorial slides also suggest that the efforts of removing
+data-dependent memory accesses should focus on cryptographic algorithm
+implementations, in order to protect the keys that they handle. This is a
+terribly misguided suggestion, because cryptographic key material has no
+intrinsic value. Attackers derive benefits from obtaining the data that is
+protected by the keys, such as medical and financial records.
+
+Some security researchers focus on protecting cryptographic keys because they
+are the target of today's attacks. Unfortunately, it is easy to lose track of
+the fact that keys are being attacked simply because they are the lowest
+hanging fruits. A system that can only protect the keys will have a very small
+positive impact, as the attackers will simply shift their focus on the
+algorithms that process the valuable information, and use the same software
+side-channel attacks to obtain that information directly.
+
+The second drawback of the approach described towards the beginning of this
+section is that while eliminating data-dependent memory accesses should
+thwart the attacks described in \S~\ref{sec:sgx_vs_memory_mapping_attacks} and
+\S~\ref{sec:sgx_vs_cache_timing_attacks}, the measure may not be sufficient to
+prevent the hyper-threading attacks described in
+\S~\ref{sec:sgx_vs_privileged_sw_attacks}. The level of sharing between the two
+logical processors~(LP,~\S~\ref{sec:cpu_core}) on the same CPU core is so high
+that it is possible that a snooping LP can learn more than the memory access
+pattern from the other LP on the same core.
+
+For example, if the number of cycles taken by an integer ALU to execute a
+multiplication or division micro-op~(\S~\ref{sec:out_of_order}) depends on its
+inputs, the snooping LP could learn some information about the numbers
+multiplied or divided by the other LP. While this may be a simple example, it
+is safe to assume that the Quoting Enclave will be studied by many motivated
+attackers, and that any information leak will be exploited.
+
+
+\subsubsection{Enclaves Cannot DOS the System Software}
+% NOTE: This is a slightly edited answer to a question we received.
+
+SGX enclaves execute at the lowest privilege level (user mode / ring 3), so
+they cannot compromise the system software without exploiting a security
+vulnerability. Therefore, the only kind of malicious behavior that an enclave
+can exhibit is denial of service (DoS).
+
+The SGX design provides system software the tools it needs to protect itself
+from enclaves that engage into CPU hogging and DRAM hogging. As enclaves cannot
+perform I/O directly, these are the only two classes of DoS attacks available
+to them.
+
+An enclave that attempts to hog an LP assigned to it can be pre-empted by the
+system software via an Inter-Processor Interrupt~(IPI,~\S~\ref{sec:interrupts})
+issued from another processor. This method is available as long as the system
+software reserves at least one LP for non-enclave computation.
+
+Furthermore, most OS kernels use tick schedulers, which use a real-time clock
+(RTC) configured to issue periodical interrupts (ticks) to all cores. The RTC
+interrupt handler invokes the kernel's scheduler, which choses the thread that
+will get to use the logical processor until the next RTC interrupt is received.
+Therefore, kernels that use tick schedulers always have the opportunity to
+de-schedule enclave threads, and don't need to rely on the ability to send
+IPIs.
+
+In SGX, the system software can always evict an enclave's EPC pages to non-EPC
+memory, and then to disk. The system software can also outright deallocate an
+enclave's EPC pages, though this will probably cause the enclave code to
+encounter page faults that cannot be resolved. The only catch is that the EPC
+pages that hold metadata for running enclave threads cannot be evicted or
+removed. However, this can easily be resolved, as the system software can
+always preempt enclave threads, using one of the methods described above.
+
+% TODO(pwnall): Move the following paragraphs into Sanctum.
+%Sanctum gives the system software less control over the DRAM regions allocated
+%to enclaves, in order to hide the enclaves' memory access patterns.
+%Specifically, the system software cannot reclaim a DRAM region from an enclave
+%without the enclave's cooperation. However, the system software can always
+%completely terminate an enclave and reclaim all its memory.
+%
+%Sanctum's enclaves can only be terminated when all their threads are stopped.
+%Therefore, when the system software decides that an enclave is hogging CPU or
+%DRAM, it can pre-empt all the enclave's threads, using the methods described
+%above, and then terminate the enclave.
+
+
+\subsection{Interaction with Anti-Virus Software}
+% NOTE: This is a slightly edited answer to a question we received.
+
+Today's anti-virus (AV) systems are glorified pattern matchers. AV software
+simply scans all the executable files on the system and the memory of running
+processes, looking for bit patterns that are thought to only occur in malicious
+software. These patterns are pompously called "virus signatures".
+
+SGX (and TXT, to some extent) provides a method for executing code in an
+isolated container that we refer to as an enclave. Enclaves are isolated from
+all the other software on the computer, including any AV software that might be
+installed.
+
+The isolation afforded by SGX opens up the possibility for bad actors to
+structure their attacks as a generic loader that would end up executing a
+malicious payload without tripping the AV's pattern matcher.  More
+specifically, the attack would create an enclave and initialize it with a
+generic loader that looks innocent to an AV. The loader inside the enclave
+would obtain an encrypted malicious payload, and would undergo software
+attestation with an Internet server to obtain the payload's encryption key. The
+loader would then decrypt the malicious payload and execute it inside the
+enclave.
+
+In the scheme suggested here, the malicious payload only exists in a decrypted
+form inside an enclave's memory, which cannot be accessed by the AV. Therefore,
+the AV's pattern matcher will not trip.
+
+This issue does not have a solution that maintains the status-quo for the AV
+vendors. The attack described above would be called a protection scheme if the
+payload would be a proprietary image processing algorithm, or a DRM scheme.
+
+On a brighter note, enclaves do not bring the complete extinction of AV, they
+merely require a change in approach. Enclave code always executes at the lowest
+privilege mode (ring 3 / user mode), so it cannot perform any I/O without
+invoking the services of system software. For all intents and purposes, this
+effectively means that enclave software cannot perform any malicious action
+without the complicity of system software. Therefore, enclaves can be policed
+effectively by intelligent AV software that records and filters the I/O
+performed by software, and detects malicious software according to the actions
+that it performs, rather than according to bit patterns in its code.
+
+Furthermore, SGX's enclave loading model allows the possibility of performing
+static analysis on the enclave's software. For simplicity, assume the existence
+of a standardized static analysis framework.  The initial enclave contents is
+not encrypted, so the system software can easily perform static analysis on it.
+Dynamically loaded code or Just-In-Time code generation (JIT) can be handled by
+requiring that all enclaves that use these techniques embed the static analysis
+framework and use it to analyze any dynamically loaded code before it is
+executed. The system software can use static verification to ensure that
+enclaves follow these rules, and refuse to initialize any enclaves that fail
+verification.
+
+In conclusion, enclaves in and of themselves don't introduce new attack vectors
+for malware. However, the enclave isolation mechanism is fundamentally
+incompatible with the approach employed by today's AV solutions. Fortunately,
+it is possible (though non-trivial) to develop more intelligent AV software for
+enclave software.
