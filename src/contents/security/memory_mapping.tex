@@ -16,10 +16,9 @@ difficult problems faced by these designes is that application software relies
 on the memory management services provided by the system software, which is now
 untrusted.
 
-Intel's SGX~\cite{mckeen2013sgx, anati2013sgx}, which was inspired by
-Bastion~\cite{champagne2010bastion}, leaves the system software in charge of
-setting up the page tables (\S~\ref{sec:paging}) used by address translation,
-but instates access checks that prevent the system software from directly
+Intel's SGX~\cite{mckeen2013sgx, anati2013sgx}, leaves the system software in charge of
+setting up the page tables (\S~\ref{sec:paging}) used by address translation, inspired by Bastion~\cite{champagne2010bastion},
+but instantiates access checks that prevent the system software from directly
 accessing the isolated container's memory.
 
 This section discusses some attacks that become relevant when the application
