@@ -1,13 +1,10 @@
 \subsection{The Aegis Secure Processor}
 
-The Aegis secure processor \cite{suh2003aegis} \cite{aegis_impl} argued that
+The Aegis secure processor \cite{suh2003aegis} relies on a security kernel in the operating system to isolate containers, and includes the kernel's cryptographic hash in the measurement reported by the software attestation signature.  \cite{aegis_impl} argued that
 Physically Unclonable Functions (PUFs) \cite{gassend2002puf} can be used to
 endow a secure processor with a tamper-resistant private key, which is required
 for software attestation. PUFs do not have the fabrication process drawbacks of
 EEPROM, and are significantly more resilient to physical attacks than e-fuses.
-Aegis relies on a security kernel in the operating system to isolate
-containers, and includes the kernel's cryptographic hash in the measurement
-reported by the software attestation signature.
 
 Aegis relies on a trusted security kernel to isolate each container from the
 other software on the computer by configuring the page tables used in address
@@ -22,7 +19,7 @@ The Aegis memory controller encrypts the cache lines in one memory range, and
 HMACs the cache lines in one other memory range. The two memory ranges can
 overlap, and are configurable by the security kernel. Thanks to the two ranges,
 the memory controller can avoid the latency overhead of cryptographic
-operations for the DRAM outside containers. Aegis is not vulnerable to physical
+operations for the DRAM outside containers. Aegis was the first secure processor not vulnerable to physical
 replay attacks, as it uses a Merkle tree construction \cite{gassend2003merkle}
 to guarantee DRAM freshness. The latency overhead of the Merkle tree is greatly
 reduced by augmenting the L2 cache with the tree nodes for the cache lines.
@@ -31,6 +28,6 @@ Aegis' security kernel allows the OS to page out container memory, but verifies
 the correctness of the paging operations. The security kernel uses the same
 encryption and Merkle tree algorithms as the memory controller to guarantee the
 privacy and integrity of the container pages that are swapped out from DRAM.
-As the OS is free to page out container memory, it can learn a containter's
+As the OS is free to page out container memory, it can learn a container's
 memory access patterns, at page granularity. Aegis containers are also
 vulnerable to cache timing attacks.
