@@ -29,7 +29,7 @@ SGX's microcode ensures the privacy, authenticity, and freshness of each
 container's evicted pages, like Bastion's hypervisor. However, SGX relies on a
 version-based Merkle tree, inspired by Aegis \cite{suh2003aegis}, and adds an innovative twist
 that allows the operating system to dynamically shape the Merkle tree. SGX also
-shares Bastion's vulnerability to memory access pattern leaks, namely a
+shares Bastion's and Aegis' vulnerability to memory access pattern leaks, namely a
 malicious OS can directly learn a container's memory accesses at page
 granularity, and any piece of software can perform cache timing attacks.
 
