@@ -3,8 +3,8 @@
 
 This section sets out to disprove a few common misconceptions about SGX and its
 programming model. First, we dispute Intel's non-explicit claims that SGX's
-vulnerability to software side-channel attacks is inconsequentional. Second, we
-disprove commonly voiced concerns that might be used by Intel to justify its
+vulnerability to software side-channel attacks is inconsequential. Second, we
+dispute commonly voiced concerns that might be used by Intel to justify its
 licensing scheme.
 
 
@@ -42,7 +42,7 @@ data-dependent memory accesses, as suggested in
 detect code that performs data-dependent memory accesses.
 
 The main drawback of the approach described above is that it is extremely
-cumbersone. \S~\ref{sec:cache_timing_workarounds} describes that, while it may
+cumbersome. \S~\ref{sec:cache_timing_workarounds} describes that, while it may
 be possible to write simple pieces of software in such a way that they do not
 require data-dependent memory accesses, there is no known process that can
 scale this to large software systems. For example, each virtual method call in
@@ -58,7 +58,7 @@ protected by the keys, such as medical and financial records.
 Some security researchers focus on protecting cryptographic keys because they
 are the target of today's attacks. Unfortunately, it is easy to lose track of
 the fact that keys are being attacked simply because they are the lowest
-hanging fruits. A system that can only protect the keys will have a very small
+hanging fruit. A system that can only protect the keys will have a very small
 positive impact, as the attackers will simply shift their focus on the
 algorithms that process the valuable information, and use the same software
 side-channel attacks to obtain that information directly.
@@ -90,18 +90,18 @@ vulnerability. Therefore, the only kind of malicious behavior that an enclave
 can exhibit is denial of service (DoS).
 
 The SGX design provides system software the tools it needs to protect itself
-from enclaves that engage into CPU hogging and DRAM hogging. As enclaves cannot
+from enclaves that engage in CPU hogging and DRAM hogging. As enclaves cannot
 perform I/O directly, these are the only two classes of DoS attacks available
 to them.
 
-An enclave that attempts to hog an LP assigned to it can be pre-empted by the
+An enclave that attempts to hog an LP assigned to it can be preempted by the
 system software via an Inter-Processor Interrupt~(IPI,~\S~\ref{sec:interrupts})
 issued from another processor. This method is available as long as the system
 software reserves at least one LP for non-enclave computation.
 
 Furthermore, most OS kernels use tick schedulers, which use a real-time clock
 (RTC) configured to issue periodical interrupts (ticks) to all cores. The RTC
-interrupt handler invokes the kernel's scheduler, which choses the thread that
+interrupt handler invokes the kernel's scheduler, which chooses the thread that
 will get to use the logical processor until the next RTC interrupt is received.
 Therefore, kernels that use tick schedulers always have the opportunity to
 de-schedule enclave threads, and don't need to rely on the ability to send
@@ -124,7 +124,7 @@ always preempt enclave threads, using one of the methods described above.
 %
 %Sanctum's enclaves can only be terminated when all their threads are stopped.
 %Therefore, when the system software decides that an enclave is hogging CPU or
-%DRAM, it can pre-empt all the enclave's threads, using the methods described
+%DRAM, it can preempt all the enclave's threads, using the methods described
 %above, and then terminate the enclave.
 
 
@@ -134,7 +134,7 @@ always preempt enclave threads, using one of the methods described above.
 Today's anti-virus (AV) systems are glorified pattern matchers. AV software
 simply scans all the executable files on the system and the memory of running
 processes, looking for bit patterns that are thought to only occur in malicious
-software. These patterns are pompously called "virus signatures".
+software. These patterns are somewhat pompously called ``virus signatures".
 
 SGX (and TXT, to some extent) provides a method for executing code in an
 isolated container that we refer to as an enclave. Enclaves are isolated from

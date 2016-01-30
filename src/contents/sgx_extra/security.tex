@@ -435,7 +435,7 @@ Therefore, an ME compromise would be equivalent to the DRAM attacks analyzed in
 
 The SGX threat model excludes the cache timing attacks described in
 \S~\ref{sec:cache_timing}. The SGX documentation bundles these attacks together
-with other side-channel attacks and summarily dismissesthem as complex physical
+with other side-channel attacks and summarily dismisses them as complex physical
 attacks. However, cache timing attacks can be mounted entirely by unprivileged
 software running at ring 3. This section describes the implications of SGX's
 environment and threat model on cache timing attacks.
@@ -497,7 +497,7 @@ multi-threading has been disabled, for the reasons explained in
 
 Barring the additional protection measures described above, a tracing kernel
 can extend the attack described in \S~\ref{sec:sgx_vs_memory_mapping_attacks}
-with the steps outlined to take advantage of cache timing and narrow down the
+with the steps outlined below to take advantage of cache timing and narrow down the
 addresses in an application's memory access trace to cache line granularity.
 
 Right before entering an enclave via \texttt{EENTER} or \texttt{ERESUME}, the
