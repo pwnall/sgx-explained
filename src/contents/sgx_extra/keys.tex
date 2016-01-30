@@ -1,6 +1,8 @@
 \subsection{Key Hierarchy and Derivation}
 
-%% FUSE_KEY
+%%% Intel patent summary
+
+% FUSE_KEY
 %   US 8,972,746 B2 - Table 4-13, column 19
 
 According to Intel's patents, the SGX implementation relies on a complex key
@@ -65,6 +67,8 @@ value on each processor power cycle, and is incremented after $2^{32}$ AES
 operations that use the value. They also indicate that each EREPORT may
 increment the KeyID by 1.
 
+
+%%% Intel ME speculation
 
 % Key Structures and Provisioning: Ruan 2014 Ch 5
 

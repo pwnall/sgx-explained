@@ -63,12 +63,12 @@ and filters the data transfered by the uncore's ring bus
 (\S~\ref{sec:cache_coherence}), and reports it to an external debugger.
 
 The SGX memory protection measures are implemented at the core level, in the
-PMH (\S~\ref{sec:sgx_access_protection}) and at the chip die level, in the
-memory controller (\S~\ref{sec:sgx_uncore_modifications}). Therefore, the code
-and data inside enclaves is stored in plaintext in on-chip
-caches~(\S~\ref{sec:caching}), which entails that the enclave contents travels
-without any cryptographic protection on the uncore's ring bus
-(\S~\ref{sec:cache_coherence}).
+Page Miss Handler~(PMH,~\S~\ref{sec:tlbs}) (\S~\ref{sec:sgx_access_protection})
+and at the chip die level, in the memory controller
+(\S~\ref{sec:sgx_uncore_modifications}). Therefore, the code and data inside
+enclaves is stored in plaintext in on-chip caches~(\S~\ref{sec:caching}), which
+entails that the enclave contents travels without any cryptographic protection
+on the uncore's ring bus (\S~\ref{sec:cache_coherence}).
 
 Fortunately, a recent Intel patent~\cite{shanbhogue2015gdxcsgx} indicates that
 Intel engineers are tackling at least some classes of attacks targeting
@@ -161,6 +161,98 @@ Intel's manufacturing process. It follows that defending against power analysis
 attacks has a very high cost-to-benefit ratio.
 
 
+\subsubsection{Privileged Software Attacks}
+\label{sec:sgx_vs_privileged_sw_attacks}
+
+The SGX threat model considers system software to be untrusted. This is a
+prerequisite for SGX to qualify as a solution to the secure remote computation
+problem encountered by software developers who wish to take advantage of
+Infrastructure-as-a-Service (IaaS) cloud computing.
+
+SGX's approach is also an acknowledgement of the realities of today's software
+landscape, where the system software that runs at high privilege
+levels~(\S~\ref{sec:rings}) is so complex that security researchers constantly
+find vulnerabilities in it (\S~\ref{sec:system_software_attacks}).
+
+The SGX design prevents malicious software from directly reading or from
+modifying the EPC pages that store an enclave's code and data. This security
+property relies on two pillars in the SGX design.
+
+First, the SGX implementation~(\S~\ref{sec:sgx_implementation_overview}) runs
+in the processor's microcode~(\S~\ref{sec:microcode}), which is effectively a
+higher privilege level that system software does not have access to.
+Along the same lines, SGX's security
+checks~(\S~\ref{sec:sgx_access_protection}) are the last step performed by the
+PMH, so they cannot be bypassed by any other architectural feature.
+
+This implementation detail is only briefly mentioned in SGX's official
+documentation, but has a large impact on security. For context, Intel's Trusted
+Execution Technology~(TXT,~\cite{grawrock2009txt}), which is the predecessor of
+SGX, relied on Intel's Virtual Machine Extensions (VMX) for isolation. The
+approach was unsound, because software running in System Management
+Mode~(SMM,~\S~\ref{sec:rings}) could bypass the restrictions used by VMX to
+provide isolation.
+
+The security properties of SGX's memory protection mechanisms are discussed
+in detail in \S~\ref{sec:sgx_vs_memory_mapping_attacks}.
+
+Second, SGX's microcode is always involved when a CPU transitions between
+enclave code and non-enclave code~(\S~\ref{sec:sgx_threads}), and therefore
+regulates all interactions between system software and an enclave's
+environment.
+
+On enclave entry~(\S~\ref{sec:sgx_eenter}), the SGX implementation sets up the
+registers~(\S~\ref{sec:resources}) that make up the execution
+state~(\S~\ref{sec:registers}) of the logical
+processor~(LP~\S~\ref{sec:cpu_core}), so a malicious OS or hypervisor cannot
+induce faults in the enclave's software by tampering with its execution
+environment.
+
+When an LP transitions away from an enclave's code due to a
+hardware exception~(\S~\ref{sec:faults}), the SGX implementation stashes the
+LP's execution state into a State Save Area~(SSA,~\S~\ref{sec:sgx_ssa}) area
+inside the enclave and scrubs it, so the system software's exception handler
+cannot access any enclave secrets that may be stored in the execution state.
+
+The protections described above apply to the all the levels of privileged
+software. SGX's transitions between an enclave's code and non-enclave code
+place SMM software on the same footing as the system software at lower
+privilege levels. System Management Interrupts~(SMI,~\S~\ref{sec:interrupts},
+\S~\ref{sec:system_software_attacks}), which cause the processor to execute
+SMM code, are handled using the same Asynchronous Enclave
+Exit~(AEX,~\S~\ref{sec:sgx_aex}) process as all other hardware exceptions.
+
+Unfortunately, the following sections will reveal that while SGX offers rather
+thorough against straightforward attacks on enclaves, its guarantees are almost
+non-existent when it comes to more sophisticated attacks, such as side-channel
+attacks. This section concludes by describing what might be the most egregious
+side-channel vulnerability in SGX.
+
+Most modern Intel processors feature hyper-threading. On these CPUs, the
+execution units~(\S~\ref{sec:out_of_order}) and caches~(\S~\ref{sec:caching})
+on a core~(\S~\ref{sec:cpu_core}) are shared by two LPs, each of which has its
+own execution state. SGX does not prevent hyper-threading, so malicious system
+software can schedule a thread executing the code of a victim enclave on an
+LP that shares the core with an LP executing a snooping thread. This snooping
+thread can use the processor's high-resolution performance counter
+\cite{petters1999making}, in conjunction with microarchitectural knowledge of
+the CPU's execution units and out-of-order scheduler, to learn the instructions
+executed by the victim enclave, as well as its memory access patterns.
+
+This vulnerability can be fixed using two approaches. The straightforward
+solution is to require cloud computing providers to disable hyper-threading
+when offering SGX. The SGX enclave measurement would have to be extended to
+include the computer's hyper-threading configuration, so the remote parties in
+the software attestation process can be assured that their enclaves are hosted
+by a secure environment.
+
+A more complex approach to fixing the hyper-threading vulnerability would
+entail having the SGX implementation guarantee that when an LP is executing an
+enclave's code, the other LP sharing its core is either inactive, or is
+executing the same enclave's code. While this approach is possible, its design
+would likely be quite cumbersome.
+
+
 \subsubsection{Memory Mapping Attacks}
 \label{sec:sgx_vs_memory_mapping_attacks}
 
@@ -194,10 +286,9 @@ described in \S~\ref{sec:page_swapping_attacks}.
 
 When system software wishes to evict EPC pages, it must follow the process
 described in \S~\ref{sec:sgx_eblock}, which guarantees to the SGX
-implementation that all the logical processors~(LPs,~\S~\ref{sec:cpu_core})
-have invalidated any TLB entry associated with pages that will be evicted. This
-defeats the active attacks based on stale TLB entries described in
-\S~\ref{sec:tlb_mapping_attacks}.
+implementation that all the LPs have invalidated any TLB entry associated with
+pages that will be evicted. This defeats the active attacks based on stale TLB
+entries described in \S~\ref{sec:tlb_mapping_attacks}.
 
 \S~\ref{sec:sgx_access_correctness} outlines a correctness proof for all the
 protection measures described above.
@@ -257,15 +348,12 @@ EPC, which is a major benefit of paging.
 \subsubsection{Software Attacks on Peripherals}
 \label{sec:sgx_vs_device_attacks}
 
-The SGX threat model considers system software to be untrusted, which is
-necessary for SGX to qualify as a solution to the security issues encountered
-in Infrastructure-as-a-Service (IaaS) cloud computing deployments. Since the
-SGX design does not trust the system software, it must be prepared to withstand
-the attacks described in \S~\ref{sec:device_attacks}, which can be carried out
-by the system software thanks to its ability to control peripheral devices on
-the computer's motherboard~(\S~\ref{sec:motherboard}). This section summarizes
-the security properties of SGX when faced with these attacks, based on publicly
-available information.
+Since the SGX design does not trust the system software, it must be prepared to
+withstand the attacks described in \S~\ref{sec:device_attacks}, which can be
+carried out by the system software thanks to its ability to control peripheral
+devices on the computer's motherboard~(\S~\ref{sec:motherboard}). This section
+summarizes the security properties of SGX when faced with these attacks, based
+on publicly available information.
 
 When SGX is enabled on an LP, it configures the memory
 controller~(MC,~\S~\ref{sec:cache_coherence}) integrated on the CPU chip die to
@@ -323,9 +411,9 @@ performance counters to learn about an enclave's memory access patterns.
 
 The SGX papers mention that SGX's threat model includes attacks that overwrite
 the flash memory chip that stores the computer's firmware, which result in
-malicious code running in System Management Mode~(SMM,~\S~\ref{sec:rings}).
-However, all the official SGX documentation is silent about the implications of
-an attack that compromises the firmware executed by the Intel ME.
+malicious code running in SMM.  However, all the official SGX documentation is
+silent about the implications of an attack that compromises the firmware
+executed by the Intel ME.
 
 \S~\ref{sec:firmware_attacks} states that the ME's firmware is stored in the
 same flash memory as the boot firmware, and enumerates some of ME's special
@@ -346,6 +434,23 @@ Therefore, an ME compromise would be equivalent to the DRAM attacks analyzed in
 \label{sec:sgx_vs_cache_timing_attacks}
 
 \S~\ref{sec:cache_timing}
+
+The SGX documentation bundles
+these attacks together with other side-channel attacks and summarily dismisses
+them as complex physical attacks. However, cache timing attacks can be mounted
+entirely by unprivileged software that measures the latency of its memory
+accesses and determines whether the accesses caused misses in a cache that is
+shared with a victim program. The attacker carefully plans memory accesses to
+reveal the victim's memory access pattern.
+
+Given this pattern of vulnerabilities, ignoring cache timing attacks is
+dangerously akin to ignoring the string of demonstrated attacks which led to
+the deprecation of SHA-1 \cite{nist2014sha1policy, google2014sha1deprecation,
+microsoft2014sha1deprecation}. We must also recognize the imminent threat, and
+remove the root cause of resource sharing between mutually distrustful
+processes.
+
+
 
 The AEX process and the \texttt{ERESUME} instructions do not flush the CPU
 caches. A tracing kernel can take advantage of cache timing to narrow down
@@ -392,31 +497,6 @@ cache-timing attacks.
   }
   \label{fig:cache_partitions}
 \end{figure}
-
-
-\subsubsection{Privileged Software Attacks}
-\label{sec:sgx_vs_privileged_sw_attacks}
-
-
-Modern Intel CPUs feature hyper-threading, which means that each core has two
-(or more) sets of register files and local APICs, presented as logical
-processors running separate threads (see Figure \ref{fig:cpu_core}). The
-threads share the other core resources, such as the fetch and decode units,
-execution units and L1 and L2 caches. SGX does not prevent hyper-threading, so
-a malicious OS kernel or hypervisor can schedule a thread executing enclave
-code and a snooping thread on logical processors on same core. The snooping
-thread can use the processor's high-resolution performance counter
-\cite{petters1999making} to get information about the instructions and memory
-access patterns of the thread executing enclave code.
-
-A promising approach for preventing against hyper-threading leaks is to
-effectively disable hyper-threading, by using \texttt{CPUID} to find out the
-number of logical processors in the current core, and to require the OS to
-schedule threads in the same enclave on all the logical processors. This could
-be implemented by having the main thread spinlock waiting for the other threads
-to start, before any protected computation is performed. However, a malicious
-kernel or hypervisor can de-schedule the other threads after the main thread
-performed the spinlock check, so this defense is not reliable.
 
 
 \subsubsection{DOS Prevention}
