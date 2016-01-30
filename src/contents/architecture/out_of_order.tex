@@ -64,7 +64,7 @@ work exclusively with micro-ops.
 Different types of instructions require different logic circuits, called
 \textit{functional units}. For example, the arithmetic logic unit (ALU), which
 performs arithmetic operations, is completely different from the load and store
-unit, which peforms memory operations. Different circuits can be used at the
+unit, which performs memory operations. Different circuits can be used at the
 same time, so each CPU core can execute multiple micro-ops in parallel.
 
 The core's out-of-order engine receives decoded micro-ops, identifies the
@@ -225,7 +225,7 @@ Modern CPUs also attempt to predict memory read patterns, so they can
 cache. Prefetching minimizes the latency of successfully predicted read
 operations, as their data will already be cached. This is accomplished by
 exposing circuits called prefetchers to memory accesses and cache misses. Each
-prefetcher can recognize a particular access pattern, such as squentially
+prefetcher can recognize a particular access pattern, such as sequentially
 reading an array's elements. When memory accesses match the pattern that a
 prefetcher was built to recognize, the prefetcher loads the cache line
 corresponding to the next memory access in its pattern.

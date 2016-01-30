@@ -25,7 +25,7 @@ assigned a range of DRAM addresses via a standard PCI configuration mechanism,
 but the bus does not restrict a device from performing DMA targeting DRAM
 addresses outside its assigned range.
 
-Without any additonal protection mechanism, an attacker that compromises system
+Without any additional protection mechanism, an attacker that compromises system
 software can take advantage of programmable devices to access any DRAM region,
 yielding capabilities that were traditionally associated with a DRAM bus tap.
 For example, an early implementation of Intel TXT~\cite{grawrock2009txt} was
@@ -113,7 +113,7 @@ than probe equipment, however, as it uses low-power embedded components, such
 as a 200-400MHz execution core, and about 600KB of internal RAM.
 
 The computer and ME firmware are protected by a few security measures. The
-first line of defense is a security check in the firmware's update sevice,
+first line of defense is a security check in the firmware's update service,
 which only accepts firmware updates that have been digitally signed by a
 manufacturer key that is hard-coded in the firmware. This protection can be
 circumvented with relative ease by foregoing the firmware's update services,

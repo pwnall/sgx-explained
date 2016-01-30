@@ -21,10 +21,10 @@ key, and a 128-bit \textit{pre-seed key 0}. The eFUSEs also contain a 128-bit
 \textit{pre-seed key 1} and a 32-bit EPID group ID, which are stored in
 cleartext.
 
-\cite{shanbhogue2015gdxcsgx}, which describes mechanisms for proctecting SGX
+\cite{shanbhogue2015gdxcsgx}, which describes mechanisms for protecting SGX
 keys in the presence of hardware debuggers, states that some hardware secrets
 are stored in ``metal tie-ups and tie-downs'', while other secrets are stored
-in e-fuses or in \textit{physically uncloneable function} (PUF) circuits.
+in e-fuses or in \textit{physically unclonable function} (PUF) circuits.
 \cite{brickell2014hardening, gotze2014provisioning} state that the GWK is
 embedded into a chip using ``metal tie-ups and tie-downs'', and is shared by
 all chips manufactured from the same mask set.
@@ -107,7 +107,7 @@ Another approach that preserves the virtual TPM functionality would entail
 having the ME authenticate the CPU as described in \cite{costan2011spchip}, and
 using a key agreement protocol~(\S~\ref{sec:key_agreement}) to establish a
 secure communication channel over the DMI bus. In this case, the ME firmware is
-reponsible for storing the DAK, as described in \cite{ruan2014intelme}, and
+responsible for storing the DAK, as described in \cite{ruan2014intelme}, and
 can implement a virtual TPM.
 
 The downside of the latter approach is that the ME must be counted as belonging

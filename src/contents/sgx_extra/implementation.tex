@@ -2,7 +2,7 @@
 \label{sec:sgx_implementation_overview}
 
 % ISCA 2015 SGX Slide 204:
-%   "Close Collabaoration between micro-architecture team and ISA team" -- no
+%   "Close Collaboration between micro-architecture team and ISA team" -- no
 %   mention of other teams e.g. the folks responsible for the execution units
 
 An under-documented and overlooked feat achieved by the SGX design is that
@@ -63,7 +63,7 @@ extra MTRR pair.
 
 The SDM states that DMA transactions~(\S~\ref{sec:motherboard}) that target the
 PRM range are aborted by the processor. The SGX patents disclose that the PRMRR
-protection aginst unauthorized DMA is implemented by having the SGX microcode
+protection against unauthorized DMA is implemented by having the SGX microcode
 set up entries in the Source Address Decoder~(SAD) in the uncore CBoxes and in
 the Target Address Decoder~(TAD) in the integrated Memory Controller~(MC).
 
@@ -237,7 +237,7 @@ suitable for implementation purposes.
 \end{table*}
 
 From a cost-performance standpoint, the cost of register memory only seems to
-be justfied for the state used by the PMH to implement SGX's memory access
+be justified for the state used by the PMH to implement SGX's memory access
 checks, which will be discussed in \S~\ref{sec:sgx_access_protection}). The
 other pieces of state listed as CREGs are accessed so infrequently that storing
 them in dedicated SRAM would make very little sense.
