@@ -161,7 +161,7 @@ instructions re-load evicted page contents and metadata back into the EPC and
 EPCM. By induction, we can assume that an EPCM entry matches the enclave
 author's specification when it is evicted. Therefore, if we can prove that the
 EPCM entry that is reloaded from DRAM is equivalent to the entry that was
-evicted, we can conclude that the reloaded enrtry matches the author's
+evicted, we can conclude that the reloaded entry matches the author's
 specification.
 
 A detailed analysis of the cryptographic primitives used by the SGX design to
@@ -191,7 +191,7 @@ abstraction, as long as the contents is mapped at the same virtual address
 
 The rest of this section enumerates the address translation attacks prevented
 by the MAC verification that occurs in \texttt{ELDU} / \texttt{ELDB}. This is
-intended to help the reader can develop some intuition for the reasoning behind
+intended to help the reader develop some intuition for the reasoning behind
 using the page data and all the EPCM fields to compute and verify the MAC tag.
 
 The most obvious attack is prevented by having the MAC cover the contents of

@@ -28,7 +28,7 @@ enclave.
 %   US 8,972,746 B2 - 31:1-10
 
 Although it is believed~\cite{evtyushkin2014isox} that SGX's access checks are
-performed on every memory access checks, Intel's patents disclose that the
+performed on every memory access check, Intel's patents disclose that the
 checks are performed in the Page Miss Handler~(PMH,~\S~\ref{sec:tlbs}), which
 only handles TLB misses.
 
@@ -247,7 +247,7 @@ bits R, W, and X.
 
 Most EPCM entry fields have obvious representations. The exception is the
 LINADDR and ENCLAVESECS fields, described below. These representations explain
-SGX's seemingly aribitrary limit on the size of an enclave's virtual address
+SGX's seemingly arbitrary limit on the size of an enclave's virtual address
 range (ELRANGE).
 
 The SGX patents disclose that the LINADDR field in an EPCM entry stores the
