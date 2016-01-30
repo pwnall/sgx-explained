@@ -11,7 +11,7 @@ pdf/sgx-explained.pdf: $(wildcard src/*) $(wildcard src/contents/*) \
 		$(wildcard src/contents/related/*) \
 		$(wildcard src/contents/security/*) \
 		$(wildcard src/contents/sgx_model/*) \
-		$(wildcard src/contents/sgx_impl/*) \
+		$(wildcard src/contents/sgx_extra/*) \
 		tmp/ pdf/
 	#BIBINPUTS=../tmp rubber --verbose --force --into=tmp/ --pdf src/main.tex
 	latexmk -bibtex -cd -f -pdf -aux-directory=../tmp -output-directory=../tmp src/main.tex

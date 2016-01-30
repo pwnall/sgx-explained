@@ -3,7 +3,7 @@
 
 \S~\ref{sec:system_software_attacks} argues that today's system software is
 virtually guaranteed to have security vulnerabilities. This suggests that a
-cautious secure architecture shoild avoid having the system software in the
+cautious secure architecture should avoid having the system software in the
 TCB.
 
 However, removing the system software from the TCB requires that the
@@ -12,7 +12,7 @@ the untrusted system software. This is typically accomplished by a designing a
 mechanism for loading application code in isolated containers whose contents
 can be certified via software
 attestation~(\S~\ref{sec:generic_software_attestation}). One of the more
-difficult problems faced by these designes is that application software relies
+difficult problems faced by these designs is that application software relies
 on the memory management services provided by the system software, which is now
 untrusted.
 
@@ -72,7 +72,7 @@ We begin with an example of a straight-forward active attack. In this example,
 the application inside a protected container performs a security check to
 decide whether to disclose some sensitive information. Depending on the
 security check's outcome, the enclave code either calls a \texttt{errorOut}
-procedure, or a \texttt{disclose} procedure. The simplest vesion of the attack
+procedure, or a \texttt{disclose} procedure. The simplest version of the attack
 assumes that each procedure's code starts at a page boundary, and takes up less
 than a page. These assumptions are relaxed in more complex versions of the
 attack.
@@ -91,7 +91,7 @@ place, when the application's code jumps to the virtual address of the
   \includegraphics[width=85mm]{figures/active_mapping_attack.pdf}
   \caption{
     An example of an active memory mapping attack. The application's author
-    intends to peform a security check, and only disclose a piece of sensitive
+    intends to perform a security check, and only disclose a piece of sensitive
     information if the check passes. Malicious system software maps the virtual
     address of the procedure called when the security check fails to a DRAM
     page that contains the procedure that discloses the sensitive information,
@@ -110,7 +110,7 @@ container. However, a naive protection measure based on address tracking can be
 defeated by a more subtle active attack that relies on the architectural
 support for page swapping. Figure~\ref{fig:swap_mapping_attack} illustrates an
 attack that does not modify the application's page tables, but produces the
-same corrputed CPU view of the application as the straight-forward attack
+same corrupted CPU view of the application as the straight-forward attack
 described above.
 
 \begin{figure}[hbt]
@@ -140,7 +140,7 @@ The subtle attack described in this section can be defeated by
 cryptographically binding the contents of each page that is evicted from DRAM
 to the virtual address that the page should be mapped to. The cryptographic
 primitive (\S~\ref{sec:crypto_primitives}) used to perform the binding must
-obiously guarantee integrity. Furthermore, it must also guarantee freshness, in
+obviously guarantee integrity. Furthermore, it must also guarantee freshness, in
 order to foil replay attacks where the system software ``undoes'' an
 application's writes by evicting one of its DRAM pages to disk and bringing in
 an older version of the same page.
@@ -175,7 +175,7 @@ responsible for invalidating TLB entries across all the cores when it modifies
 the page tables.
 
 Malicious system software can take advantage of the design decisions explained
-above by carring out the following attack. While the same software used in the
+above by carrying out the following attack. While the same software used in the
 previous examples is executing on a core, the system software executes on a
 different core and evicts the \texttt{errorOut} and \texttt{disclose} pages
 from DRAM. Like in the previous attack, the system software loads the

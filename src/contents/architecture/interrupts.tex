@@ -19,7 +19,7 @@ section outlines the interrupt triggering and handling processes described
 in the SDM.
 
 % Advanced Programmable Interrupt Controller (APIC): SDM S 10
-% Message Signalled Interrupts (MSI): SDM S 10.11
+% Message Signaled Interrupts (MSI): SDM S 10.11
 
 Peripherals use bus-specific protocols to signal interrupts. For example, PCIe
 relies on \textit{Message Signaled Interrupts} (MSI), which are memory writes
@@ -66,6 +66,6 @@ performs context switches.
 
 System software can cause an interrupt on any logical processor by writing the
 target processor's APIC ID into the \textit{Interrupt Command Register} (ICR)
-of the LAPIC associated with the logical processor that the software is runing
+of the LAPIC associated with the logical processor that the software is running
 on. These interrupts, called \textit{Inter-Processor Interrupts} (IPI), are
 needed to implement TLB shoot-downs (\S~\ref{sec:tlbs}).

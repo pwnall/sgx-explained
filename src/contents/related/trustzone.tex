@@ -42,7 +42,7 @@ that performs the context switches needed to transition an execution core
 between the two worlds. The monitor must also handle hardware exceptions, such
 as interrupts, and route them to the appropriate world.
 
-The TrustZone design gives the secure world's monitor unrestricted acces to the
+The TrustZone design gives the secure world's monitor unrestricted access to the
 normal world, so the monitor can implement inter-process communication (IPC)
 between the software in the two worlds. Specifically, the monitor can issue
 bus accesses using both secure and non-secure addresses. In general, the secure
@@ -73,7 +73,7 @@ memory space is partitioned between the two worlds, so no aliasing can occur.
 The TrustZone documentation describes two TLB configurations. If many context
 switches between worlds are expected, the TLB IP blocks can be configured to
 include the secure bit in the address tag. Alternatively, the secure bit can be
-ommitted from the TLBs, as long as the monitor flushes the TLBs while
+omitted from the TLBs, as long as the monitor flushes the TLBs while
 performing a context switch between the two worlds.
 
 The hardware modules that do not consume TrustZone's address bit are expected

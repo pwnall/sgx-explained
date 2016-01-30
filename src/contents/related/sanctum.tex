@@ -21,7 +21,7 @@ same measures that isolate containers from each other.
 Sanctum relies on a trusted security monitor, which is the first piece of
 firmware executed by the processor, and has the same security properties as
 Aegis' security kernel. The monitor is measured by bootstrap code in the
-processor's ROM, and its cryptographich hash is included in the software
+processor's ROM, and its cryptographic hash is included in the software
 attestation measurement. The monitor verifies the operating system's resource
 allocation decisions. For example it ensures that no DRAM region is ever
 accessible to two different containers.

@@ -47,7 +47,7 @@ store the CPU's attestation key in untrusted memory.
 \subsubsection{Physical Attacks}
 \label{sec:sgx_vs_physical_attacks}
 
-We beging by discussing SGX's resilience to the physical attacks described in
+We begin by discussing SGX's resilience to the physical attacks described in
 \S~\ref{sec:physical_attacks}. Unfortunately, this section is set to disappoint
 readers expecting definitive statements. The lack of publicly available details
 around the hardware implementation aspects of SGX precludes any rigorous
@@ -59,7 +59,7 @@ model is not trivially circumvented by a port
 attack~(\S~\ref{sec:physical_port_attacks}). We are particularly concerned
 about the Generic Debug eXternal
 Connection~(GDXC)~\cite{yuffe2011sandybridge, intel2011gdxc}, which collects
-and filters the data transfered by the uncore's ring bus
+and filters the data transferred by the uncore's ring bus
 (\S~\ref{sec:cache_coherence}), and reports it to an external debugger.
 
 The SGX memory protection measures are implemented at the core level, in the
@@ -87,7 +87,7 @@ MEE does not protect the addresses of the DRAM locations accessed when cache
 lines holding EPC data are evicted or loaded. This provides an opportunity for
 a malicious computer owner to observe an enclave's memory access patterns by
 combining a DRAM address line bus tap with carefully crafted system software
-that creates artifical pressure on the last-level
+that creates artificial pressure on the last-level
 cache~(LLC~,\S~\ref{sec:caching}) lines that hold the enclave's EPC pages.
 
 On a brighter note, as mentioned in \S~\ref{sec:physical_bus_attacks}, we are

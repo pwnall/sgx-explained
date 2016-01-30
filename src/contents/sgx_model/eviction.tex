@@ -94,7 +94,7 @@ targeting the deallocated EPC.
 
 System software can cause a logical processor to exit an enclave by sending it
 an Inter-Processor Interrupt (IPI,~\S~\ref{sec:interrupts}), which will trigger
-an AEX when received. Essentially, this is a very coarse-grained TLB shoot down.
+an AEX when received. Essentially, this is a very coarse-grained TLB shootdown.
 
 SGX does not trust system software. Therefore, before marking an EPC page's
 EPCM entry as free, the SGX implementation must ensure that the OS kernel has

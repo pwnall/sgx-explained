@@ -112,7 +112,7 @@ In most countries, the government issues ID cards for its citizens, and
 therefore acts as as a certificate authority. An ID card, shown in
 Figure~\ref{fig:id_card_as_certificate}, is a certificate that binds a
 subject's identity, which is a full legal name, to the subject's physical
-appearence, which is used as a public key.
+appearance, which is used as a public key.
 
 The CA system is very similar to the identity document (also known as ID card)
 systems used to establish a person's identity, and a comparison between the two
@@ -123,13 +123,13 @@ may help further the reader's understanding of the concepts in the CA system.
   \includegraphics[width=85mm]{figures/id_card_as_certificate.pdf}
   \caption{
     An ID card is a certificate that binds a subject's full legal name
-    (identity) to the subject's physical appeareance, which acts as a public
+    (identity) to the subject's physical appearance, which acts as a public
     key.
   }
   \label{fig:id_card_as_certificate}
 \end{figure}
 
-Each government's ID card issuing operations are regulared by laws, so an ID
+Each government's ID card issuing operations are regulated by laws, so an ID
 card's issue date can be used to track down the laws that make up its
 certification policy. Last, the security of ID cards does not (yet) rely on
 cryptographic primitives. Instead, ID cards include physical security measures
@@ -207,7 +207,7 @@ example, Eve can create a message, encrypt it with K2, and then send it to Bob.
 As Bob thinks that K2 is a shared secret key established between himself and
 Alice, he will believe that Eve's message comes from Alice.
 
-MITM attacks on key agrement protocols can be foiled by authenticating the
+MITM attacks on key agreement protocols can be foiled by authenticating the
 party who sends the last message in the protocol (in our examples, Bob) and
 having it sign the key agreement messages. When a CA system is in place, Bob
 uses his public key to sign the messages in the key agreement and also sends

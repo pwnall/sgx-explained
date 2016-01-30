@@ -346,7 +346,7 @@ and Not-Write through (NW) bits in Control Register 0
 entries, namely Page-level Cache Disable (PCD) and Page-level Write-Through
 (PWT).
 
-The MTRRs were intended to be configurd by the computer's firmware during the
+The MTRRs were intended to be configured by the computer's firmware during the
 boot sequence. Fixed MTRRs cover pre-determined ranges of memory, such as the
 memory areas that had special semantics in the computers using 16-bit Intel
 processors. The ranges covered by \textit{variable MTRRs} can be configured by
@@ -517,7 +517,7 @@ known at that time, and can be used for indexing.
     changed by address translation, so the page tables do not impact L1 cache
     placement. The page tables do impact L2 and L3 cache placement. Using large
     pages (2~MB or 1~GB) is not sufficient to make L3 cache placement
-    independent of the page tables, because of the LLC slice hashing fuction
+    independent of the page tables, because of the LLC slice hashing function
     (\S~\ref{sec:cache_coherence}).
   }
   \label{fig:caching_and_paging}

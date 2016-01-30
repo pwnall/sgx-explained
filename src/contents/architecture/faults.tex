@@ -82,7 +82,7 @@ perform a disallowed action, such as setting the CR3 register from ring 3.
 A \textit{page fault}~(\#PF) occurs when address translation encounters a page
 table entry whose P flag is 0, or when the memory inside a page is accessed in
 way that is inconsistent with the access bits in the page table entry. For
-example, when ring 3 softare accesses the memory inside a page whose S bit is
+example, when ring 3 software accesses the memory inside a page whose S bit is
 set, the result of the memory access is \#PF.
 
 % Interrupt Descriptor Table (IDT): SDM S 6.10
