@@ -1,4 +1,4 @@
-\subsection{The Memory Layout of an SGX Enclave}
+\HeadingLevelB{The Memory Layout of an SGX Enclave}
 \label{sec:sgx_enclave_layout}
 
 SGX was designed to minimize the effort required to convert application code to
@@ -16,7 +16,7 @@ however, that the SGX design does not explicitly prohibit multiple application
 processes from sharing an enclave.
 
 
-\subsubsection{The Enclave Linear Address Range (ELRANGE)}
+\HeadingLevelC{The Enclave Linear Address Range (ELRANGE)}
 \label{sec:sgx_elrange}
 
 % SGX Enclave Control Structure (SECS): SDM S 38.7
@@ -67,7 +67,7 @@ code that expects to work with pointers to memory buffers managed by code in the
 host process.
 
 
-\subsubsection{SGX Enclave Attributes}
+\HeadingLevelC{SGX Enclave Attributes}
 \label{sec:sgx_secs_attributes}
 
 The execution environment of an enclave is heavily influenced by the value of
@@ -129,7 +129,7 @@ flag is set to true at a certain point in the enclave lifecycle, which will be
 summarized in \S~\ref{sec:sgx_enclave_lifecycle}.
 
 
-\subsubsection{Address Translation for SGX Enclaves}
+\HeadingLevelC{Address Translation for SGX Enclaves}
 \label{sec:sgx_paging}
 
 % Access Control Requirements: SDM S 38.3
@@ -214,7 +214,7 @@ do not trigger any of the checks above, and can be directly accessed by the
 system software.
 
 
-\subsubsection{The Thread Control Structure (TCS)}
+\HeadingLevelC{The Thread Control Structure (TCS)}
 \label{sec:sgx_tcs}
 
 % Thread Control Structure (TCS): SDM S 38.8, S 38.8.{1,2,3,4}
@@ -255,7 +255,7 @@ registers~(\S~\ref{sec:segments}), which typically point to Thread Local
 Storage (TLS).
 
 
-\subsubsection{The State Save Area (SSA)}
+\HeadingLevelC{The State Save Area (SSA)}
 \label{sec:sgx_ssa}
 
 % Interactions with the Processor Extended State and Miscellaneous State:

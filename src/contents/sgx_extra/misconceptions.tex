@@ -1,4 +1,4 @@
-\subsection{Misconceptions about SGX}
+\HeadingLevelB{Misconceptions about SGX}
 \label{sec:sgx_misconceptions}
 
 This section sets out to disprove a few common misconceptions about SGX and its
@@ -8,7 +8,7 @@ dispute commonly voiced concerns that might be used by Intel to justify its
 licensing scheme.
 
 
-\subsubsection{Software Side-Channel Attacks and SGX}
+\HeadingLevelC{Software Side-Channel Attacks and SGX}
 
 The SGX design reuses a few terms from the Trusted Platform
 Module~(TPM,~\S~\ref{sec:tpm}) design. This helps software developers familiar
@@ -81,7 +81,7 @@ is safe to assume that the Quoting Enclave will be studied by many motivated
 attackers, and that any information leak will be exploited.
 
 
-\subsubsection{Enclaves Cannot DOS the System Software}
+\HeadingLevelC{Enclaves Cannot DOS the System Software}
 % NOTE: This is a slightly edited answer to a question we received.
 
 SGX enclaves execute at the lowest privilege level (user mode / ring 3), so
@@ -128,7 +128,7 @@ always preempt enclave threads, using one of the methods described above.
 %above, and then terminate the enclave.
 
 
-\subsection{Interaction with Anti-Virus Software}
+\HeadingLevelB{Interaction with Anti-Virus Software}
 % NOTE: This is a slightly edited answer to a question we received.
 
 Today's anti-virus (AV) systems are glorified pattern matchers. AV software

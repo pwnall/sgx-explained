@@ -1,4 +1,4 @@
-\subsection{SGX Enclave Versioning Support}
+\HeadingLevelB{SGX Enclave Versioning Support}
 \label{sec:sgx_versioning}
 
 The software attestation model~(\S~\ref{sec:generic_software_attestation})
@@ -68,7 +68,7 @@ immutable, such as when the secrets are encryption keys obtained via software
 attestation
 
 
-\subsubsection{Enclave Certificates}
+\HeadingLevelC{Enclave Certificates}
 \label{sec:sgx_sigstruct}
 \label{sec:sgx_mrsigner}
 
@@ -166,7 +166,7 @@ simplified algorithm also requires the fields Q1 and Q2 in the RSA signature,
 which are also described in \S~\ref{sec:sgx_rsa_check}.
 
 
-\subsubsection{Certificate-Based Enclave Identity}
+\HeadingLevelC{Certificate-Based Enclave Identity}
 \label{sec:sgx_certificate_identity}
 
 An enclave's identity is determined by three fields in its
@@ -223,7 +223,7 @@ build system to allocate a new SVN for every software build that it produces,
 and each code change triggers a build.
 
 
-\subsubsection{CPU Security Version Numbers}
+\HeadingLevelC{CPU Security Version Numbers}
 \label{sec:sgx_cpusvn}
 
 % Security Version Numbers: SDM S 39.4.2
@@ -251,7 +251,7 @@ SGX's implementation. This structure is consistent with all the statements made
 in the SDM.
 
 
-\subsubsection{Establishing an Enclave's Identity}
+\HeadingLevelC{Establishing an Enclave's Identity}
 \label{sec:sgx_einit_sigstruct}
 
 When the \texttt{EINIT}~(\S~\ref{sec:sgx_einit_overview}) instruction prepares
@@ -346,7 +346,7 @@ pseudocode seems to imply that the SGX implementation only checks that
 VENDOR is either zero or 0x8086.
 
 
-\subsubsection{Enclave Key Derivation}
+\HeadingLevelC{Enclave Key Derivation}
 \label{sec:sgx_egetkey}
 
 SGX's secret migration mechanism is based on the symmetric key derivation

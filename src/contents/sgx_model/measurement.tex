@@ -1,4 +1,4 @@
-\subsection{SGX Enclave Measurement}
+\HeadingLevelB{SGX Enclave Measurement}
 \label{sec:sgx_measurement}
 \label{sec:sgx_mrenclave}
 
@@ -52,7 +52,7 @@ field stores the internal state and final output of the 256-bit SHA-2 secure
 hash function.
 
 
-\subsubsection{Measuring \texttt{ECREATE}}
+\HeadingLevelC{Measuring \texttt{ECREATE}}
 \label{sec:sgx_ecreate_mrenclave}
 
 % ECREATE: SDM S 41.3
@@ -101,7 +101,7 @@ which could cause the SSA contents written by an AEX to overwrite the enclave's
 code or data.
 
 
-\subsubsection{Measuring Enclave Attributes}
+\HeadingLevelC{Measuring Enclave Attributes}
 \label{sec:sgx_ecreate_mrenclave_no_attributes}
 
 The enclave's measurement does not include the enclave
@@ -139,7 +139,7 @@ architectural extensions to be used independently will result in $2^n$ valid
 measurements.
 
 
-\subsubsection{Measuring \texttt{EADD}}
+\HeadingLevelC{Measuring \texttt{EADD}}
 \label{sec:sgx_eadd_mrenclave}
 
 % EADD and EEXTEND Interaction: SDM S 39.1.1
@@ -212,7 +212,7 @@ pages, but it does not guarantee that any of the code pages contains the
 code supplied by the enclave's author.
 
 
-\subsubsection{Measuring \texttt{EEXTEND}}
+\HeadingLevelC{Measuring \texttt{EEXTEND}}
 \label{sec:sgx_eextend}
 
 % EEXTEND: SDM S 41.3
@@ -312,7 +312,7 @@ TCS fields that represent enclave addresses, which are OENTRY, OFSBASGX and
 OGSBASGX.
 
 
-\subsubsection{Measuring \texttt{EINIT}}
+\HeadingLevelC{Measuring \texttt{EINIT}}
 
 % EINIT: SDM S 41.3
 

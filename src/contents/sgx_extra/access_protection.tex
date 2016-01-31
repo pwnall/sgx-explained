@@ -1,4 +1,4 @@
-\subsection{SGX Memory Access Protection}
+\HeadingLevelB{SGX Memory Access Protection}
 \label{sec:sgx_access_protection}
 
 SGX guarantees that the software inside an enclave is isolated from all the
@@ -33,7 +33,7 @@ checks are performed in the Page Miss Handler~(PMH,~\S~\ref{sec:tlbs}), which
 only handles TLB misses.
 
 
-\subsubsection{Functional Description}
+\HeadingLevelC{Functional Description}
 \label{sec:sgx_access_concepts}
 
 The intuition behind SGX's memory access protections can be built by
@@ -233,7 +233,7 @@ Specifically, the TLB entry bits P, W, and XD can be AND-ed with the EPCM entry
 bits R, W, and X.
 
 
-\subsubsection{EPCM Entry Representation}
+\HeadingLevelC{EPCM Entry Representation}
 \label{sec:sgx_epcm_format}
 
 % EPC and EPCM
@@ -276,7 +276,7 @@ supported by the CPU. The ISCA 2015 SGX tutorial slides mention an EPC size of
 today's typical processors, which is $2^{36}$ - $2^{40}$ bytes.
 
 
-\subsubsection{PMH Hardware Modifications}
+\HeadingLevelC{PMH Hardware Modifications}
 \label{sec:sgx_pmh_hardware}
 
 % SERR register implemented in PMH

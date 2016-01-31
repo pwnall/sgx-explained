@@ -1,4 +1,4 @@
-\subsection{Privilege Level Switching}
+\HeadingLevelB{Privilege Level Switching}
 \label{sec:privilege_switches}
 
 Any architecture that has software privilege levels must provide a method for
@@ -38,7 +38,7 @@ software, summarized in Figure~\ref{fig:cpu_ring_switch}.
 \end{figure}
 
 
-\subsubsection{System Calls}
+\HeadingLevelC{System Calls}
 \label{sec:syscalls}
 
 % Fast System Calls in 64-Bit Mode: SDM S 5.8.8
@@ -64,7 +64,7 @@ design can get away without referencing a stack because kernel calls are not
 recursive.
 
 
-\subsubsection{Faults}
+\HeadingLevelC{Faults}
 \label{sec:faults}
 
 % Interrupt and Exception Handling: SDM S 6.1, S 6.2
@@ -175,7 +175,7 @@ encountered a bug. It follows that all fault handlers must be trusted to not
 leak or tamper with the information in an application's execution context.
 
 
-\subsubsection{VMX Privilege Level Switching}
+\HeadingLevelC{VMX Privilege Level Switching}
 \label{sec:vmx}
 
 % Life Cycle of VMM Software: SDM S 23.4

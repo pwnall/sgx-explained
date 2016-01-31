@@ -1,4 +1,4 @@
-\subsection{SGX Software Attestation}
+\HeadingLevelB{SGX Software Attestation}
 \label{sec:sgx_attestation}
 
 The software attestation scheme implemented by SGX follows the principles
@@ -76,7 +76,7 @@ software licensing system. \S~\ref{sec:sgx_licensing} briefly discusses the
 implications, should this turn out to be true.
 
 
-\subsubsection{Local Attestation}
+\HeadingLevelC{Local Attestation}
 \label{sec:sgx_ereport}
 
 % Using REPORTs for Local Attestation: SDM S 39.4.3.2
@@ -182,7 +182,7 @@ also saved in the attestation report, but it is not covered by the MAC tag.
 %   US 8,972,746 B2 - 21:64-67
 
 
-\subsubsection{Remote Attestation}
+\HeadingLevelC{Remote Attestation}
 \label{sec:sgx_quoting_enclave}
 
 The SDM paints a complete picture of the local attestation mechanism that was
@@ -296,7 +296,7 @@ accurate picture of the key usage in SGX's software attestation, which entails
 that Intel can trace each attestation key to a specific piece of silicon.
 
 
-\subsubsection{Enclave Attributes Access Control}
+\HeadingLevelC{Enclave Attributes Access Control}
 \label{sec:sgx_launch_enclave}
 
 % ATTRIBUTES: SDM S 38.7.1
@@ -431,7 +431,7 @@ key that is used to bypass the EINITTTOKEN checks. This restriction appears to
 be redundant, as the same restriction could be enforced in the Launch Enclave.
 
 
-\subsubsection{Licensing}
+\HeadingLevelC{Licensing}
 \label{sec:sgx_licensing}
 
 The SGX patents~\cite{intel2013patent1, intel2013patent2} disclose that

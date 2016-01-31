@@ -1,4 +1,4 @@
-\subsection{Software Attacks on Peripherals}
+\HeadingLevelB{Software Attacks on Peripherals}
 \label{sec:device_attacks}
 
 Threat models for secure architectures generally only consider software attacks
@@ -15,7 +15,7 @@ matters in cloud computing scenarios, where physical attacks are significantly
 more expensive than software attacks.
 
 
-\subsubsection{PCI Express Attacks}
+\HeadingLevelC{PCI Express Attacks}
 \label{sec:pcie_attacks}
 
 The PCIe bus~(\S~\ref{sec:motherboard}) allows any device connected to the bus
@@ -35,7 +35,7 @@ adding extra security checks in the DMA bus arbiter. \S~\ref{sec:intel_txt}
 provides a more detailed description of Intel TXT.
 
 
-\subsubsection{DRAM Attacks}
+\HeadingLevelC{DRAM Attacks}
 \label{sec:rowhammer_attack}
 
 The rowhammer DRAM bit-flipping attack~\cite{kim2014rowhammer,
@@ -64,7 +64,7 @@ engineers' invalid assumptions to obtain capabilities that are normally
 associated with an active DRAM bus attack.
 
 
-\subsubsection{The Performance Monitoring Side Channel}
+\HeadingLevelC{The Performance Monitoring Side Channel}
 \label{sec:perfmon_attacks}
 
 % On Die Digital Thermal Sensors: SDM S 14.7.5
@@ -83,7 +83,7 @@ information needed to carry out a power analysis attack, which normally
 requires physical access to the victim computer and specialized equipment.
 
 
-\subsubsection{Attacks on the Boot Firmware and Intel ME}
+\HeadingLevelC{Attacks on the Boot Firmware and Intel ME}
 \label{sec:firmware_attacks}
 
 Virtually all motherboards store the firmware used to boot the computer in a
@@ -142,7 +142,7 @@ assortment of security issues that allowed an attacker to completely take over
 a computer whose ME firmware contained the AMT application.
 
 
-\subsubsection{Accounting for Software Attacks on Peripherals}
+\HeadingLevelC{Accounting for Software Attacks on Peripherals}
 
 The attacks described in this section show that a system whose threat model
 assumes no software attacks must be designed with an understanding of all the

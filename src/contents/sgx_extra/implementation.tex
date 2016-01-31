@@ -1,4 +1,4 @@
-\subsection{SGX Implementation Overview}
+\HeadingLevelB{SGX Implementation Overview}
 \label{sec:sgx_implementation_overview}
 
 % ISCA 2015 SGX Slide 204:
@@ -18,7 +18,7 @@ microcode~(\S~\ref{sec:microcode}), which supports a much higher development
 speed than the chip's electrical circuitry.
 
 
-\subsubsection{Execution Core Modifications}
+\HeadingLevelC{Execution Core Modifications}
 \label{sec:sgx_core_modifications}
 
 % Minimal PMH support for enclaves is MTRR to protect CMA access.
@@ -55,7 +55,7 @@ memory~(\S~\ref{sec:memory_io}). Therefore, the PRMRR can be represented as an
 extra MTRR pair.
 
 
-\subsubsection{Uncore Modifications}
+\HeadingLevelC{Uncore Modifications}
 \label{sec:sgx_uncore_modifications}
 
 % SAD/TAD entry protects against DMA snoops.
@@ -134,7 +134,7 @@ Quick-Path Interconnect~(QPI,~\S~\ref{sec:motherboard}) traffic using
 link-layer encryption.
 
 
-\subsubsection{Microcode Modifications}
+\HeadingLevelC{Microcode Modifications}
 \label{sec:sgx_microcode_modifications}
 
 % Most of SGX is implemented in microcode

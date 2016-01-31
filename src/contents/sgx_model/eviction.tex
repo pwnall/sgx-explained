@@ -1,4 +1,4 @@
-\subsection{EPC Page Eviction}
+\HeadingLevelB{EPC Page Eviction}
 \label{sec:sgx_epc_eviction}
 
 Modern OS kernels take advantage of address translation~(\S~\ref{sec:paging})
@@ -71,7 +71,7 @@ the hypervisor implements its own EPC page swapping. Therefore, ``OS kernel''
 should really be read as ``the system software that performs EPC paging''.
 
 
-\subsubsection{Page Eviction and the TLBs}
+\HeadingLevelC{Page Eviction and the TLBs}
 \label{sec:sgx_eblock}
 
 One of the least promoted accomplishments of SGX is that it does not add any
@@ -177,7 +177,7 @@ possibly target it. Therefore, these instructions do not require a mechanism
 similar to \texttt{EBLOCK} or \texttt{ETRACK}.
 
 
-\subsubsection{The Version Array (VA)}
+\HeadingLevelC{The Version Array (VA)}
 \label{sec:sgx_va}
 \label{sec:sgx_epa}
 
@@ -224,7 +224,7 @@ software cannot access a VA's contents, neither the use of a special value, nor
 the value itself is architectural.
 
 
-\subsubsection{Enclave IDs}
+\HeadingLevelC{Enclave IDs}
 \label{sec:sgx_eid}
 
 The \texttt{EWB} and \texttt{ELDU} / \texttt{ELDB} instructions use an
@@ -269,7 +269,7 @@ the EID's value suitable for identifying an enclave throughout its lifetime,
 even across evictions of its SECS page from the EPC.
 
 
-\subsubsection{Evicting an EPC Page}
+\HeadingLevelC{Evicting an EPC Page}
 \label{sec:sgx_ewb}
 
 The system software evicts an EPC page using the \texttt{EWB} instruction,
@@ -389,7 +389,7 @@ in the LINADDR field.
 %   US 8,972,746 B2 - 23:13-67, 24:1-19, 24:31-46, 24:65-67,
 
 
-\subsubsection{Loading an Evicted Page Back into EPC}
+\HeadingLevelC{Loading an Evicted Page Back into EPC}
 
 % AEX Operational Detail: SDM S 40.4.1
 
@@ -430,7 +430,7 @@ the page swapping-based active address translation attack described in
 \S~\ref{sec:page_swapping_attacks}.
 
 
-\subsubsection{Eviction Trees}
+\HeadingLevelC{Eviction Trees}
 \label{sec:sgx_eviction_trees}
 
 The SGX design allows VA pages to be evicted from the EPC, just like enclave

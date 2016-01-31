@@ -47,7 +47,14 @@
 
 \setlength{\columnsep}{.25in}
 
+
 \begin{document}
+
+% A proper content heading abstraction system, inspired by HTML.
+\newcommand{\HeadingLevelA}[1]{\section{#1}}
+\newcommand{\HeadingLevelB}[1]{\subsection{#1}}
+\newcommand{\HeadingLevelC}[1]{\subsubsection{#1}}
+
 \title{Intel SGX Explained}
 \author{Victor Costan and Srinivas Devadas \\
         victor@costan.us, devadas@mit.edu \\

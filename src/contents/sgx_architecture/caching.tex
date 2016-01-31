@@ -1,4 +1,4 @@
-\subsection{Cache Memories}
+\HeadingLevelB{Cache Memories}
 \label{sec:caching}
 
 At the time of this writing, CPU cores can process data $\approx 200\times$
@@ -25,7 +25,7 @@ implementation concepts. \S~\ref{sec:cache_timing} describes cache timing
 attacks.
 
 
-\subsubsection{Caching Principles}
+\HeadingLevelC{Caching Principles}
 \label{sec:caching_intro}
 
 At a high level, caches exploit the high locality in the memory access patterns
@@ -125,7 +125,7 @@ translation caches, described in \S~\ref{sec:tlbs} below, can only be executed
 at ring 0.
 
 
-\subsubsection{Cache Organization}
+\HeadingLevelC{Cache Organization}
 \label{sec:cache_org}
 
 In the Intel architecture, caches are completely implemented in hardware,
@@ -175,7 +175,7 @@ Figure~\ref{fig:cpu_cache} shows the cache structure and lookup process.
 \end{figure}
 
 
-\subsubsection{Cache Coherence}
+\HeadingLevelC{Cache Coherence}
 \label{sec:cache_coherence}
 
 The Intel architecture was designed to support application software that was
@@ -275,7 +275,7 @@ transfers go through both the SAD and TAD, which can be configured to abort DMA
 transfers targeting protected DRAM ranges.
 
 
-\subsubsection{Caching and Memory-Mapped Devices}
+\HeadingLevelC{Caching and Memory-Mapped Devices}
 \label{sec:memory_io}
 \label{sec:cacheability_config}
 
@@ -415,7 +415,7 @@ so the system software that controls the page tables can specify caching
 behavior at a very fine granularity.
 
 
-\subsubsection{Caches and Address Translation}
+\HeadingLevelC{Caches and Address Translation}
 \label{sec:tlbs}
 
 Modern system software relies on address translation (\S~\ref{sec:paging}).

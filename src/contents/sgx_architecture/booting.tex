@@ -1,4 +1,4 @@
-\subsection{Platform Initialization (Booting)}
+\HeadingLevelB{Platform Initialization (Booting)}
 \label{sec:booting}
 
 % Outcome: analyzing the chain of trust in a hardware/software co-design
@@ -19,7 +19,7 @@ the motherboard and components in a computer, this section focuses on the
 high-level flow described by Intel's documentation.
 
 
-\subsubsection{The UEFI Standard}
+\HeadingLevelC{The UEFI Standard}
 \label{sec:efi}
 
 The firmware in recent computers with Intel processors implements the
@@ -78,7 +78,7 @@ the DRAM contents, and then directly executes the operating system's wake-up
 handler.
 
 
-\subsubsection{SEC on Intel Platforms}
+\HeadingLevelC{SEC on Intel Platforms}
 \label{sec:uefi_sec_details}
 
 % Power Sequencing and Reset Signal Timings: X99 Chipset datasheet S 8.5
@@ -184,7 +184,7 @@ security checks, it is executed. Processors that support Intel TXT only accept
 Intel-signed ACMs \cite[p. 92]{futral2013servertxt}.
 
 
-\subsubsection{PEI on Intel Platforms}
+\HeadingLevelC{PEI on Intel Platforms}
 \label{sec:uefi_pei_details}
 
 \cite{intel2010booting} and \cite{coreboot2015manual} describe the

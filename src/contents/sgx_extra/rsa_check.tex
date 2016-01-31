@@ -1,4 +1,4 @@
-\subsection{Enclave Signature Verification}
+\HeadingLevelB{Enclave Signature Verification}
 \label{sec:sgx_rsa_check}
 
 Let $m$ be the public modulus in the enclave author's RSA key, and $s$ be the
@@ -62,7 +62,7 @@ The rest of this section proves the correctness of the algorithm in
 Figure~\ref{fig:sgx_sig_verification}.
 
 
-\subsubsection{Analysis of Steps 1 - 4}
+\HeadingLevelC{Analysis of Steps 1 - 4}
 
 Steps $1 - 4$ in the algorithm check the correctness of $q_1$ and use it
 to compute $s^2 \bmod m$. The key observation to understanding these steps is
@@ -86,7 +86,7 @@ according to the computations performed in steps 1 and 3,
 $w = s^2 - q_1 \times m$. Therefore, we can conclude that $w = s^2 \bmod p$.
 
 
-\subsubsection{Analysis of Steps 5 - 8}
+\HeadingLevelC{Analysis of Steps 5 - 8}
 
 Similarly, steps $5 - 8$ in the algorithm check the correctness of $q_2$ and
 use it to compute $w \times s \bmod m$. The key observation here is that
@@ -141,7 +141,7 @@ z & = w \times s \bmod m \\
 \end{align*}
 
 
-\subsubsection{Implementation Requirements}
+\HeadingLevelC{Implementation Requirements}
 
 The main advantage of the algorithm in Figure~\ref{fig:sgx_sig_verification} is
 that it relies on the implementation of very few arithmetic operations on large

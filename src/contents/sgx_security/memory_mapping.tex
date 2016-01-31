@@ -1,4 +1,4 @@
-\subsection{Address Translation Attacks}
+\HeadingLevelB{Address Translation Attacks}
 \label{sec:address_translation_attacks}
 
 \S~\ref{sec:system_software_attacks} argues that today's system software is
@@ -29,7 +29,7 @@ of the mechanisms in SGX are aimed at dealing with a subset of the attacks
 described here.
 
 
-\subsubsection{Passive Attacks}
+\HeadingLevelC{Passive Attacks}
 \label{sec:fault_tracking_attacks}
 
 System software uses the the CPU's address translation feature
@@ -59,7 +59,7 @@ the outline of a JPEG image is inferred while the image is decompressed inside
 a container protected by SGX's isolation guarantees.
 
 
-\subsubsection{Straightforward Active Attacks}
+\HeadingLevelC{Straightforward Active Attacks}
 \label{sec:memory_mapping_attacks}
 
 We define active address translation attacks to be the class of attacks where
@@ -101,7 +101,7 @@ place, when the application's code jumps to the virtual address of the
 \end{figure}
 
 
-\subsubsection{Active Attacks Using Page Swapping}
+\HeadingLevelC{Active Attacks Using Page Swapping}
 \label{sec:page_swapping_attacks}
 
 The most obvious active attacks on memory mapping can be defeated by tracking
@@ -146,7 +146,7 @@ application's writes by evicting one of its DRAM pages to disk and bringing in
 an older version of the same page.
 
 
-\subsubsection{Active Attacks Based on TLBs}
+\HeadingLevelC{Active Attacks Based on TLBs}
 \label{sec:tlb_mapping_attacks}
 
 Today's multi-core architectures can be subjected to an even more subtle active

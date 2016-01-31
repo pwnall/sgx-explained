@@ -1,4 +1,4 @@
-\subsection{CPU Microcode}
+\HeadingLevelB{CPU Microcode}
 \label{sec:microcode}
 
 % Outcome: evaluating the cost of architectural modifications
@@ -22,7 +22,7 @@ following subsections summarize information gleaned from Intel's patents and
 other researchers' findings.
 
 
-\subsubsection{The Role of Microcode}
+\HeadingLevelC{The Role of Microcode}
 \label{sec:microcode_role}
 
 % Legacy Decode Pipeline (Instruction Decode): Optimization S 2.2.2.1
@@ -127,7 +127,7 @@ supporting evidence from Intel's assigned patents and published patent
 applications.
 
 
-\subsubsection{Microcode Structure}
+\HeadingLevelC{Microcode Structure}
 \label{sec:microcode_structure}
 
 % Arch feature implementation strategy
@@ -223,7 +223,7 @@ special loads and stores encode commands and input parameters. For example,
 stores to a certain range of addresses flush specific TLB sets.
 
 
-\subsubsection{Microcode and Address Translation}
+\HeadingLevelC{Microcode and Address Translation}
 \label{sec:microcode_pmh}
 
 % Microcode gets executed on CR3 write.
@@ -345,7 +345,7 @@ key role in estimating the implementation complexity of architectural
 modifications targeting the processor's address translation mechanism.
 
 
-\subsubsection{Microcode and Booting}
+\HeadingLevelC{Microcode and Booting}
 \label{sec:microcode_sec}
 
 The SDM states that microcode performs the Built-In Self Test (BIST,
@@ -412,7 +412,7 @@ implies that the AP initialization described in \S~\ref{sec:uefi_sec_details}
 is implemented in microcode.
 
 
-\subsubsection{Microcode Updates}
+\HeadingLevelC{Microcode Updates}
 \label{microcode:updates}
 
 The SDM explains that the microcode on Intel CPUs can be updated, and describes

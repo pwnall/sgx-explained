@@ -1,4 +1,4 @@
-\subsection{Cache Timing Attacks}
+\HeadingLevelB{Cache Timing Attacks}
 \label{sec:cache_timing}
 
 Cache timing attacks~\cite{banescu2011cache} are a powerful class of software
@@ -8,7 +8,7 @@ the victim's memory, so they bypass the address translation-based isolation
 measures (\S~\ref{sec:paging}) implemented in today's kernels and hypervisors.
 
 
-\subsubsection{Theory}
+\HeadingLevelC{Theory}
 
 Cache timing attacks exploit the unfortunate dependency between the location of
 a memory access and the time it takes to perform the access. A cache miss
@@ -45,7 +45,7 @@ data-dependent memory fetches, the attacker may be able to deduce the sensitive
 information from the learned memory access pattern.
 
 
-\subsubsection{Practical Considerations}
+\HeadingLevelC{Practical Considerations}
 
 Cache timing attacks require control over a software process that shares a
 cache memory with the victim process. Therefore, a cache timing attack that
@@ -76,7 +76,7 @@ to instructions in the victim code, even when accounting for speculative
 execution.
 
 
-\subsubsection{Known Cache Timing Attacks}
+\HeadingLevelC{Known Cache Timing Attacks}
 
 Despite these difficulties, cache timing attacks are known to retrieve
 cryptographic keys used by AES~\cite{osvik2006aes, bonneau2006aes},
@@ -99,7 +99,7 @@ the deprecation of SHA-1~\cite{nist2014sha1policy, google2014sha1deprecation,
 microsoft2014sha1deprecation}.
 
 
-\subsubsection{Defending against Cache Timing Attacks}
+\HeadingLevelC{Defending against Cache Timing Attacks}
 \label{sec:cache_timing_workarounds}
 
 Fortunately, invalidating any of the preconditions for cache timing attacks is

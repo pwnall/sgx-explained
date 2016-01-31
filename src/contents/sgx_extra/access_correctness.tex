@@ -1,4 +1,4 @@
-\subsection{SGX Security Check Correctness}
+\HeadingLevelB{SGX Security Check Correctness}
 \label{sec:sgx_access_correctness}
 
 In \S~\ref{sec:sgx_access_concepts}, we argued that SGX's security guarantees
@@ -18,7 +18,7 @@ incredibly tedious, and would do very little to boost the reader's
 understanding of SGX.
 
 
-\subsubsection{Top-Level Invariant Breakdown}
+\HeadingLevelC{Top-Level Invariant Breakdown}
 
 We first break down the above invariant into specific cases based on whether
 a logical processor~(LP) is executing enclave code or not, and on whether the
@@ -128,7 +128,7 @@ the whole proof outlined here results in an end-to-end argument for the
 correctness of SGX's memory protection scheme.
 
 
-\subsubsection{EPCM Entries Reflect Enclave Author Design}
+\HeadingLevelC{EPCM Entries Reflect Enclave Author Design}
 
 This sub-section outlines the proof for the following invariant. \textbf{At
 all times, each EPCM entry for a page that is allocated to an enclave matches
@@ -235,7 +235,7 @@ While replay attacks look relatively benign, they can be quite devastating when
 used to facilitate double spending.
 
 
-\subsubsection{TLB Entries for ELRANGE Reflect EPCM Contents}
+\HeadingLevelC{TLB Entries for ELRANGE Reflect EPCM Contents}
 
 This sub-section sketches a proof for the following invariant. \textbf{At all
 times when an LP is in enclave mode, the TLB entries for virtual addresses
@@ -275,7 +275,7 @@ pages which, by the argument above, must follow the constraints of the
 corresponding EPCM entries.
 
 
-\subsubsection{EPCM Entries are Not In TLBs When Modified}
+\HeadingLevelC{EPCM Entries are Not In TLBs When Modified}
 
 In this sub-section, we outline a proof that \textbf{an EPCM entry is only
 modified when there is no mapping for it in any LP's TLB.}. This proof analyzes

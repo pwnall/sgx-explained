@@ -1,4 +1,4 @@
-\subsection{The Life Cycle of an SGX Thread}
+\HeadingLevelB{The Life Cycle of an SGX Thread}
 \label{sec:sgx_threads}
 
 Between the time when an enclave is
@@ -49,7 +49,7 @@ software's handler is invoked, the enclave's host process can use the
 re-enter the enclave and resume the computation that it was performing.
 
 
-\subsubsection{Synchronous Enclave Entry}
+\HeadingLevelC{Synchronous Enclave Entry}
 \label{sec:sgx_enclave_mode}
 \label{sec:sgx_eenter}
 
@@ -151,7 +151,7 @@ Based Sampling~(PEBS). Conceptually, a debugger attached to the host process
 sees the enclave's execution as one single processor instruction.
 
 
-\subsubsection{Synchronous Enclave Exit}
+\HeadingLevelC{Synchronous Enclave Exit}
 \label{sec:sgx_eexit}
 
 % EEXIT - Exits an Enclave: SDM S 41.4.1
@@ -196,7 +196,7 @@ segmentation model that is still present in the 32-bit Intel architecture. As
 stated in the introduction, we are not interested in such legacy aspects.
 
 
-\subsubsection{Asynchronous Enclave Exit (AEX)}
+\HeadingLevelC{Asynchronous Enclave Exit (AEX)}
 \label{sec:sgx_aex}
 
 If a hardware exception, like a fault~(\S~\ref{sec:faults}) or an
@@ -283,7 +283,7 @@ to the values saved by \texttt{EENTER}, and all the debugging facilities that
 were suppressed by \texttt{EENTER} are restored to their previous states.
 
 
-\subsubsection{Recovering from an Asynchronous Exit}
+\HeadingLevelC{Recovering from an Asynchronous Exit}
 \label{sec:sgx_eresume}
 
 When a hardware exception occurs inside enclave mode, the processor performs

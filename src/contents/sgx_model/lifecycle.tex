@@ -1,4 +1,4 @@
-\subsection{The Life Cycle of an SGX Enclave}
+\HeadingLevelB{The Life Cycle of an SGX Enclave}
 \label{sec:sgx_enclave_lifecycle}
 
 An enclave's life cycle is deeply intertwined with resource management,
@@ -24,7 +24,7 @@ which is illustrated by Figure~\ref{fig:sgx_enclave_lifecycle}.
 % Enclave Entry and Exiting : SDM S 39.2, S 39.2.1
 % ECREATE, EADD, EREMOVE: SDM S 41.3
 
-\subsubsection{Creation}
+\HeadingLevelC{Creation}
 \label{sec:sgx_ecreate}
 
 An enclave is born when the system software issues the \texttt{ECREATE}
@@ -61,7 +61,7 @@ attribute is set to true, which happens in the initialization stage that will
 be described in \S~\ref{sec:sgx_einit_overview}.
 
 
-\subsubsection{Loading}
+\HeadingLevelC{Loading}
 \label{sec:sgx_eadd}
 
 \texttt{ECREATE} marks the newly created SECS as \textit{uninitialized}. While
@@ -125,7 +125,7 @@ the software attestation process. Software attestation is discussed in
 \S~\ref{sec:sgx_attestation}.
 
 
-\subsubsection{Initialization}
+\HeadingLevelC{Initialization}
 \label{sec:sgx_einit_overview}
 
 % EINIT Token Structure (EINITTOKEN): SDM S 38.14
@@ -154,7 +154,7 @@ software must load all the pages that make up the enclave's initial state
 before executing the \texttt{EINIT} instruction.
 
 
-\subsubsection{Teardown}
+\HeadingLevelC{Teardown}
 \label{sec:sgx_eremove}
 
 After the enclave has done the computation it was designed to perform, the

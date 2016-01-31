@@ -1,4 +1,4 @@
-\subsection{SGX Security Properties}
+\HeadingLevelB{SGX Security Properties}
 \label{sec:sgx_security_analysis}
 
 We have summarized SGX's programming model and the implementation details
@@ -10,7 +10,7 @@ fares when pitted against the attacks described in
 \S~\ref{sec:security_background}.
 
 
-\subsubsection{Overview}
+\HeadingLevelC{Overview}
 
 Intel's Software Guard Extensions (SGX) is Intel's latest iteration of a
 trusted hardware solution to the secure remote computation problem. The SGX
@@ -44,7 +44,7 @@ special privileges that use the certificate-based identity system to securely
 store the CPU's attestation key in untrusted memory.
 
 
-\subsubsection{Physical Attacks}
+\HeadingLevelC{Physical Attacks}
 \label{sec:sgx_vs_physical_attacks}
 
 We begin by discussing SGX's resilience to the physical attacks described in
@@ -161,7 +161,7 @@ Intel's manufacturing process. It follows that defending against power analysis
 attacks has a very high cost-to-benefit ratio.
 
 
-\subsubsection{Privileged Software Attacks}
+\HeadingLevelC{Privileged Software Attacks}
 \label{sec:sgx_vs_privileged_sw_attacks}
 
 The SGX threat model considers system software to be untrusted. This is a
@@ -253,7 +253,7 @@ executing the same enclave's code. While this approach is possible, its design
 would likely be quite cumbersome.
 
 
-\subsubsection{Memory Mapping Attacks}
+\HeadingLevelC{Memory Mapping Attacks}
 \label{sec:sgx_vs_memory_mapping_attacks}
 
 \S~\ref{sec:sgx_threads} explained that the code running inside an enclave uses
@@ -345,7 +345,7 @@ completely prevented without removing the kernel's ability to oversubscribe the
 EPC, which is a major benefit of paging.
 
 
-\subsubsection{Software Attacks on Peripherals}
+\HeadingLevelC{Software Attacks on Peripherals}
 \label{sec:sgx_vs_device_attacks}
 
 Since the SGX design does not trust the system software, it must be prepared to
@@ -430,7 +430,7 @@ Therefore, an ME compromise would be equivalent to the DRAM attacks analyzed in
 \S~\ref{sec:sgx_vs_physical_attacks}.
 
 
-\subsubsection{Cache Timing Attacks}
+\HeadingLevelC{Cache Timing Attacks}
 \label{sec:sgx_vs_cache_timing_attacks}
 
 The SGX threat model excludes the cache timing attacks described in
