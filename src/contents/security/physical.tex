@@ -163,27 +163,36 @@ the data being computed on, and learns some property of the data from the
 observed power consumption.
 
 The earliest power analysis attacks have directly measured the processor chip's
-power consumption. For example, [] used the correlation between the power
-consumed by a smart card chip's multiplication circuitry and the number of one
-bits in the input, and learned an RSA key that the smart card was supposed to
-safeguard.
+power consumption. For example, \cite{kocher1999dpa} describes a simple power
+analysis (SPA) attack that exploits the correlation between the power consumed
+by a smart card chip's CPU and the type of instruction executed by it, and
+learned a DSA key that the smart card was supposed to safeguard.
 
 While direct power analysis attacks necessitate some equipment, their costs are
 dominated by the complexity of the analysis required to learn the desired
 information from the observed power trace which, in turn, is determined by the
 complexity of the processor's circuitry. Today's smart cards contain special
-circuitry designed to frustrate power analysis attacks. [] We are not aware of
-any successful power analysis attacks against full-blown out-of-order Intel
-processors.
+circuitry~\cite{tiri2002dcmos} and use hardened algorithms~\cite{herbst2006aes}
+designed to frustrate power analysis attacks.
+
+Recent work demonstrated successful power analysis attacks against full-blown
+out-of-order Intel processors using inexpensive off-the-shelf sensor equipment.
+\cite{genkin2014rsa} extracts an RSA key from GnuPG running on a laptop using a
+microphone that measures its acoustic emissions. \cite{genkin2014fullpa} and
+\cite{genkin2015radiopa} extract RSA keys from power analysis-resistant
+implementations using a voltage meter and a radio. All these attacks can be
+performed quite easily by a disgruntled data center employee.
 
 Unfortunately, power analysis attacks can be extended to displays and human
 input devices, which cannot be secured in any reasonable manner. For example,
-[] measured the radiation emitted by a CRT display's ion beam to reconstitute
-the image on a computer screen in a different room. [] used a directional
-microphone to measure the sound emitted by a keyboard and learn the password
-that its operator typed. [] applied similar techniques to learn a user's input
-on a smartphone's on-screen keyboard, based on data from the device's
-accelerometer.
+\cite{van1985monitorpa} documented a very early attack that measures the
+radiation emitted by a CRT display's ion beam to reconstitute the image on a
+computer screen in a different room. \cite{kuhn2005lcdpa} extended the attack
+to modern LCD displays. \cite{zhuang2009keyboard} used a directional microphone
+to measure the sound emitted by a keyboard and learn the password that its
+operator typed. \cite{owusu2012accessory} applied similar techniques to learn a
+user's input on a smartphone's on-screen keyboard, based on data from the
+device's accelerometer.
 
 In general, power attacks cannot be addressed at the architectural level, as
 they rely on implementation details that are decided during the manufacturing
