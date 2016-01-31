@@ -110,12 +110,13 @@ the judicious use of a cache partitioning scheme.
 
 Performance concerns aside, the main difficulty associated with cache
 partitioning schemes is that they must be implemented by a trusted party. When
-the system software is trusted, it can (for example) implement cache
-coloring~\cite{taylor1990coloring}, which comes down setting up the page tables
-in such a way that no two mutually distrusting software module are stored in
-physical pages that map to the same sets in any cache memory. However, if the
-system software is not trusted, the cache partitioning scheme must be
-implemented in hardware.
+the system software is trusted, it can (for example) use the principles behind
+page coloring~\cite{taylor1990coloring, kessler1992coloring} to partition the
+caches~\cite{lin2008coloring} between mutually distrusting parties. This comes
+down setting up the page tables in such a way that no two mutually distrusting
+software module are stored in physical pages that map to the same sets in any
+cache memory.  However, if the system software is not trusted, the cache
+partitioning scheme must be implemented in hardware.
 
 The other interesting precondition is that the victim must access its memory in
 a data-dependent fashion that allows the attacker to infer private information

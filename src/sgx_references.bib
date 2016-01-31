@@ -1062,7 +1062,8 @@
   url={http://arxiv.org/abs/1507.06955}
 }
 
-% Security Background: Cache timing attacks
+
+% Security Background: Cache Timing Attacks
 
 @article{banescu2011cache,
   title={Cache Timing Attacks},
@@ -1140,6 +1141,27 @@
  pages={355--363},
  publisher={ACM},
 }
+@article{kessler1992coloring,
+  title={Page placement algorithms for large real-indexed caches},
+  author={Kessler, Richard E and Hill, Mark D},
+  journal={ACM Transactions on Computer Systems (TOCS)},
+  volume={10},
+  number={4},
+  pages={338--359},
+  year={1992},
+  publisher={ACM}
+}
+@inproceedings{lin2008coloring,
+  title={Gaining Insights into Multicore Cache Partitioning: Bridging the Gap
+         between Simulation and Real Systems},
+  author={Lin, Jiang and Lu, Qingda and Ding, Xiaoning and Zhang, Zhao and
+          Zhang, Xiaodong and Sadayappan, P},
+  booktitle={14th International IEEE Symposium on High Performance Computer
+             Architecture (HPCA)},
+  pages={367--378},
+  year={2008},
+  organization={IEEE}
+}
 @incollection{kasper2009aes,
   title={Faster and timing-attack resistant AES-GCM},
   author={K{\"a}sper, Emilia and Schwabe, Peter},
@@ -1148,9 +1170,6 @@
   year={2009},
   publisher={Springer}
 }
-
-% Security Background: Cache Timing Attacks
-
 @inproceedings{xu2015pagefaults,
   author={Yuanzhong Xu and Weidong Cui and Marcus Peinado},
   booktitle={Proceedings of the 36th IEEE Symposium on Security and Privacy
@@ -1464,6 +1483,17 @@
   year={2003},
   organization={ACM}
 }
+@conference{aegis_impl,
+  title="{Design and Implementation of the {\sc aegis} Single-Chip Secure
+          Processor Using Physical Random Functions}",
+  author={Suh, G. Edward and O'Donnell, Charles W. and Sachdev, Ishan and
+          Devadas, Srinivas},
+  booktitle = {Proceedings of the $32^{nd}$ ISCA'05},
+  year={2005},
+  month={June},
+  publisher={ACM},
+  howpublished="\url{http://csg.csail.mit.edu/pubs/memos/Memo-483/Memo-483.pdf}"
+}
 @inproceedings{gassend2002puf,
   title={Silicon physical random functions},
   author={Gassend, Blaise and Clarke, Dwaine and Van Dijk, Marten and
@@ -1745,6 +1775,14 @@
   year={2007},
   organization={ACM}
 }
+@inproceedings{maes2009puf,
+ author={R. Maes and P. Tuyls and I. Verbauwhede},
+ title="{Low-Overhead Implementation of a Soft Decision Helper Data Algorithm
+           for \textsc{SRAM PUF}s}",
+ booktitle={Cryptographic Hardware and Embedded Systems (CHES)},
+ year={2009},
+ pages={332--347},
+}
 @inproceedings{costan2011spchip,
   title={Security Challenges and Opportunities in Adaptive and Reconfigurable
          Hardware},
@@ -1912,20 +1950,3 @@
   organization={IEEE}
 }
 
-@conference{aegis_impl,
-    author = "G. Edward Suh and Charles W. O'Donnell and Ishan Sachdev and Srinivas Devadas",
-    title = "{Design and Implementation of the {\sc aegis} Single-Chip Secure Processor Using Physical Random Functions}",
-        booktitle = {Proceedings of the $32^{nd}$ ISCA'05},
-    url = "http://csg.csail.mit.edu/pubs/memos/Memo-483/Memo-483.pdf",
-        month = { June },
-        publisher = {ACM},
-        address = {New-York},
-        year = { 2005 }}
-
-@inproceedings{Maes:2009,
- author = {R. Maes and P. Tuyls and I. Verbauwhede},
- title = "{Low-Overhead Implementation of a Soft Decision Helper Data Algorithm for \textsc{SRAM PUF}s}",
- booktitle = {Cryptographic Hardware and Embedded Systems (CHES)},
- year = {2009},
- pages = {332--347},
-}

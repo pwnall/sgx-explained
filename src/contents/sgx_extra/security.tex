@@ -130,9 +130,9 @@ created from the same mask, so it has all the drawbacks of global secrets
 explained in \S~\ref{sec:physical_chip_attacks}.
 
 Newer Intel patents~\cite{gotze2014provisioning, gotze2014provisioning2}
-describe SGX-enabled processors that employ a
-\textit{Physical Unclonable Function}~(PUF), e.g., \cite{suh2007puf}, \cite{Maes:2009}, which
-generates a symmetric key that is used during the provisioning process.
+describe SGX-enabled processors that employ a \textit{Physical Unclonable
+Function}~(PUF), e.g., \cite{suh2007puf}, \cite{maes2009puf}, which generates a
+symmetric key that is used during the provisioning process.
 
 Specifically, at an early provisioning stage, the PUF key is encrypted with the
 GWK and transmitted to the key generation server. At a later stage, the key
@@ -456,9 +456,11 @@ placement~(\S~\ref{sec:tlbs}).
 
 For example, the malicious kernel set out to trace an enclave's memory access
 patterns described in \S~\ref{sec:sgx_vs_memory_mapping_attacks} can improve
-the accuracy of a cache timing attack by partitioning the
-sets~(\S~\ref{sec:cache_org}) of the cache targeted by the attacks into two
-disjoint regions, as shown in Figure~\ref{fig:cache_partitions}.
+the accuracy of a cache timing attack by using page
+coloring~\cite{kessler1992coloring} principles to
+partition~\cite{lin2008coloring} the cache targeted by the attack. In a
+nutshell, the kernel divides the cache's sets~(\S~\ref{sec:cache_org}) into
+two regions, as shown in Figure~\ref{fig:cache_partitions}.
 
 \begin{figure}[hbt]
   \centering
@@ -475,11 +477,11 @@ disjoint regions, as shown in Figure~\ref{fig:cache_partitions}.
   \label{fig:cache_partitions}
 \end{figure}
 
-The system software would store all the victim enclave's code and data in DRAM
-addresses that map to the cache sets in one of the regions, and would store its
-own code and data in DRAM addresses that map to the other region's cache sets.
-The snooping thread's code is assumed to be a part of the OS. For example, in
-a typical 256~KB (per-core) L2 cache organized as 512 8-way sets of 64-byte
+The system software stores all the victim enclave's code and data in DRAM
+addresses that map to the cache sets in one of the regions, and stores its own
+code and data in DRAM addresses that map to the other region's cache sets.  The
+snooping thread's code is assumed to be a part of the OS. For example, in a
+typical 256~KB (per-core) L2 cache organized as 512 8-way sets of 64-byte
 lines, the tracing kernel could allocate lines 0-63 for the enclave's code
 page, lines 64-127 for the enclave's data page, and use lines 128-511 for its
 own pages.
