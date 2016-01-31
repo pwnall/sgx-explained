@@ -7,9 +7,9 @@ pdf/:
 	mkdir -p pdf/
 
 pdf/sgx-explained.pdf: $(wildcard src/*) $(wildcard src/contents/*) \
-		$(wildcard src/contents/architecture/*) \
-		$(wildcard src/contents/related/*) \
-		$(wildcard src/contents/security/*) \
+		$(wildcard src/contents/sgx_architecture/*) \
+		$(wildcard src/contents/sgx_related/*) \
+		$(wildcard src/contents/sgx_security/*) \
 		$(wildcard src/contents/sgx_model/*) \
 		$(wildcard src/contents/sgx_extra/*) \
 		tmp/ pdf/
