@@ -42,7 +42,7 @@ whose corresponding public key is hard-coded into the SGX microcode, similarly
 to TXT's SINIT ACM.
 
 As SGX does not protect against cache timing attacks, the privileged enclave's
-authors cannot use data-independent memory accesses. For example, cache attacks
+authors cannot use data-dependent memory accesses. For example, cache attacks
 on the Quoting Enclave, which computes attestation signatures, would provide
 an attack with a processor's EPID signing key and completely compromise SGX.
 
