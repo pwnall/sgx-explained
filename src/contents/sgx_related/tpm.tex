@@ -51,7 +51,7 @@ from the measurement.
   \label{fig:tpm_measurement}
 \end{figure}
 
-For example, the firmware on most modern computers implement the platform
+For example, the firmware on most modern computers implements the platform
 initialization process in the Unified Extensible Firmware Interface (UEFI)
 specification~\cite{forum2015uefi}. Each platform initialization phase is
 responsible for verifying or measuring the firmware that implements the next
@@ -69,7 +69,7 @@ issue, and assumes that the firmware responsible for loading the first stage
 bootloader is securely embedded in the motherboard. However, virtually every
 TPM-enabled computer stores its firmware in a flash memory chip that can be
 re-programmed in software (\S~\ref{sec:motherboard}), so the TPM's measurement
-can be subverted by an attacker that can reflash the computer's firmware
+can be subverted by an attacker who can reflash the computer's firmware
 \cite{butterworth2013bios}.
 
 On very recent Intel processors, the attack described above can be defeated by

@@ -28,10 +28,9 @@ blocks.
 TrustZone extends the address lines in the AMBA AXI system
 bus~\cite{arm2004ambaxi} with one signal that indicates whether an access
 belongs to the secure or normal (non-secure) world. ARM processor cores that
-include TrustZone's ``Security Extensions'' can switch between executing code
-in the normal world and code in the secure world. The address in each bus
-access executed by a core reflects the world that the core is currently
-executing in.
+include TrustZone's ``Security Extensions'' can switch between the normal world
+and the secure world when executing code. The address in each bus access
+executed by a core reflects the world in which the core is currently executing.
 
 The reset circuitry in a TrustZone processor places it in secure mode, and
 points it to the first-stage bootloader stored in on-chip ROM. TrustZone's TCB
@@ -73,8 +72,8 @@ memory space is partitioned between the two worlds, so no aliasing can occur.
 The TrustZone documentation describes two TLB configurations. If many context
 switches between worlds are expected, the TLB IP blocks can be configured to
 include the secure bit in the address tag. Alternatively, the secure bit can be
-omitted from the TLBs, as long as the monitor flushes the TLBs while
-performing a context switch between the two worlds.
+omitted from the TLBs, as long as the monitor flushes the TLBs when switching
+contexts.
 
 The hardware modules that do not consume TrustZone's address bit are expected
 to be connected to the AXI bus via IP cores that implement simple partitioning
@@ -100,9 +99,9 @@ The TrustZone components do not have any counter-measures for physical attacks.
 However, a system that follows the recommendations in the TrustZone
 documentation will not be exposed to physical attacks, under a threat model
 that trusts the processor chip package. The AXI bus is designed to connect
-components in a SoC design, so it cannot be tapped by an attacker. The
+components in an SoC design, so it cannot be tapped by an attacker. The
 TrustZone documentation recommends having all the code and data in the secure
-world stored in on-chip SRAM, which is not subjected to physical attacks.
+world stored in on-chip SRAM, which is not subject to physical attacks.
 However, this approach places significant limits on the secure container's
 functionality, because on-chip SRAM is many orders of magnitude more expensive
 than a DRAM chip of the same capacity.
@@ -116,4 +115,4 @@ measurement root can be built on top of the same components, by storing a
 per-chip attestation key in the polyfuses, and having the first-stage
 bootloader measure the second-stage bootloader and store its hash in an on-chip
 SRAM region allocated to the secure world. The polyfuses would be gated by a
-TZMA IP block that only makes them accessible to the secure world.
+TZMA IP block that makes them accessible only to the secure world.

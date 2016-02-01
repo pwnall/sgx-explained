@@ -39,7 +39,7 @@ processor from accessing privileged resources, such as the battery-backed
 memory that stores the system software's secrets.
 
 The 4765 implements software attestation. The coprocessor's attestation key is
-stored in battery-backed memory that is only accessible by the service
+stored in battery-backed memory that is only accessible to the service
 processor. Upon reset, the service processor executes a first-stage bootloader
 stored in ROM, which measures and loads the system software. In turn, the
 system software measures the application code stored in NVRAM and loads it into

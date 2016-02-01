@@ -24,7 +24,7 @@ identifier for each TLB entry as it is created. Similarly to XOM and Aegis, the
 secure processor checks the TLB tag against the current container's identifier
 on every memory access.
 
-Bastion offers the same protection against physical DRAM attacks as Aegis,
+Bastion offers the same protection against physical DRAM attacks as Aegis does,
 without the restriction that a container's data must be stored inside a
 continuous DRAM range. This is accomplished by extending cache lines and TLB
 entries with flags that enable memory encryption and HMACing. The hypervisor's

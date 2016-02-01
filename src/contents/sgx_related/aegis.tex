@@ -28,6 +28,6 @@ Aegis' security kernel allows the OS to page out container memory, but verifies
 the correctness of the paging operations. The security kernel uses the same
 encryption and Merkle tree algorithms as the memory controller to guarantee the
 privacy and integrity of the container pages that are swapped out from DRAM.
-As the OS is free to page out container memory, it can learn a container's
+The OS is free to page out container memory, so it can learn a container's
 memory access patterns, at page granularity. Aegis containers are also
 vulnerable to cache timing attacks.

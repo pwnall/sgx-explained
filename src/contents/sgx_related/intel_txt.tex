@@ -40,10 +40,9 @@ revised when SINIT ACM exploits \cite{wojtczuk2011txt} surfaced. Currently, the
 SINIT ACM's cryptographic hash is included in the attestation measurement.
 
 Last, the warm reset performed by the SINIT ACM does not include the software
-running in System Management Mode (SMM). SMM was designed
-solely for the use of firmware, and is stored in a protected memory area
-(SMRAM) which should not be accessible to non-SMM software. However, the SMM
-handler was compromised on multiple occasions \cite{duflot2006smm,
-rutkowska2008remap, wojtczuk2009smm, wecherowski2009smm, embleton2010smm}, and
-an attacker that obtains SMM execution can access the memory used by TXT's
-container.
+running in System Management Mode (SMM). SMM was designed solely for use by
+firmware, and is stored in a protected memory area (SMRAM) which should not be
+accessible to non-SMM software. However, the SMM handler was compromised on
+multiple occasions \cite{duflot2006smm, rutkowska2008remap, wojtczuk2009smm,
+wecherowski2009smm, embleton2010smm}, and an attacker who obtains SMM execution
+can access the memory used by TXT's container.

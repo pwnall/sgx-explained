@@ -5,7 +5,7 @@ hoekstra2013sgx} implements secure containers for applications without making
 any modifications to the processor's critical execution path. SGX does not
 trust any layer in the computer's software stack (firmware, hypervisor, OS).
 Instead, SGX's TCB consists of the CPU's microcode and a few privileged
-containers. SGX introduces an approach to solving some of the issues brought by
+containers. SGX introduces an approach to solving some of the issues raised by
 multi-core processors with a shared, coherent last-level cache.
 
 SGX does not extend caches or TLBs with container identity bits, and does not
@@ -51,4 +51,4 @@ and freshness by virtue of a Memory Encryption Engine (MEE). The MEE is
 informally described in an ISCA 2015 tutorial \cite{intel2015iscasgx}, and
 appears to lack a formal specification. In the absence of further information,
 we assume that SGX provides the same protection against physical DRAM attacks
-as Aegis and Bastion.
+that Aegis and Bastion provide.
