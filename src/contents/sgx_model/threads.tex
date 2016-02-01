@@ -179,16 +179,6 @@ calls into a dynamically loaded module. More specifically, the module's code is
 also responsible for preserving stack-related registers, and a buggy module
 might jump anywhere in the application code of the host process.
 
-At first glance, it may seem elegant to have \texttt{EENTER} store the contents
-of the XCR0, FS, and GS registers in the current SSA, and have \texttt{EEXIT}
-restore them from the current SSA. However, this approach would break the Intel
-architecture's guarantees that only system software can modify XCR0, and
-application software can only load segment registers using selectors that index
-into the GDT or LDT set up by system software (\S~\ref{sec:segments}).
-Specifically, a malicious application could modify these privileged registers
-by creating an enclave that writes the desired values to the current SSA
-locations backing up the registers, and then executes \texttt{EEXIT}.
-
 This section describes the \texttt{EENTER} behavior for 64-bit enclaves. The
 \texttt{EENTER} implementation for 32-bit enclaves is significantly more
 complex, due to the extra special cases introduced by the full-fledged
