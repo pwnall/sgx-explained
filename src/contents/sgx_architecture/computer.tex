@@ -155,6 +155,8 @@ ME accesses the flash memory chip an embedded SPI controller.
 \HeadingLevelC{The Processor Die}
 \label{sec:cpu_die}
 
+% Multi-Core Architecture: SDM S 8.8
+
 An Intel processor's die, illustrated in Figure~\ref{fig:cpu_die}, is divided
 into two broad areas: the \textit{core area} implements the instruction
 execution pipeline typically associated with CPUs, while the \textit{uncore}
@@ -201,6 +203,10 @@ Virtually all modern Intel processors have core areas consisting of multiple
 copies of the execution core circuitry, each of which is called a
 \textit{core}.  At the time of this writing, desktop-class Intel CPUs have 4
 cores, and server-class CPUs have as many as 18 cores.
+
+% Intel Hyper-Threading Technology Architecture: SDM S 8.7
+% State of the Logical Processors: SDM S 8.7.1
+% Implementation-Specific Intel HT Technology Facilities: SDM S 8.7.13
 
 Most Intel CPUs feature \textit{hyper-threading}, which means that a core
 (shown in Figure~\ref{fig:cpu_core}) has two copies of the register files
