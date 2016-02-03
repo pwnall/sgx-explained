@@ -85,7 +85,7 @@ it must be the case that the value supplied for $q_1$ is correct.
 We can also plug $s^2$, $q_1$ and $m$ into the integer division remainder
 definition to obtain the identity $s^2 \bmod m = s^2 - q_1 \times m$. However,
 according to the computations performed in steps 1 and 3,
-$w = s^2 - q_1 \times m$. Therefore, we can conclude that $w = s^2 \bmod p$.
+$w = s^2 - q_1 \times m$. Therefore, we can conclude that $w = s^2 \bmod m$.
 
 
 \HeadingLevelC{Analysis of Steps 5 - 8}
@@ -95,7 +95,7 @@ use it to compute $w \times s \bmod m$. The key observation here is that
 $q_2$ is the quotient of the integer division $(w \times s) / m$.
 
 We can convince ourselves of the truth of this observation by using the fact
-that $w = s^2 \bmod p$, which was proven above, by plugging in the definition
+that $w = s^2 \bmod m$, which was proven above, by plugging in the definition
 of the remainder in integer division, and by taking advantage of the
 distributivity of integer multiplication with respect to addition.
 
