@@ -1,5 +1,5 @@
 \HeadingLevelB{Intel's Trusted Execution Technology (TXT)}
-\label{sec:intel_txt}
+\label{sec:sgx_related_intel_txt}
 
 Intel's Trusted Execution Technology (TXT) \cite{grawrock2009txt} uses the
 TPM's software attestation model and auxiliary tamper-resistant chip, but
@@ -14,12 +14,12 @@ authenticated code module (SINIT ACM) that effectively performs a warm system
 reset before starting the container's VM.
 
 TXT requires a TPM chip with an extended register set. The registers used by
-the measured boot process described in \S~\ref{sec:tpm} are considered to make
-up the platform's Static Root of Trust Measurement (SRTM). When a TXT VM is
-initialized, it updates TPM registers that make up the Dynamic Root of Trust
-Measurement (DRTM). While the TPM's SRTM registers only reset at the start of a
-boot cycle, the DRTM registers are reset by the SINIT ACM, every time a TXT VM
-is launched.
+the measured boot process described in \S~\ref{sec:sgx_related_tpm} are
+considered to make up the platform's Static Root of Trust Measurement (SRTM).
+When a TXT VM is initialized, it updates TPM registers that make up the Dynamic
+Root of Trust Measurement (DRTM). While the TPM's SRTM registers only reset at
+the start of a boot cycle, the DRTM registers are reset by the SINIT ACM, every
+time a TXT VM is launched.
 
 TXT does not implement DRAM encryption or HMACs, and therefore is vulnerable to
 physical DRAM attacks, just like TPM-based designs. Furthermore, early TXT

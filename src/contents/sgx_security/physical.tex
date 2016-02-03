@@ -71,16 +71,16 @@ console was partially stored in its southbridge. The protection mechanisms of
 the PlayStation 3 hypervisor were subverted by an active tap on its memory
 bus~\cite{hotz2010ps3} that targeted the hypervisor's page tables.
 
-\S~\ref{sec:related} shows that concealing the addresses of the DRAM cells
-accessed by a program is orders of magnitude more expensive than protecting the
-memory's contents. Therefore, we are interested in analyzing attacks that tap
-the DRAM bus, but only use the information on the address lines. These attacks
-use the same equipment as normal DRAM bus tapping attacks, but require a
-significantly more involved analysis to learn useful information. One of the
-difficulties of such attacks is that the memory addresses observed on the DRAM
-bus are generally very different from the application's memory access patterns,
-because of the extensive cache hierarchies in modern processors
-(\S~\ref{sec:caching}).
+The Ascend secure processor~(\S~\ref{sec:sgx_related_ascend}) shows that
+concealing the addresses of the DRAM cells accessed by a program is orders of
+magnitude more expensive than protecting the memory's contents. Therefore, we
+are interested in analyzing attacks that tap the DRAM bus, but only use the
+information on the address lines. These attacks use the same equipment as
+normal DRAM bus tapping attacks, but require a significantly more involved
+analysis to learn useful information. One of the difficulties of such attacks
+is that the memory addresses observed on the DRAM bus are generally very
+different from the application's memory access patterns, because of the
+extensive cache hierarchies in modern processors (\S~\ref{sec:caching}).
 
 We are not aware of any successful attack based on tapping the address lines of
 a DRAM bus and analyzing the sequence of memory addresses.
@@ -197,5 +197,5 @@ device's accelerometer.
 In general, power attacks cannot be addressed at the architectural level, as
 they rely on implementation details that are decided during the manufacturing
 process. Therefore, it is unsurprising that the secure computing architectures
-described in \S~\ref{sec:related} do not protect against power analysis
+described in \S~\ref{sec:sgx_related} do not protect against power analysis
 attacks.

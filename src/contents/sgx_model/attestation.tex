@@ -4,10 +4,10 @@
 The software attestation scheme implemented by SGX follows the principles
 outlined in \S~\ref{sec:generic_software_attestation}. An SGX-enabled processor
 computes a measurement of the code and data that is loaded in each enclave,
-which is similar to the measurement computed by the TPM~(\S~\ref{sec:tpm}). The
-software inside an enclave can start a process that results in an SGX
-attestation signature, which includes the enclave's measurement and an enclave
-message.
+which is similar to the measurement computed by the
+TPM~(\S~\ref{sec:sgx_related_tpm}). The software inside an enclave can start a
+process that results in an SGX attestation signature, which includes the
+enclave's measurement and an enclave message.
 
 \begin{figure}[hbt]
   \centering
@@ -266,8 +266,8 @@ report, producing an \textit{Attestation Signature}.
 %   US 8,972,746 B2 - 20:59-67
 
 The SGX patents state that the name ``Quoting Enclave'' was chosen as a
-reference to the TPM~(\S~\ref{sec:tpm})'s quoting feature, which is used to
-perform software attestation on a TPM-based system.
+reference to the TPM~(\S~\ref{sec:sgx_related_tpm})'s quoting feature, which is
+used to perform software attestation on a TPM-based system.
 
 The Attestation Key uses Intel's \textit{Enhanced Privacy ID}~(EPID)
 cryptosystem~\cite{brickell2009epid}, which is a group signature scheme that is
@@ -475,7 +475,7 @@ to SGX will also stifle innovation.
 
 Furthermore, from a historical perspective, the enclave licensing scheme
 described in the SGX patents is very similar to Verified Boot, which was
-briefly discussed in \S~\ref{sec:tpm}. Verified Boot has mostly received
-negative reactions from software developers, so it is likely that an enclave
-licensing scheme would meet the same fate, should the developer community
-become aware of it.
+briefly discussed in \S~\ref{sec:sgx_related_tpm}. Verified Boot has mostly
+received negative reactions from software developers, so it is likely that an
+enclave licensing scheme would meet the same fate, should the developer
+community become aware of it.
