@@ -18,7 +18,7 @@ that her own public key belongs to Alice, Eve can produce message signatures
 that seem to come from Alice.
 
 The introductory material in \S~\ref{sec:crypto_primitives} assumed that each
-party transmits its public key over a channel with integrity guarantees. In
+party transmits their public key over a channel with integrity guarantees. In
 practice, this is not a reasonable assumption, and the secure distribution of
 public keys is still an open research problem.
 
@@ -78,9 +78,9 @@ Figure~\ref{fig:certificate_validation}.
 One of the main drawbacks of the CA system is that the CA's private key becomes
 a very attractive attack target. This issue is somewhat mitigated by minimizing
 the use of the CA's private key, which reduces the opportunities for its
-compromise. The authority described above becomes the \textit{root CA}, and its
-private key is only used to produce certificates for the
-\textit{intermediate CAs} which, in turn, are responsible for generating
+compromise. The authority described above becomes the \textit{root CA}, and
+their private key is only used to produce certificates for the
+\textit{intermediate CAs} who, in turn, are responsible for generating
 certificates for the other parties in the system, as shown in
 Figure~\ref{fig:intermediate_cas}.
 
@@ -98,7 +98,7 @@ Figure~\ref{fig:intermediate_cas}.
 
 In hierarchical CA systems, the only public key that gets distributed securely
 to all the parties is the root CA's public key. Therefore, when two parties
-wish to interact, each party must present its own certificate, as well as the
+wish to interact, each party must present their own certificate, as well as the
 certificate of the issuing CA. For example, given the hierarchy in
 Figure~\ref{fig:intermediate_cas}, Alice would prove the authenticity of her
 public key to Bob by presenting her certificate, as well as the certificate of
@@ -114,9 +114,9 @@ Figure~\ref{fig:id_card_as_certificate}, is a certificate that binds a
 subject's identity, which is a full legal name, to the subject's physical
 appearance, which is used as a public key.
 
-The CA system is very similar to the identity document (also known as ID card)
-systems used to establish a person's identity, and a comparison between the two
-may help further the reader's understanding of the concepts in the CA system.
+The CA system is very similar to the identity document (ID card) systems used to
+establish a person's identity, and a comparison between the two may help further
+the reader's understanding of the concepts in the CA system.
 
 \begin{figure}[hbt]
   \centering
@@ -133,7 +133,7 @@ Each government's ID card issuing operations are regulated by laws, so an ID
 card's issue date can be used to track down the laws that make up its
 certification policy. Last, the security of ID cards does not (yet) rely on
 cryptographic primitives. Instead, ID cards include physical security measures
-designed to deter tampering and prevent counterfeiting .
+designed to deter tampering and prevent counterfeiting.
 
 
 \HeadingLevelC{Key Agreement Protocols}
@@ -155,9 +155,9 @@ reader an intuition for how key agreement protocols work.
   \centering
   \includegraphics[width=80mm]{figures/dh_key_exchange.pdf}
   \caption{
-    In the Diffie-Hellman Key Exchange (DKE) protocol, Alice and Bob
-    agree on a shared secret key $K = g^{AB} \mod p$. An adversary that
-    observes $g^{A} \mod p$ and $g^{B} \mod p$ cannot compute $K$.
+    In the Diffie-Hellman Key Exchange (DKE) protocol, Alice and Bob agree on a
+    shared secret key $K = g^{AB} \mod p$. An adversary who observes
+    $g^{A} \mod p$ and $g^{B} \mod p$ cannot compute $K$.
   }
   \label{fig:dh_key_exchange}
 \end{figure}
@@ -192,8 +192,8 @@ as illustrated in Figure~\ref{fig:key_agreement_mitm}.
 In a MITM attack, Eve intercepts Alice's first key exchange message, and sends
 Bob her own message. Eve then intercepts Bob's response and replaces it with
 her own, which she sends to Alice. Eve effectively performs key exchanges with
-both Alice and Bob, establishing a shared secret with each of them, without
-either Bob or Alice being aware of her presence.
+both Alice and Bob, establishing a shared secret with each of them, with neither
+Bob nor Alice being aware of her presence.
 
 After establishing shared keys with both Alice and Bob, Eve can choose to
 observe the communication between Alice and Bob, by forwarding messages between
@@ -209,12 +209,12 @@ Alice, he will believe that Eve's message comes from Alice.
 
 MITM attacks on key agreement protocols can be foiled by authenticating the
 party who sends the last message in the protocol (in our examples, Bob) and
-having it sign the key agreement messages. When a CA system is in place, Bob
+having them sign the key agreement messages. When a CA system is in place, Bob
 uses his public key to sign the messages in the key agreement and also sends
 Alice his certificate, along with the certificates for any intermediate CAs.
 Alice validates Bob's certificate, ensures that the subject identified by the
-certificate is who she expects (Bob), and verifies that the key agreement
-messages exchanged between her and Bob match the signature provided by Bob.
+certificate is whom she expects (Bob), and verifies that the key agreement
+messages exchanged between herself and Bob match the signature provided by Bob.
 
 In conclusion, a key agreement protocol can be used to bootstrap symmetric key
 primitives from an asymmetric key signing scheme, where only one party needs to

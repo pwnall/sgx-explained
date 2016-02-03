@@ -45,7 +45,7 @@ initialized as shown in Figure~\ref{fig:sgx_tracking_ecreate}.
 \end{figure}
 
 The \id{active-threads} SECS field tracks the number of LPs that are currently
-executing the code of the enclave who owns the SECS. The field is is atomically
+executing the code of the enclave who owns the SECS. The field is atomically
 incremented by \texttt{EENTER}~(\S~\ref{sec:sgx_eenter}) and
 \texttt{ERESUME}~(\S~\ref{sec:sgx_eresume}) and is atomically decremented by
 \texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}) and Asynchronous Enclave

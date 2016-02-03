@@ -71,7 +71,7 @@ broker, Bob, over a network connection owned by Eve.
 A communication system with privacy guarantees would prevent Eve from
 distinguishing between a \textsc{buy} and a \textsc{sell} order, as illustrated
 in Figure~\ref{fig:privacy_attack}. Without privacy, Eve would know Alice's
-order before it is is placed by Bob, so Eve would presumably gain a financial
+order before it is placed by Bob, so Eve would presumably gain a financial
 advantage at Alice's expense.
 
 \begin{figure}[hbt]
@@ -96,9 +96,9 @@ price.
   \includegraphics[width=85mm]{figures/integrity_attack.pdf}
   \caption{
     In an integrity attack, Eve replaces Alice's message with her own. In this
-    case, Eve sends Bob a \textbf{sell-everything} order.
-    understand the information inside it. In this case, Eve can tell that the
-    message is a \textbf{buy} order, and not a \textbf{sell} order.
+    case, Eve sends Bob a \textbf{sell-everything} order. In this case, Eve can
+    tell that the message is a \textbf{buy} order, and not a \textbf{sell}
+    order.
   }
   \label{fig:integrity_attack}
 \end{figure}
@@ -171,9 +171,8 @@ generation algorithm, which produces a \textit{private key} and a
 \textit{public key} that are mathematically related. Each party's public key
 is distributed to the other parties over a channel with integrity guarantees,
 as shown in Figure~\ref{fig:asymmetric_key_generation}.
-Asymmetric key primitives are more flexible than their symmetric key
-counterparts, but are more complicated and consume more computational
-resources.
+Asymmetric key primitives are more flexible than their symmetric counterparts,
+but are more complicated and consume more computational resources.
 
 \begin{figure}[hbt]
   \centering
@@ -337,7 +336,7 @@ hash output from the internal state.
   \label{fig:block_hash_operation}
 \end{figure}
 
-In the symmetric key setting, integrity guarantees are obtained using an
+In the symmetric key setting, integrity guarantees are obtained using a
 \textit{Message Authentication Code}~(MAC) cryptosystem, illustrated in
 Figure~\ref{fig:symmetric_mac}. The sender uses a MAC algorithm that reads in a
 symmetric key and a variable-legnth message, and produces a fixed-length, short
@@ -423,10 +422,9 @@ recommendation~\cite{fips2017gcm} when combined with AES to form AES-GCM.
 The most popular signature algorithm is based on the RSA algorithm. Recently,
 elliptic curve cryptography (ECC)~\cite{koblitz1987ecc} has gained a surge in
 popularity, thanks to its smaller key sizes. For example, a 384-bit ECC key is
-considered to have the same security as a 3072-bit RSA
-key~\cite{fips2012keysize, nsa2015suiteb}. The NSA requires the Digital
-Signature Standard~(DSS)\cite{fips2013dss}, which specifies schemes based on
-RSA and on ECC.
+considered to be as secure as a 3072-bit RSA key~\cite{fips2012keysize,
+nsa2015suiteb}. The NSA requires the Digital Signature
+Standard~(DSS)\cite{fips2013dss}, which specifies schemes based on RSA and ECC.
 
 
 \HeadingLevelC{Freshness}
@@ -439,17 +437,17 @@ the state needed to generate the unique pieces of information on the sender
 side, and verify their uniqueness on the receiver side.
 
 A popular solution for gaining freshness guarantees relies on \textit{nonces},
-single-use random numbers. The attractiveness of nonces is that the sender does
-not need to maintain any state, but the downside is that the receiver must
-store the nonces of all received messages.
+single-use random numbers. Nonces are attractive because the sender does not
+need to maintain any state; the receiver, however, must store the nonces of all
+received messages.
 
 Nonces are often combined with a message timestamping and expiration scheme, as
 shown in Figure~\ref{fig:timestamped_nonces}. An expiration can greatly reduce
 the receiver's storage requirement, as the nonces for expired messages can be
 safely discarded. However, the scheme depends on the sender and receiver having
 synchronized clocks. The message expiration time is a compromise between the
-desire to reduce storage costs and the need to tolerate clock skew and
-message transmission and processing delays.
+desire to reduce storage costs, and the need to tolerate clock skew and delays
+in message transmission and processing.
 
 \begin{figure}[hbt]
   \centering

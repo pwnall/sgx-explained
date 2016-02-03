@@ -26,11 +26,11 @@ the differences between existing platforms.
 
 Software attestation can be combined with a key agreement
 protocol~(\S~\ref{sec:key_agreement}), as software attestation provides the
-authentication required the key agreement protocol. The resulting protocol can
+authentication required by the key agreement protocol. The resulting protocol can
 assure a verifier that it has established a shared secret with a specific piece
 of software, hosted inside an isolated container created by trusted hardware.
 The next paragraph outlines the augmented protocol, using Diffie-Hellman Key
-Exchange~(DKE)~\cite{diffie1976keyexchange} as an example key exchange
+Exchange~(DKE)~\cite{diffie1976keyexchange} as an example of the key exchange
 protocol.
 
 The verifier starts executing the key exchange protocol, and sends the first
@@ -63,9 +63,9 @@ and provisions each secure processor that it produces with a unique
 \textit{attestation signatures}. The manufacturer also
 issues an \textit{endorsement certificate} for each secure processor's
 attestation key. The certificate indicates that the key is meant to be used for
-software attestation. The certification policy generally states, at a minimum,
-that the private part of the attestation key is stored in tamper-resistant
-hardware, and is only used for producing attestation signatures.
+software attestation. The certification policy generally states that, at the
+very least, the private part of the attestation key be stored in
+tamper-resistant hardware, and only be used to produce attestation signatures.
 
 A secure processor identifies each isolated container by storing a
 cryptographic hash of the code and data loaded inside the container. When the
@@ -73,8 +73,8 @@ processor is asked to sign a piece of attestation data, it uses the
 cryptographic hash associated with the container as the measurement in the
 attestation signature. After a verifier validates the processor's attestation
 key using its endorsement certificate, the verifier ensures that the signature
-is valid, and that the measurement in the signature belongs to the software
-that it expects to communicate with. Having checked all the links in the
+is valid, and that the measurement in the signature belongs to the software with
+which it expects to communicate. Having checked all the links in the
 attestation chain, the verifier has authenticated the other party in the key
 exchange, and is assured that it now shares a secret with the software that it
 expects, running in an isolated container on hardware that it trusts.
@@ -93,7 +93,7 @@ build a secure container contributes data to its measurement hash.
 The philosophy behind software attestation is that the computer's owner can
 load any software she wishes in a secure container. However, the computer owner
 is assumed to have an incentive to participate in a distributed system where
-the secure container built by her is authenticated in software attestation.
+the secure container she built is authenticated via software attestation.
 Without the requirement to undergo software attestation, the computer owner can
 build any container without constraints, which would make it impossible to
 reason about the security properties of the software inside the container.
