@@ -537,11 +537,13 @@ replaced by the enclave's memory accesses.
 % PRMRR documented in HASP papers and both SGX manuals, completely removed from
 % SDM. It still exists in Coreboot. Couldn't find other Skywell code.
 
+% Memory Type Considerations for PRMRR: SGX S 6.11.1, SGX2 S 6.11.1
+
 An extreme approach that can provably defeat cache timing attacks is disabling
 caching for the PRM range, which contains the EPC. The SDM is almost completely
 silent about the PRM, but the SGX manuals that it is based on state that
-the allowable caching behaviors~(\S~\ref{sec:cacheability_config}) for the EPC
-are uncacheable (UC) and write-back (WB). This could become useful if the SGX
-implementation would make sure that the PRM's caching behavior cannot be
+the allowable caching behaviors~(\S~\ref{sec:cacheability_config}) for the PRM
+range are uncacheable (UC) and write-back (WB). This could become useful if the
+SGX implementation would make sure that the PRM's caching behavior cannot be
 changed while SGX is enabled, and if the selected behavior would be captured by
 the enclave's measurement~(\S~\ref{sec:sgx_measurement}).
