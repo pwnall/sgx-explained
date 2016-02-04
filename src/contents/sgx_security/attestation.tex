@@ -124,14 +124,12 @@ by the software attestation process.
 
 Therefore, it makes sense to state that a trusted hardware design's measurement
 scheme guarantees that a property has a certain value in a secure container.
-The precise meaning of the phrase is that the property's value determines the
-the data used to compute the container's measurement, so an expected
-measurement hash effectively specifies an expected value for the property. The
-correct use of software attestation in a distributed system will cause all
-containers that are allowed to participate in the system to have the desired
-value for the given property.
+The precise meaning of this phrase is that the property's value determines the
+data used to compute the container's measurement, so an expected measurement
+hash effectively specifies an expected value for the property. All containers in
+a distributed system that correctly uses software attestation will have the
+desired value for the given property.
 
 For example, the measuring scheme used by trusted hardware designed for cloud
 infrastructure should guarantee that the container's memory was initialized
-using the contents desired by the customer. This contents is often referred to
-as an image.
+using the customer's content, often referred to as an image.

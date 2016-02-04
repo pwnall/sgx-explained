@@ -48,7 +48,7 @@ More complex physical attacks consist of installing a device that taps a bus on
 the computer's motherboard (\S~\ref{sec:motherboard}). \textit{Passive attacks}
 are limited to monitoring the bus traffic, whereas \textit{active attacks} can
 modify the traffic, or even place new commands on the bus. \textit{Replay
-attacks} are a notoriously difficult to defeat class of active attacks, where
+attacks} are a notoriously challenging class of active attacks, where
 the attacker first records the bus traffic, and then selectively replays a
 subset of the traffic. Replay attacks bypass systems that rely on static
 signatures or HMACs, and generally aim to double-spend a limited resource.
@@ -65,7 +65,7 @@ the firmware from DRAM.
 
 Although the speed of the DDR bus makes tapping very difficult, there are
 well-publicized records of successful attempts. The original Xbox console's
-booting process was reverse-engineered thanks to a passive tap on the DRAM
+booting process was reverse-engineered, thanks to a passive tap on the DRAM
 bus~\cite{huang2003xbox}, which showed that the firmware used to boot the
 console was partially stored in its southbridge. The protection mechanisms of
 the PlayStation 3 hypervisor were subverted by an active tap on its memory
@@ -97,11 +97,11 @@ developed to diagnose design and manufacturing defects in chips.
 
 The cost of chip attacks is dominated by the required equipment, although the
 reverse-engineering involved is also non-trivial. This cost grows very rapidly
-as the size of the circuitry's components decreases. At the time of this
-writing, the latest Intel CPUs have a 14nm feature size, which requires ion
-beam microscopy. % (TODO: look up the details for all this).
+as the circuit components shrink. At the time of this writing, the latest Intel
+CPUs have a 14nm feature size, which requires ion beam microscopy.
+% (TODO: look up the details for all this).
 
-The least expensive class of chip attacks are destructive, and only require
+The least expensive classes of chip attacks are destructive, and only require
 imaging the chip's circuitry. These attacks rely on a microscope capable of
 capturing the necessary details in each layer, and equipment for mechanically
 removing each layer and exposing the layer below it to the microscope.
@@ -118,13 +118,12 @@ of magnitude more expensive than imaging attacks, because the attacker must
 maintain the integrity of the chip's circuitry, and therefore cannot de-layer
 the chip.
 
-The simplest active attacks on a chip consist in creating or destroying an
-electric connection between two components. For example, the debugging
-functionality in many chips is disabled by ``blowing'' an e-fuse. Once this
-e-fuse is located, an attacker can reconnect its two ends, effectively undoing
-the ``blowing'' operation. More expensive attacks involve changing voltages
-across a component as the chip is operating, and are typically used to
-reverse-engineer complex circuits.
+The simplest active attacks on a chip create or destroy an electric connection
+between two components. For example, the debugging functionality in many chips
+is disabled by ``blowing'' an e-fuse. Once this e-fuse is located, an attacker
+can reconnect its two ends, effectively undoing the ``blowing'' operation. More
+expensive attacks involve changing voltages across a component as the chip is
+operating, and are typically used to reverse-engineer complex circuits.
 
 Surprisingly, active attacks are not significantly more expensive to carry out
 than passive non-destructive attacks. This is because the tools used to measure
@@ -159,14 +158,14 @@ hardware that is vulnerable to destructive attacks, such as e-fuses.
 An entirely different approach to physical attacks consists of indirectly
 measuring the power consumption of a computer system or its components. The
 attacker takes advantage of a known correlation between power consumption and
-the data being computed on, and learns some property of the data from the
-observed power consumption.
+the computed data, and learns some property of the data from the observed power
+consumption.
 
 The earliest power analysis attacks have directly measured the processor chip's
 power consumption. For example, \cite{kocher1999dpa} describes a simple power
 analysis (SPA) attack that exploits the correlation between the power consumed
-by a smart card chip's CPU and the type of instruction executed by it, and
-learned a DSA key that the smart card was supposed to safeguard.
+by a smart card chip's CPU and the type of instruction it executed, and learned
+a DSA key that the smart card was supposed to safeguard.
 
 While direct power analysis attacks necessitate some equipment, their costs are
 dominated by the complexity of the analysis required to learn the desired
