@@ -6,27 +6,26 @@ virtually guaranteed to have security vulnerabilities. This suggests that a
 cautious secure architecture should avoid having the system software in the
 TCB.
 
-However, removing the system software from the TCB requires that the
-architecture provides a method for isolating sensitive application code from
-the untrusted system software. This is typically accomplished by a designing a
-mechanism for loading application code in isolated containers whose contents
-can be certified via software
-attestation~(\S~\ref{sec:generic_software_attestation}). One of the more
-difficult problems faced by these designs is that application software relies
-on the memory management services provided by the system software, which is now
-untrusted.
+However, removing the system software from the TCB requires the architecture to
+provide a method for isolating sensitive application code from the untrusted
+system software. This is typically accomplished by designing a mechanism for
+loading application code in isolated containers whose contents can be certified
+via software attestation~(\S~\ref{sec:generic_software_attestation}). One of the
+more difficult problems these designs face is that application software
+relies on the memory management services provided by the system software, which
+is now untrusted.
 
-Intel's SGX~\cite{mckeen2013sgx, anati2013sgx}, leaves the system software in charge of
-setting up the page tables (\S~\ref{sec:paging}) used by address translation, inspired by Bastion~\cite{champagne2010bastion},
-but instantiates access checks that prevent the system software from directly
-accessing the isolated container's memory.
+Intel's SGX~\cite{mckeen2013sgx, anati2013sgx}, leaves the system software in
+charge of setting up the page tables (\S~\ref{sec:paging}) used by address
+translation, inspired by Bastion~\cite{champagne2010bastion}, but instantiates
+access checks that prevent the system software from directly accessing the
+isolated container's memory.
 
 This section discusses some attacks that become relevant when the application
-software does not trust the system software which in charge of the page tables.
-Understanding these attacks is a prerequisite to reasoning about the security
-properties of architectures with this threat model. For example, a large amount
-of the mechanisms in SGX are aimed at dealing with a subset of the attacks
-described here.
+software does not trust the system software, which is in charge of the page
+tables. Understanding these attacks is a prerequisite to reasoning about the
+security properties of architectures with this threat model. For example, many
+of the mechanisms in SGX target a subset of the attacks described here.
 
 
 \HeadingLevelC{Passive Attacks}
@@ -91,11 +90,10 @@ place, when the application's code jumps to the virtual address of the
   \includegraphics[width=85mm]{figures/active_mapping_attack.pdf}
   \caption{
     An example of an active memory mapping attack. The application's author
-    intends to perform a security check, and only disclose a piece of sensitive
-    information if the check passes. Malicious system software maps the virtual
-    address of the procedure called when the security check fails to a DRAM
-    page that contains the procedure that discloses the sensitive information,
-    which is supposed to be called when the security check passes.
+    intends to perform a security check, and only call the procedure that
+    discloses the sensitive information if the check passes. Malicious system
+    software maps the virtual address of the procedure that is called when the
+    check fails, to a DRAM page that contains the disclosing procedure.
   }
   \label{fig:active_mapping_attack}
 \end{figure}
@@ -134,11 +132,11 @@ medium, such as a hard disk. The system software exchanges the hard disk
 bytes storing the two pages, and then brings the two pages back into DRAM.
 Remarkably, all the steps taken by this attack are indistinguishable from
 legitimate page swapping activity, with the exception of the I/O operations
-that exchange the disk bytes that store evicted pages.
+that exchange the disk bytes storing evicted pages.
 
 The subtle attack described in this section can be defeated by
 cryptographically binding the contents of each page that is evicted from DRAM
-to the virtual address that the page should be mapped to. The cryptographic
+to the virtual address to which the page should be mapped. The cryptographic
 primitive (\S~\ref{sec:crypto_primitives}) used to perform the binding must
 obviously guarantee integrity. Furthermore, it must also guarantee freshness, in
 order to foil replay attacks where the system software ``undoes'' an
@@ -178,16 +176,16 @@ Malicious system software can take advantage of the design decisions explained
 above by carrying out the following attack. While the same software used in the
 previous examples is executing on a core, the system software executes on a
 different core and evicts the \texttt{errorOut} and \texttt{disclose} pages
-from DRAM. Like in the previous attack, the system software loads the
+from DRAM. As in the previous attack, the system software loads the
 \texttt{disclose} code in the DRAM page that previously held \texttt{errorOut}.
 In this attack, however, the system software also updates the page tables.
 
 The core where the system software executed sees the code that the application
 developer intended. Therefore, the attack will pass any security checks that
-rely cryptographic associations between page contents and page table data, as
-long as the checks are performed by the core used to load pages back into DRAM.
-However, the core that executes the protected container's code still uses the
-old page table data, because the system software did not invalidate its TLB
+rely upon cryptographic associations between page contents and page table data,
+as long as the checks are performed by the core used to load pages back into
+DRAM. However, the core that executes the protected container's code still uses
+the old page table data, because the system software did not invalidate its TLB
 entries. Assuming the TLBs are not subjected to any additional security checks,
 this attack causes the same private information leak as the previous examples.
 

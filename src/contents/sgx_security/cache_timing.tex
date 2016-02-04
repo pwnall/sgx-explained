@@ -23,17 +23,18 @@ ring 3 software.
 The fundamental tool of a cache timing attack is an attacker process that
 measures the latency of accesses to carefully designated memory locations in
 its own address space. The memory locations are chosen so that they map to
-the same cache lines as some interesting memory locations in a victim process,
-in a cache that is shared between the attacker and the victim. This requires
-in-depth knowledge of the shared cache's organization (\S~\ref{sec:cache_org}).
+the same cache lines as those of some interesting memory locations in a victim
+process, in a cache that is shared between the attacker and the victim. This
+requires in-depth knowledge of the shared cache's organization
+(\S~\ref{sec:cache_org}).
 
 Armed with the knowledge of the cache's organization, the attacker process
 sets up the attack by accessing its own memory in such a way that it fills up
-all the ways in the cache sets that would hold the victim's interesting memory
-locations. After the targeted cache sets are full, the attacker allows the
-victim process to execute. When the victim process accesses an interesting
-memory locations in its own address space, the shared cache must evict one of
-the cache lines holding the attacker's memory locations.
+all the cache sets that would hold the victim's interesting memory locations.
+After the targeted cache sets are full, the attacker allows the victim process
+to execute. When the victim process accesses an interesting memory location in
+its own address space, the shared cache must evict one of the cache lines
+holding the attacker's memory locations.
 
 As the victim is executing, the attacker process repeatedly times accesses to
 its own memory locations. When the access times indicate that a location was
@@ -49,10 +50,10 @@ information from the learned memory access pattern.
 
 Cache timing attacks require control over a software process that shares a
 cache memory with the victim process. Therefore, a cache timing attack that
-aims at the L2 cache would have to rely on the system software to schedule a
+targets the L2 cache would have to rely on the system software to schedule a
 software thread on a logical processor in the same core as the target software,
 whereas an attack on the L3 cache can be performed using any logical processor
-on the same CPU. The latter attacks rely on the fact that the L3 cache is
+on the same CPU. The latter attack relies on the fact that the L3 cache is
 inclusive, which greatly simplifies the processor's cache coherence
 implementation (\S~\ref{sec:cache_coherence}).
 
@@ -113,7 +114,7 @@ partitioning schemes is that they must be implemented by a trusted party. When
 the system software is trusted, it can (for example) use the principles behind
 page coloring~\cite{taylor1990coloring, kessler1992coloring} to partition the
 caches~\cite{lin2008coloring} between mutually distrusting parties. This comes
-down setting up the page tables in such a way that no two mutually distrusting
+down to setting up the page tables in such a way that no two mutually distrusting
 software module are stored in physical pages that map to the same sets in any
 cache memory.  However, if the system software is not trusted, the cache
 partitioning scheme must be implemented in hardware.
@@ -126,7 +127,7 @@ accesses from all the code handling sensitive data.
 
 However, removing data-dependent memory accesses is difficult to accomplish in
 practice because instruction fetches must also be taken into consideration.
-\cite{kasper2009aes} gives an idea of the level of effort required for removing
+\cite{kasper2009aes} gives an idea of the level of effort required to remove
 data-dependent accesses from AES, which is a relatively simple data processing
 algorithm. At the time of this writing, we are not aware of any approach that
 scales to large pieces of software.
@@ -135,7 +136,7 @@ While the focus of this section is cache timing attacks, we would like to point
 out that any shared resource can lead to information leakage. A worrying
 example is hyper-threading (\S~\ref{sec:cpu_core}), where each CPU core is
 represented as two logical processors, and the threads executing on these two
-processors share execution units. An attacker that can run a process on a
+processors share execution units. An attacker who can run a process on a
 logical processor sharing a core with a victim process can use
 \texttt{RDTSCP}~\cite{petters1999making} to learn which execution units are in
 use, and infer what instructions are executed by the victim process.

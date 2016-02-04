@@ -165,7 +165,7 @@ grabs a fixed number of bits from the CSPRNG.
   \label{fig:symmetric_key_generation}
 \end{figure}
 
-The salient feature of \textit{asymmetric key} cryptography is that it does not
+The defining feature of \textit{asymmetric key} cryptography is that it does not
 require a private channel for key distribution. Each party executes the key
 generation algorithm, which produces a \textit{private key} and a
 \textit{public key} that are mathematically related. Each party's public key
@@ -239,7 +239,7 @@ variable key sizes, and 3072-bit key pairs are considered to provide the same
 security as 128-bit AES keys~\cite{fips2012keysize}.
 
 A block cipher does not necessarily guarantee privacy, when used  on its own.
-An easy to see issue is that in our previous example, a block cipher would
+A noticeable issue is that in our previous example, a block cipher would
 generate the same encrypted output for any of Alice's \textsc{buy} orders, as
 they all have the same content. Furthermore, each block cipher has its own
 assumptions that can lead to subtle vulnerabilities if the cipher is used

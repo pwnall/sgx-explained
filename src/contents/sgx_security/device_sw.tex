@@ -22,10 +22,9 @@ The PCIe bus~(\S~\ref{sec:motherboard}) allows any device connected to the bus
 to perform \textit{Direct Memory Access}~(DMA), reading from and writing to
 the computer's DRAM without the involvement of a CPU core. Each device is
 assigned a range of DRAM addresses via a standard PCI configuration mechanism,
-but the bus does not restrict a device from performing DMA targeting DRAM
-addresses outside its assigned range.
+but can perform DMA on DRAM addresses outside of that range.
 
-Without any additional protection mechanism, an attacker that compromises system
+Without any additional protection mechanism, an attacker who compromises system
 software can take advantage of programmable devices to access any DRAM region,
 yielding capabilities that were traditionally associated with a DRAM bus tap.
 For example, an early implementation of Intel TXT~\cite{grawrock2009txt} was
@@ -51,7 +50,7 @@ attackers caused bit flips in the page tables used by the CPU's address
 translation (\S~\ref{sec:paging}) mechanism, and in other data structures used
 to make security decisions.
 
-The issue exploited by the rowhammer attack most likely stems from an incorrect
+The defect exploited by the rowhammer attack most likely stems from an incorrect
 design assumption. The DRAM engineers probably only thought of non-malicious
 software and assumed that an individual DRAM cell cannot be accessed too
 often, as repeated accesses to the same memory address would be absorbed by the
@@ -60,8 +59,8 @@ advantage of the \texttt{CLFLUSH} instruction, which flushes the cache line
 that contains a given DRAM address. \texttt{CLFLUSH} is intended as a method
 for applications to extract more performance out of the cache hierarchy, and
 is therefore available to software running at all privilege levels. Rowhammer
-exploited the interaction between \texttt{CLFLUSH}'s availability and the DRAM
-engineers' invalid assumptions to obtain capabilities that are normally
+exploited the combination of \texttt{CLFLUSH}'s availability and the DRAM
+engineers' invalid assumptions, to obtain capabilities that are normally
 associated with an active DRAM bus attack.
 
 
@@ -78,7 +77,7 @@ describes digital temperature sensors embedded in each CPU core, whose readings
 are exposed using Model-Specific Registers~(MSRs)~(\S~\ref{sec:address_spaces})
 that can be read by system software.
 
-An attacker that compromises a computer's system software and gains access to
+An attacker who compromises a computer's system software and gains access to
 the performance monitoring events or the temperature sensors can obtain the
 information needed to carry out a power analysis attack, which normally
 requires physical access to the victim computer and specialized equipment.
@@ -103,7 +102,7 @@ tapping attacks.
 The Intel Management Engine (ME)~\cite{ruan2014intelme} loads its firmware
 from the same flash memory chip as the main computer, which opens up the
 possibility of compromising its firmware. Due to its vast management
-capabilities (\S~\ref{sec:intel_me}), a compromised ME would bring most of the
+capabilities (\S~\ref{sec:intel_me}), a compromised ME would leak most of the
 powers that come with installing active probes on the DRAM bus, the PCI bus,
 and the System Management bus (SMBus), as well as power consumption meters.
 Thanks to its direct access to the motherboard's Ethernet PHY, the probe would
@@ -147,7 +146,7 @@ a computer whose ME firmware contained the AMT application.
 
 The attacks described in this section show that a system whose threat model
 assumes no software attacks must be designed with an understanding of all the
-system's buses, the programmable devices that may be attached to them. The
+system's buses, and the programmable devices that may be attached to them. The
 system's security analysis must argue that the devices will not be used in
 physical-like attacks. The argument will rely on barriers that prevent
 untrusted software running on the CPU from communicating with other
