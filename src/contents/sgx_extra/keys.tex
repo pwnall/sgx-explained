@@ -1,4 +1,40 @@
 \HeadingLevelB{Key Hierarchy and Derivation}
+\label{sec:sgx_hardware_keys}
+
+% Provisioning Base Key known to intel, used to provision DAK in field
+%   US 8,972,746 B2 - Table 12-1, columns 40-41
+%   US 8,972,746 B2 - 42:52-57
+% Provisioning Key is unique to chip package and enclave signer, to fulfill the
+% case of multiple provisioning infrastructures.
+%   US 8,972,746 B2 - 42:57-62
+% Provisioning Seal Key is used to encrypt DAK with a key that can be retrieved
+% when the platform changes ownership
+%   US 8,972,746 B2 - 42:63-67, 43:1-5
+% DAK sources - preferred source has DAK keys fused in, does not match reality;
+% second source matches reality
+%   US 8,972,746 B2 - 43:25-34, 44:1-3
+
+% Key derivation process
+%   US 8,972,746 B2 - 44:17-29, 45:18-26
+%   US 8,972,746 B2 - Table 12, columns 44-45
+
+% TCB Key Hierarchy (minus the OOB experience key and EPID key)
+%   US 8,972,746 B2 - 46:65-67, 47:1-10
+%   US 8,972,746 B2 - Figure 18, labels in 49:1-51
+% Key server encrypts fuse key before burning it in
+%   US 8,972,746 B2 - 47:36-44
+
+% TCB SVN register: 64 bits, 8 8-bit SVNs
+%   US 8,972,746 B2 - 47:18-23
+% PRF Loop Derivation -> SVN key (the 288 bits of EPID key got nixed)
+%   US 8,972,746 B2 - 47:45-67, 48:1-59
+% Provisioning key is CMAC using SVN key over a fixed string
+%   US 8,972,746 B2 - 48:60-65
+
+
+
+
+
 
 %%% Intel patent summary
 

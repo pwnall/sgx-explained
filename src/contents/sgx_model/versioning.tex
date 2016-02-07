@@ -155,7 +155,8 @@ The enclave certificates must be signed by RSA
 signatures~(\S~\ref{sec:integrity_crypto}) that follow the method described in
 RFC 3447~\cite{jonsson2003pkcsv21}, using 256-bit SHA-2~\cite{fips2015shs} as
 the hash function that reduces the input size, and the padding method described
-in PKCS \#1 v1.5~\cite{kaliski1998pkcs1v15}.
+in PKCS \#1 v1.5~\cite{kaliski1998pkcs1v15}, which is illustrated in
+Figure~\ref{fig:rsa_pkcs1_v15_padding}.
 
 The SGX implementation only supports 3072-bit RSA keys whose public exponent is
 3. The key size is likely chosen to meet FIPS'
@@ -245,6 +246,9 @@ Specifically, an SGX implementation will consider all SGX implementations with
 lower SVNs to be compromised due to security vulnerabilities, and will not
 trust them.
 
+% TCB SVN register: 64 bits, 8 8-bit SVNs
+%   US 8,972,746 B2 - 47:18-23
+
 An SGX patent~\cite{intel2013patent1} discloses that CPUSVN is a concatenation
 of small integers representing the SVNs of the various components that make up
 SGX's implementation. This structure is consistent with all the statements made
@@ -289,6 +293,11 @@ of the MODULUS field in the SIGSTRUCT, and writes it into the enclave's SECS.
 \texttt{EINIT} also copies the ISVPRODID and ISVSVN fields from SIGSTRUCT into
 the enclave's SECS. As explained in \S~\ref{sec:sgx_certificate_identity},
 these fields make up the enclave's certificate-based identity.
+
+After verifying the RSA signature in SIGSTRUCT, \texttt{EINIT} copies the
+signature's padding into the PADDING field in the enclave's SECS. The PKCS \#1
+v1.5 padding scheme, outlined in Figure~\ref{fig:rsa_pkcs1_v15_padding}, does
+not involve randomness, so PADDING should have the same value for all enclaves.
 
 \texttt{EINIT} performs a few checks to make sure that the enclave undergoing
 initialization was indeed authorized by the provided SIGSTRUCT certificate. The
@@ -358,45 +367,20 @@ illustrated in Figure~\ref{fig:sgx_egetkey}.
   \includegraphics[width=87mm]{figures/sgx_egetkey.pdf}
   \caption{
     \texttt{EGETKEY} implements a key derivation service that is primarily used
-    by SGX's secret migration feature. The key derivation material is derived
+    by SGX's secret migration feature. The key derivation material is drawn
     from the SECS of the calling enclave, the information in a Key Request
-    structure, and a.
+    structure, and secure storage inside the CPU's hardware.
   }
   \label{fig:sgx_egetkey}
 \end{figure}
 
 The keys produced by \texttt{EGETKEY} are derived based on the identity
-information in the current enclave's SECS and on a secret stored in secure
-hardware inside the SGX-enabled processor. The pieces of information used to
-derive the keys are selected by a Key Request (KEYREQUEST) structure, shown in
-Table~\ref{fig:sgx_keyrequest}.
-
-% Key Request (KEYREQUEST): SDM S 38.17
-
-\begin{table}[hbt]
-  \centering
-  \begin{tabularx}{\columnwidth}{| l | r | X |}
-  \hline
-  \textbf{Field} & \textbf{Bytes} & \textbf{Description} \\
-  \hline
-  KEYNAME & 2 & The desired key type; secret migration uses ``Seal'' keys \\
-  \hline
-  KEYPOLICY & 2 & The identity information (MRENCLAVE and/or MRSIGNER) \\
-  \hline
-  ISVSVN & 2 & The enclave SVN used in derivation\\
-  \hline
-  CPUSVN & 16 & SGX implementation SVN used in derivation \\
-  \hline
-  ATTRIBUTEMASK & 16 & Selects enclave attributes \\
-  \hline
-  KEYID & 32 & Random bytes \\
-  \hline
-  \end{tabularx}
-  \caption{
-    A subset of the fields in the KEYREQUEST structure. These fields
-  }
-  \label{fig:sgx_keyrequest}
-\end{table}
+information in the current enclave's SECS and on two secrets stored in secure
+hardware inside the SGX-enabled processor. One of the secrets is the input to
+a largely undocumented series of transformations that yields the symmetric key
+for the cryptographic primitive underlying the key derivation process. The
+other secret, referred to as the CR\_SEAL\_FUSES in the SDM, is one of the
+pieces of information used in the key derivation material.
 
 % KDF uses FIPS SP 800-180 and AES-CMAC
 %   US 8,972,746 B2 - 44:17-29
@@ -410,25 +394,54 @@ The SDM does not specify the key derivation algorithm, but the SGX
 patents~\cite{intel2013patent1, intel2013patent2} disclose that the keys are
 derived using the method described in FIPS SP 800-108~\cite{fips2009kdf} using
 AES-CMAC~\cite{fips2005cmac} as a Pseudo-Random Function (PRF). The same
-patents state that the secret used for key derivation is stored in e-fuses in
-the CPU, which is confirmed by the ISCA 2015 SGX
+patents state that the secrets used for key derivation are stored in the CPU's
+e-fuses, which is confirmed by the ISCA 2015 SGX
 tutorial~\cite{intel2015iscasgx}.
 
 This additional information implies that all \texttt{EGETKEY} invocations that
 use the same key derivation material will result in the same key, even across
 CPU power cycles. Furthermore, it is impossible for an adversary to obtain the
 key produced from a specific key derivation material without access to the
-secret stored in the CPU's e-fuses. The following paragraphs discuss the pieces
-of data used in the key derivation material.
+secret stored in the CPU's e-fuses. SGX's key hierarchy is further described in
+\S~\ref{sec:sgx_quoting_enclave}.
 
 % Key Request (KEYREQUEST): SDM S 38.17
 % EGETKEY: SDM S 41.4.1
 % Key Derivation: SDM Table 41-43
 
+The following paragraphs discuss the pieces of data used in the key derivation
+material, which are selected by the Key Request (KEYREQUEST) structure shown in
+in Table~\ref{fig:sgx_keyrequest},
+
+\begin{table}[hbt]
+  \centering
+  \begin{tabularx}{\columnwidth}{| l | r | X |}
+  \hline
+  \textbf{Field} & \textbf{Bytes} & \textbf{Description} \\
+  \hline
+  KEYNAME & 2 & The desired key type; secret migration uses Seal keys \\
+  \hline
+  KEYPOLICY & 2 & The identity information (MRENCLAVE and/or MRSIGNER) \\
+  \hline
+  ISVSVN & 2 & The enclave SVN used in derivation\\
+  \hline
+  CPUSVN & 16 & SGX implementation SVN used in derivation \\
+  \hline
+  ATTRIBUTEMASK & 16 & Selects enclave attributes \\
+  \hline
+  KEYID & 32 & Random bytes \\
+  \hline
+  \end{tabularx}
+  \caption{
+    A subset of the fields in the KEYREQUEST structure
+  }
+  \label{fig:sgx_keyrequest}
+\end{table}
+
 The KEYNAME field in KEYREQUEST always participates in the key generation
 material. It indicates the type of the key to be generated. While the SGX
-design defines a few key types, the secret migration feature always uses ``Seal
-keys''. The other key types are used by the SGX software attestation process,
+design defines a few key types, the secret migration feature always uses Seal
+keys. The other key types are used by the SGX software attestation process,
 which will be outlined in \S~\ref{sec:sgx_attestation}.
 
 The KEYPOLICY field in KEYREQUEST has two flags that indicate if the MRENCLAVE
@@ -469,9 +482,9 @@ to implementations with lower SVNs. \S~\ref{sec:sgx_certificate_identity}
 argues that the SVN restrictions can reduce the impact of security
 vulnerabilities in enclaves and in SGX's implementation.
 
-\texttt{EGETKEY} always uses the ISVPROD value from the current enclave's SECS
-for key derivation. It follows that secrets can never flow between enclaves
-whose SIGSTRUCT certificates assign them different Product IDs.
+\texttt{EGETKEY} always uses the ISVPRODID value from the current enclave's
+SECS for key derivation. It follows that secrets can never flow between
+enclaves whose SIGSTRUCT certificates assign them different Product IDs.
 
 Similarly, the key derivation material always includes the value of an 128-bit
 Owner Epoch (OWNEREPOCH) SGX configuration register. This register is intended
@@ -479,6 +492,11 @@ to be set by the computer's firmware to a secret generated once and stored in
 non-volatile memory. Before the computer changes ownership, the old owner can
 clear the OWNEREPOCH from non-volatile memory, making it impossible for the new
 owner to decrypt any enclave secrets that may be left on the computer.
+
+Due to the cryptographic properties of the key derivation process, outside
+observers cannot correlate keys derived using different OWNEREPOCH values. This
+makes it impossible for software developers to use the \texttt{EGETKEY}-derived
+keys described in this section to track a processor as it changes owners.
 
 The \texttt{EGETKEY} derivation material also includes a 256-bit value supplied
 by the enclave, in the KEYID field. This makes it possible for an enclave to

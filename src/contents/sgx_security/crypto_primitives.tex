@@ -419,12 +419,27 @@ operating mode is \textit{Galois/Counter operation
 mode}~(GCM)~\cite{mcgrew2004gcm}, which has earned NIST's
 recommendation~\cite{fips2017gcm} when combined with AES to form AES-GCM.
 
-The most popular signature algorithm is based on the RSA algorithm. Recently,
-elliptic curve cryptography (ECC)~\cite{koblitz1987ecc} has gained a surge in
-popularity, thanks to its smaller key sizes. For example, a 384-bit ECC key is
-considered to be as secure as a 3072-bit RSA key~\cite{fips2012keysize,
-nsa2015suiteb}. The NSA requires the Digital Signature
-Standard~(DSS)\cite{fips2013dss}, which specifies schemes based on RSA and ECC.
+The most popular signature scheme combines the RSA encryption algorithms with a
+padding schemes specified in PKCS \#1, as illustrated in
+Figure~\ref{fig:rsa_pkcs1_v15_padding}. Recently, elliptic curve cryptography
+(ECC)~\cite{koblitz1987ecc} has gained a surge in popularity, thanks to its
+smaller key sizes. For example, a 384-bit ECC key is considered to be as secure
+as a 3072-bit RSA key~\cite{fips2012keysize, nsa2015suiteb}. The NSA requires
+the Digital Signature Standard~(DSS)\cite{fips2013dss}, which specifies schemes
+based on RSA and ECC.
+
+\begin{figure}[hbt]
+  \centering
+  \includegraphics[width=85mm]{figures/rsa_pkcs1_v15_padding.pdf}
+  \caption{
+    The RSA signature scheme with PKCS \#1 v1.5 padding specified in RFC 3447
+    combines a secure hash of the signed message with a DER-encoded
+    specification of the secure hash algorithm used by the signature, and a
+    padding string whose bits are all set to 1. Everything except for the
+    secure hash output is considered to be a part of the PKCS \#1 v1.5 padding.
+  }
+  \label{fig:rsa_pkcs1_v15_padding}
+\end{figure}
 
 
 \HeadingLevelC{Freshness}
