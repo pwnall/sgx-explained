@@ -26,8 +26,10 @@ can be done very cheaply in hardware, using the circuit outlined in
 The SDM does not describe the PRM and the PRM range registers (PRMRR). These
 concepts are documented in the SGX
 manuals~\cite{intel2013sgxmanual, intel2014sgx2manual} and in one of the SGX
-papers~\cite{mckeen2013sgx}. Curiously, although the SDM generally mirrors the
-SGX manuals, it lacks most of the sections that mention the PRM.
+papers~\cite{mckeen2013sgx}. Therefore, the PRM is a micro-architectural detail
+that might change in future implementations of SGX. Our security analysis of
+SGX relies on implementation details surrounding the PRM, and will have to be
+re-evaluated for SGX future implementations.
 
 
 \HeadingLevelC{The Enclave Page Cache (EPC)}

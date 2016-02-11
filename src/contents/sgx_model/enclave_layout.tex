@@ -63,8 +63,20 @@ or software.
 When an enclave represents a dynamic library, it is natural to set ELRANGE to
 the memory range reserved for the library by the loader. The ability to access
 non-enclave memory from enclave code makes it easy to reuse existing library
-code that expects to work with pointers to memory buffers managed by code in the
-host process.
+code that expects to work with pointers to memory buffers managed by code in
+the host process.
+
+Non-enclave software cannot access PRM memory. A memory access that resolves
+inside the PRM results in an aborted transaction, which is undefined at an
+architectural level, On current processors, aborted writes are ignored, and
+aborted reads return a value whose bits are all set to 1. This comes into play
+in the scenario described above, where an enclave is loaded into a host
+application process as a dynamically loaded library. The system software maps
+the enclave's code and data in ELRANGE into EPC pages. If application software
+attempts to access memory inside ELRANGE, it will experience the abort
+transaction semantics. The current semantics do not cause the application to
+crash (e.g., due to a Page Fault), but also guarantee that the host application
+will not be able to tamper with the enclave or read its private information.
 
 
 \HeadingLevelC{SGX Enclave Attributes}
@@ -119,10 +131,13 @@ The MODE64BIT flag is set to true for enclaves that use the 64-bit Intel
 architecture. From a security standpoint, this flag should not even exist, as
 supporting a secondary architecture adds unnecessary complexity to the SGX
 implementation, and increases the probability that security vulnerabilities
-will creep in. In the interest of mental sanity, this work does not analyze the
-behavior of SGX for enclaves whose MODE64BIT flag is cleared. However, a
-security researcher who wishes to find vulnerabilities in SGX might study this
-area.
+will creep in. It is very likely that the 32-bit architecture support was
+included due to Intel's strategy of offering extensive backwards compatibility,
+which has paid off quite well so far.
+
+In the interest of mental sanity, this work does not analyze the behavior of
+SGX for enclaves whose MODE64BIT flag is cleared. However, a security
+researcher who wishes to find vulnerabilities in SGX might study this area.
 
 Last, the INIT flag is always false when the enclave's SECS is created. The
 flag is set to true at a certain point in the enclave lifecycle, which will be
