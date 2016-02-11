@@ -28,6 +28,17 @@ enclave's author has a business relationship with Intel, and implements a
 software licensing system. \S~\ref{sec:sgx_licensing} briefly discusses the
 implications, should this turn out to be true.
 
+The remainder of the section argues that the Launch Enclave should be removed
+from the SGX design. \S~\ref{sec:sgx_provisioning_privacy} explains that the
+LE is not required to enforce the computer owner's launch control policy, and
+concludes that the LE is only meaningful if it enforces a policy that is
+detrimental to the computer owner. \S~\ref{sec:sgx_enclaves_vs_system} debunks
+the myth that an enclave can host malware, which is likely to be used to
+justify the LE. \S~\ref{sec:sgx_enclaves_vs_av} argues that Anti-Virus (AV)
+software is not fundamentally incompatible with enclaves, further disproving
+the theory that Intel needs to actively police the software that runs inside
+enclaves.
+
 
 \HeadingLevelC{Enclave Attributes Access Control}
 \label{sec:sgx_launch_enclave}
@@ -162,19 +173,6 @@ plans. However, given that we know for sure that Intel considered enclave
 licensing at some point, we briefly discuss the implications of implementing
 such a licensing plan.
 
-First, implementing license checks in the Launch Enclave will increase the
-complexity of the enclave's code. The production Launch Enclave is incredibly
-security-sensitive, as a vulnerability in its code has the potential for
-allowing attackers to give malicious enclaves access to the Provisioning Key
-that is the base of SGX's software attestation
-process~(\S~\ref{sec:sgx_quoting_enclave}). Increasing the complexity of such a
-security-sensitive piece of code seems rather reckless.
-
-This first concern can be somewhat mitigated by delegating the actual license
-checks to another enclave, and using a MAC scheme to verify the authenticity of
-the result received from that enclave.
-
-Second, a much bigger concern about implementing enclave licensing is that
 Intel has a near-monopoly on desktop and server-class processors, and being
 able to decide which software vendors are allowed to use SGX can effectively
 put Intel in a position to decide winners and losers in many software markets.
@@ -194,9 +192,37 @@ enclave licensing scheme would meet the same fate, should the developer
 community become aware of it.
 
 
-\HeadingLevelC{Policing Provisioning Keys}
+\HeadingLevelC{System Software Can Enforce a Launch Policy}
 \label{sec:sgx_provisioning_privacy}
 
+\S~\ref{sec:sgx_enclave_lifecycle} explains that the SGX instructions used to
+load and initialize enclaves (\texttt{ECREATE}, \texttt{EADD}, \texttt{EINIT})
+can only be issued by privileged system software, because they manage the EPC,
+which is a system resource.
+
+A consequence on the restriction that only privileged software can issue
+\texttt{ECREATE} and \texttt{EADD} instructions is that the system software is
+able to track all the public contents that is loaded into each enclave. The
+privilege requirements of \texttt{EINIT} mean that the system software can also
+examine each enclave's SIGSTRUCT. It follows that the system software has
+access to a superset of the information that the Launch Enclave might use.
+
+Furtheremore, \texttt{EINIT}'s privileged instruction status means that the
+system software can perform its own policy checks before allowing application
+software to initialize an enclave. So, the system software can enforce a Launch
+Control Policy set by the computer's owner. For example, an IaaS cloud service
+provider may use its hypervisor to implement a Launch Control Policy that
+limits what enclaves its customers are allowed to execute.
+
+Given that the system software has access to a superset of the information that
+the Launch Enclave might use, it is easy to see that the set of policies that
+can be enforced by system software is a superset of the policies that can be
+supported by an LE. Therefore, the only rational explanation for the existence
+of the LE is that it was designed to implement a Launch Control Policy that is
+not beneficial to the computer owner.
+
+As an illustration of this argument, we consider the case of restricting access
+to \texttt{EGETKEY}'s Provisioning keys~(\S~\ref{sec:sgx_quoting_enclave}).
 The derivation material for Provisioning keys does not include OWNEREPOCH, so
 malicious enclaves can potentially use these keys to track a CPU chip package
 as it exchanges owners. For this reason, the SGX design includes a simple
@@ -204,28 +230,46 @@ access control mechanism that can be used by system software to limiting
 enclave access to Provisioning keys. \texttt{EGETKEY} refuses to derive
 Provisioning keys for enclaves whose PROVISIONKEY attribute is not set to true.
 
-The SGX instructions used to load and initialize enclaves introduced in
-\S~\ref{sec:sgx_enclave_lifecycle} (\texttt{ECREATE}, \texttt{EADD},
-\texttt{EINIT}) can only be issued by privileged system software, because they
-manage the EPC. This privilege requirement gives the system software an ability
-to filter the enclaves that run on a computer.
+It follows that a reasonable Launch Control Policy would only allow the
+PROVISIONKEY attribute to be set for the enclaves that implement software
+attestation, such as Intel's Provisioning Enclave and Quoting Enclave. This
+policy can easily be implemented by system software, given its exclusive access
+to the \texttt{EINIT} instruction.
+
+The only concern with the approach outlined above is that a malicious system
+software might abuse the PROVISIONKEY attribute to generate a unique identifier
+for the hardware that it runs on, similar to the much maligned Intel Processor
+Serial Number~\cite{intel1999psn}. We dismiss this concern by pointing out that
+system software has access to many unique identifiers, such as the
+Media Access Control~(MAC) address of the Ethernet adapter integrated into the
+motherboard's chipset~(\S~\ref{sec:motherboard}).
 
 
-\S~\ref{sec:sgx_einit_overview}
-
-The system software that provides the enclave loading
-service which issues the \texttt{EINIT}~(
-instruction can protect the computer owner's privacy by
-enclaves
-
-
-\HeadingLevelC{Enclaves Cannot DOS the System Software}
+\HeadingLevelC{Enclaves Cannot Damage the Host Computer}
+\label{sec:sgx_enclaves_vs_system}
 % NOTE: This is a slightly edited answer to a question we received.
 
 SGX enclaves execute at the lowest privilege level (user mode / ring 3), so
-they cannot compromise the system software without exploiting a security
-vulnerability. Therefore, the only kind of malicious behavior that an enclave
-can exhibit is denial of service (DoS).
+they are subject to the same security checks as their host application. For
+example, modern operating systems set up the I/O maps~(\S~\ref{sec:segments})
+to prevent application software from directly accessing the I/O address
+space~(\S~\ref{sec:address_spaces}), and use the supervisor (S) page table
+attribute~(\S~\ref{sec:page_table_attributes}) to deny application software
+direct access to memory-mapped devices~(\S~\ref{sec:address_spaces}) and to the
+DRAM that stores the system software. Enclave software is subject to I/O
+privilege checks and address translation checks, so a malicious enclave cannot
+directly interact with the computer's devices, and cannot tamper the system
+software.
+
+It follows that software running in an enclave has the same means to compromise
+the system software as its host application, which come down to exploiting a
+security vulnerability. The same solutions used to mitigate vulnerabilities
+exploited by application software (e.g.,
+\texttt{seccomp/bpf}~\cite{kim2013seccompbpf}) apply to enclaves.
+
+The only remaining concern is that an enclave can perform a denial of service
+(DoS) attack against the system software. The rest of this section addresses
+the concern.
 
 The SGX design provides system software the tools it needs to protect itself
 from enclaves that engage in CPU hogging and DRAM hogging. As enclaves cannot
@@ -267,6 +311,7 @@ always preempt enclave threads, using one of the methods described above.
 
 
 \HeadingLevelC{Interaction with Anti-Virus Software}
+\label{sec:sgx_enclaves_vs_av}
 % NOTE: This is a slightly edited answer to a question we received.
 
 Today's anti-virus (AV) systems are glorified pattern matchers. AV software

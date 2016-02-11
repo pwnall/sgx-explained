@@ -4,10 +4,11 @@
 We have summarized SGX's programming model and the implementation details
 that are publicly documented in Intel's official documentation and published
 patents. We are now ready to bring this the information together in an analysis
-of SGX's security properties. We start the analysis by restating SGX's
+of SGX's security properties.  We start the analysis by restating SGX's
 security guarantees, and spend the bulk of this section discussing how SGX
 fares when pitted against the attacks described in
-\S~\ref{sec:security_background}.
+\S~\ref{sec:security_background}. We conclude the analysis with some troubling
+implications of SGX's lack of resistance to software side-channel attacks.
 
 
 \HeadingLevelC{Overview}
@@ -101,13 +102,13 @@ mention of the System Management bus~(SMBus,~\S~\ref{sec:intel_me}) that
 connects the Intel Management Engine~(ME,~\S~\ref{sec:intel_me}) to various
 components on the computer's motherboard.
 
-In \S~\ref{sec:sgx_vs_device_attacks}, we will explain that the ME might play a
-role in SGX's software attestation process. This makes us concerned about the
-possibility of an attack that taps the SMBus to reach into the Intel ME. The
-SMBus is much more accessible than the DRAM bus, as it has fewer wires that
-operate at a significantly lower speed. Unfortunately, without more information
-about the role that the Intel ME plays in a computer, we cannot move beyond
-speculation on this topic.
+In \S~\ref{sec:sgx_vs_device_attacks}, we will explain that the ME needs to be
+taken into account when evaluating SGX's memory protection guarantees. This
+makes us concerned about the possibility of an attack that taps the SMBus to
+reach into the Intel ME. The SMBus is much more accessible than the DRAM bus,
+as it has fewer wires that operate at a significantly lower speed.
+Unfortunately, without more information about the role that the Intel ME plays
+in a computer, we cannot move beyond speculation on this topic.
 
 The threat model stated by the SGX design excludes physical attacks targeting
 the CPU chip~(\S~\ref{sec:physical_chip_attacks}). Fortunately, Intel's patents
@@ -244,10 +245,10 @@ writes the desired values to the current SSA locations backing up the
 registers, and then executes \texttt{EEXIT}~(\S~\ref{sec:sgx_eexit}).
 
 Unfortunately, the following sections will reveal that while SGX offers rather
-thorough guarantees against straightforward attacks on enclaves, its guarantees are almost
-non-existent when it comes to more sophisticated attacks, such as side-channel
-attacks. This section concludes by describing what might be the most egregious
-side-channel vulnerability in SGX.
+thorough guarantees against straightforward attacks on enclaves, its guarantees
+are almost non-existent when it comes to more sophisticated attacks, such as
+side-channel attacks. This section concludes by describing what might be the
+most egregious side-channel vulnerability in SGX.
 
 Most modern Intel processors feature hyper-threading. On these CPUs, the
 execution units~(\S~\ref{sec:out_of_order}) and caches~(\S~\ref{sec:caching})
@@ -445,10 +446,25 @@ concerned about malicious ME firmware.
 
 \S~\ref{sec:firmware_attacks} argues that an attacker who compromises the ME
 can carry out actions that are usually classified as physical attacks.
-Fortunately, the most scary attack vector afforded by an ME takeover appears to
-be direct DRAM access, and SGX already assumes that the DRAM is untrusted.
-Therefore, an ME compromise would be equivalent to the DRAM attacks analyzed in
+An optimistic security researcher can observe that the most scary attack vector
+afforded by an ME takeover appears to be direct DRAM access, and SGX already
+assumes that the DRAM is untrusted. Therefore, an ME compromise would be
+equivalent to the DRAM attacks analyzed in
 \S~\ref{sec:sgx_vs_physical_attacks}.
+
+However, we are troubled by the lack of documentation on the ME's
+implementation, as certain details are critical to SGX's security analysis. For
+example, the ME is involved in the computer's boot
+process~(\S~\ref{sec:booting}, \S~\ref{sec:microcode_sec}), so it is unclear if
+it plays any part in the SGX initialization sequence. Furthermore, during the
+security boot stage~(SEC,~\S~\ref{sec:uefi_sec_details}), the bootstrap
+LP~(BSP) is placed in Cache-As-Ram~(CAR) mode so that the PEI firmware can be
+stored securely while it is measured. This suggests that it would be convenient
+for the ME to receive direct access to the CPU's caches, so that the ME's TPM
+implementation can measure the firmware directly. At the same time, a special
+access path from the ME to the CPU's caches might sidestep the MEE, allowing an
+attacker who has achieved ME code execution to directly read the EPC's
+contents.
 
 
 \HeadingLevelC{Cache Timing Attacks}
@@ -547,3 +563,77 @@ range are uncacheable (UC) and write-back (WB). This could become useful if the
 SGX implementation would make sure that the PRM's caching behavior cannot be
 changed while SGX is enabled, and if the selected behavior would be captured by
 the enclave's measurement~(\S~\ref{sec:sgx_measurement}).
+
+
+\HeadingLevelC{Software Side-Channel Attacks and SGX}
+
+The SGX design reuses a few terms from the Trusted Platform
+Module~(TPM,~\S~\ref{sec:sgx_related_tpm}) design. This helps software
+developers familiar with TPM understand SGX faster. At the same time, the term
+reuse invites the assumption that SGX's software attestation is implemented in
+tamper-resistant hardware, similarly to the TPM design.
+
+\S~\ref{sec:sgx_attestation} explains that, in fact, the SGX design delegates
+the creation of attestation signatures to software that runs inside a
+Quoting Enclave with special privileges that allows it to access the
+processor's attestation key. Re-stated, SGX includes an enclave whose
+software reads the attestation key and produces attestation signatures.
+
+Creating the Quoting Enclave is a very elegant way of reducing the complexity
+of the hardware implementation of SGX, assuming that the isolation guarantees
+provided by SGX are sufficient to protect the attestation key. However, the
+security analysis in \S~\ref{sec:sgx_security_analysis} reveals that enclaves
+are vulnerable to a vast array of software side-channel attacks, which have
+been demonstrated effective in extracting a variety of secrets from isolated
+environments.
+
+% ISCA 2015 SGX: Slides 122 - 134
+
+The gaps in the security guarantees provided to enclaves place a large amount
+of pressure on Intel's software developers, as they must attempt to implement
+the EPID signing scheme used by software attestation without leaking any
+information. Intel's ISCA 2015 SGX tutorial slides suggest that the SGX
+designers will advise developers to write their code in a way that avoids
+data-dependent memory accesses, as suggested in
+\S~\ref{sec:cache_timing_workarounds}, and perhaps provide analysis tools that
+detect code that performs data-dependent memory accesses.
+
+The main drawback of the approach described above is that it is extremely
+cumbersome. \S~\ref{sec:cache_timing_workarounds} describes that, while it may
+be possible to write simple pieces of software in such a way that they do not
+require data-dependent memory accesses, there is no known process that can
+scale this to large software systems. For example, each virtual method call in
+an object-oriented language results in data-dependent code fetches.
+
+The ISCA 2015 SGX tutorial slides also suggest that the efforts of removing
+data-dependent memory accesses should focus on cryptographic algorithm
+implementations, in order to protect the keys that they handle. This is a
+terribly misguided suggestion, because cryptographic key material has no
+intrinsic value. Attackers derive benefits from obtaining the data that is
+protected by the keys, such as medical and financial records.
+
+Some security researchers focus on protecting cryptographic keys because they
+are the target of today's attacks. Unfortunately, it is easy to lose track of
+the fact that keys are being attacked simply because they are the lowest
+hanging fruit. A system that can only protect the keys will have a very small
+positive impact, as the attackers will simply shift their focus on the
+algorithms that process the valuable information, and use the same software
+side-channel attacks to obtain that information directly.
+
+The second drawback of the approach described towards the beginning of this
+section is that while eliminating data-dependent memory accesses should
+thwart the attacks described in \S~\ref{sec:sgx_vs_memory_mapping_attacks} and
+\S~\ref{sec:sgx_vs_cache_timing_attacks}, the measure may not be sufficient to
+prevent the hyper-threading attacks described in
+\S~\ref{sec:sgx_vs_privileged_sw_attacks}. The level of sharing between the two
+logical processors~(LP,~\S~\ref{sec:cpu_core}) on the same CPU core is so high
+that it is possible that a snooping LP can learn more than the memory access
+pattern from the other LP on the same core.
+
+For example, if the number of cycles taken by an integer ALU to execute a
+multiplication or division micro-op~(\S~\ref{sec:out_of_order}) depends on its
+inputs, the snooping LP could learn some information about the numbers
+multiplied or divided by the other LP. While this may be a simple example, it
+is safe to assume that the Quoting Enclave will be studied by many motivated
+attackers, and that any information leak will be exploited.
+
