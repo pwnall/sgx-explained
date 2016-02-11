@@ -518,3 +518,9 @@ Before adding the masked attributes value to the key generation material, the
 INIT and DEBUG attributes~(\S~\ref{sec:sgx_secs_attributes}) to be set. From a
 practical standpoint, this means that secrets will never be migrated between
 enclaves that support debugging and production enclaves.
+
+Without this restriction, it would be unsafe for an enclave author to use the
+same RSA key to issue certificates to both debugging and production enclaves.
+Debugging enclaves receive no integrity guarantees from SGX, so it is possible
+for an attacker to modify the code inside a debugging enclave in a way that
+causes it to disclose any secrets that it has access to.

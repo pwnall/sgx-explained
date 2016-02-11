@@ -26,12 +26,16 @@ some areas where no conclusions can be drawn without additional information
 from Intel.
 
 That being said, perhaps the most troubling finding in our security analysis is
-that Intel included a licensing mechanism in SGX that prevents software
-developers who cannot or will not enter a (yet unspecified) business agreement
-with Intel from authoring software that takes advantage of SGX's protections.
-All the official documentation carefully sidesteps this issue, and has a
-minimal amount of hints that lead to the Intel's patents on SGX. Only these
-patents disclose the existence of licensing plans.
+that Intel added a launch control feature to SGX that forces each computer's
+owner to gain approval from a third party (which is currently Intel) for any
+enclave that the owner wishes to use on the computer.
+\S~\ref{sec:sgx_launch_control} explains that the only publicly documented
+intended use for this launch control feature is a licensing mechanism that
+requires software developers to enter a (yet unspecified) business agreement
+with Intel to be able to author software that takes advantage of SGX's
+protections. All the official documentation carefully sidesteps this issue, and
+has a minimal amount of hints that lead to the Intel's patents on SGX. Only
+these patents disclose the existence of licensing plans.
 
 The licensing issue might not bear much relevance right now, because our
 security analysis reveals that the limitations in SGX's guarantees mean that a

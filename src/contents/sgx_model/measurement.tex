@@ -264,27 +264,44 @@ Thread Control Structure~(TCS,~\S~\ref{sec:sgx_tcs}) pages are measured.
 Otherwise, a malicious enclave loader can change the OENTRY
 field~(\S~\ref{sec:sgx_tcs}, \S~\ref{sec:sgx_eenter}) in a TCS while building
 the enclave, and then a malicious OS can use the TCS to perform an arbitrary
-jump inside enclave code.
-
-By the same argument, all the enclave's code should be measured by
-\texttt{EEXTEND}. Any code fragment that is not measured can be replaced by a
-malicious enclave loader.
+jump inside enclave code. By the same argument, all the enclave's code should
+be measured by \texttt{EEXTEND}. Any code fragment that is not measured can be
+replaced by a malicious enclave loader.
 
 Given these pitfalls, it is surprising that the SGX design opted to decouple
 the virtual address space layout measurements done by \texttt{EADD} from the
-memory content measurements done by \texttt{EEXTEND}. The decoupling does
-provide a benefit, namely the ability to load un-measured user input into an
-enclave while it is being built. However, this benefit only translates into a
-small performance improvement, because enclaves can alternatively be designed
-to copy the user input from untrusted DRAM after being initialized. At the same
-time, the decoupling opens up the possibility of relying on an enclave that
-provides no meaningful security guarantees, due to not measuring all the
-important data via \texttt{EEXTEND} calls.
+memory content measurements done by \texttt{EEXTEND}.
 
-A mitigating circumstance for the \texttt{EADD} / \texttt{EEXTEND} separation
-is that the SGX design seems to expect enclaves to be authored using the same
-tools that build today's dynamically loaded modules. Such tools would easily be
-able to identify the enclave data that needs to be measured.
+At a first pass, it appears that the decoupling only has one benefit, which is
+the ability to load un-measured user input into an enclave while it is being
+built. However, this benefit only translates into a small performance
+improvement, because enclaves can alternatively be designed to copy the user
+input from untrusted DRAM after being initialized. At the same time, the
+decoupling opens up the possibility of relying on an enclave that provides no
+meaningful security guarantees, due to not measuring all the important data via
+\texttt{EEXTEND} calls.
+
+However, the real reason behind the \texttt{EADD} / \texttt{EEXTEND} separation
+is hinted at by the \texttt{EINIT} pseudo-code in the SDM, which states that
+the instruction opens an interrupt~(\S~\ref{sec:interrupts}) window while it
+performs a computationally intensive RSA signature check. If an interrupt
+occurs during the check, \texttt{EINIT} fails with an error code, and the
+interrupt is serviced. This very unusual approach for a processor instruction
+suggests that the SGX implementation was constrained in respect to how much
+latency its instructions were allowed to add to the interrupt handling process.
+
+In light of the concerns above, it is reasonable to conclude that
+\texttt{EEXTEND} was introduced because measuring an entire page using 256-bit
+SHA-2 is quite time-consuming, and doing it in \texttt{EADD} would have caused
+the instruction to exceed SGX's latency budget. The need to hit a certain
+latency goal is a reasonable explanation for the seemingly arbitrary 256-byte
+chunk size.
+
+The \texttt{EADD} / \texttt{EEXTEND} separation will not cause security issues
+if enclaves are authored using the same tools that build today's dynamically
+loaded modules, which appears to be the workflow targeted by the SGX design.
+In this workflow, the tools that build enclaves can easily identify the enclave
+data that needs to be measured.
 
 It is correct and meaningful, from a security perspective, to have the message
 blocks provided by \texttt{EEXTEND} to the hash function include the address of
@@ -318,9 +335,9 @@ OGSBASGX.
 
 The \texttt{EINIT} instruction~(\S~\ref{sec:sgx_einit_overview}) concludes the
 enclave building process. After \texttt{EINIT} is successfully invoked on an
-enclave, the enclave's contents are ``sealed'', meaning that the system software
-cannot use the \texttt{EADD} instruction to load code and data into the
-enclave, and cannot use the \texttt{EEXTEND} instruction to update the
+enclave, the enclave's contents are ``sealed'', meaning that the system
+software cannot use the \texttt{EADD} instruction to load code and data into
+the enclave, and cannot use the \texttt{EEXTEND} instruction to update the
 enclave's measurement.
 
 \texttt{EINIT} uses the SHA-2 finalization
@@ -328,5 +345,5 @@ algorithm~(\S~\ref{sec:integrity_crypto}) on the MRENCLAVE field of the
 enclave's SECS. After \texttt{EINIT}, the field no longer stores the
 intermediate state of the SHA-2 algorithm, and instead stores the final output
 of the secure hash function. This value remains constant after \texttt{EINIT}
-completes, and is included in the attestation signature produced by the
-SGX software attestation process.
+completes, and is included in the attestation signature produced by the SGX
+software attestation process.

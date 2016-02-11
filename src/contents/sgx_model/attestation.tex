@@ -44,7 +44,7 @@ The SGX attestation key used by the Quoting Enclave does not exist at the time
 SGX-enabled processors leave the factory. The attestation key is provisioned
 later, using a largely undocumented process that is known to involve at least
 one other enclave issued by Intel, and two special
-\texttt{EGETKEY}(~\S~\ref{sec:sgx_egetkey}) key types. The publicly available
+\texttt{EGETKEY}~(~\S~\ref{sec:sgx_egetkey}) key types. The publicly available
 details of this process are summarized in \S~\ref{sec:sgx_quoting_enclave}.
 
 The SGX Launch Enclave and EINITTOKEN structure will be discussed in
@@ -100,10 +100,10 @@ on 128-bit AES.
   \centering
   \includegraphics[width=87mm]{figures/sgx_ereport_check.pdf}
   \caption{
-    The authenticity of the REPORT structure created by \texttt{EREPORT} can and
-    should be verified by the report's target enclave. The target's code uses
-    \texttt{EGETKEY} to obtain the key used for the MAC tag embedded in the
-    REPORT structure, and then verifies the tag.
+    The authenticity of the REPORT structure created by \texttt{EREPORT} can
+    and should be verified by the report's target enclave. The target's code
+    uses \texttt{EGETKEY} to obtain the key used for the MAC tag embedded in
+    the REPORT structure, and then verifies the tag.
   }
   \label{fig:sgx_ereport_check}
 \end{figure}
@@ -114,8 +114,8 @@ target enclave's measurement. The target enclave can be assured that the MAC
 tag in the report was produced by the SGX implementation, for the following
 reasons. The cryptographic properties of the underlying key derivation and
 MAC algorithms ensure that only the SGX implementation can produce the MAC tag,
-as it is the only entity that can access the processor's secret, and it would be
-impossible for an attacker to derive the Report key without knowing the
+as it is the only entity that can access the processor's secret, and it would
+be impossible for an attacker to derive the Report key without knowing the
 processor's secret. The SGX design guarantees that the key produced by
 \texttt{EGETKEY} depends on the calling enclave's measurement, so only the
 target enclave can obtain the key used to produce the MAC tag in the report.
@@ -317,6 +317,24 @@ be aware of the ownership change. The privacy issue that stems from not using
 OWNEREPOCH was already introduced by Provisioning keys, and is mitigated using
 the access control scheme based on the PROVISIONKEY attribute that will be
 discussed in \S~\ref{sec:sgx_provisioning_privacy}.
+
+Similarly to the Seal key derivation process, both the Provisioning and
+Provisioning Seal keys depend on the bitwise AND of the
+ATTRIBUTES~(\S~\ref{sec:sgx_secs_attributes}) field in the enclave's SECS and
+the ATTRIBUTESMASK field in the KEYREQUEST structure. While most attributes can
+be masked away, the DEBUG and INIT attributes are always used for key
+derivation.
+
+This dependency makes it safe for Intel to use its production RSA key to issue
+certificates for Provisioning or Quoting Enclaves with debugging features
+enabled. Without the forced dependency on the DEBUG attribute, using the
+production Intel signing key on a single debug Provisioning or Quoting Enclave
+could invalidate SGX's security guarantees on all the CPU chips whose
+attestation-related enclaves are signed by the same key.
+Concretely, if the issued SIGSTRUCT would be leaked, any attacker could build a
+debugging Provisioning or Quoting enclave, use the SGX debugging features to
+modify the code inside it, and extract the 128-bit Provisioning key used to
+authenticated the CPU to Intel's provisioning service.
 
 % Quoting Enclave replaces MAC in REPORT with attestation signature
 %   HASP 2013 Attestation/Sealing paper, S 3.2
