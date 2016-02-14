@@ -23,13 +23,14 @@ page eviction, it must prove to the SGX implementation that it also switched
 the container out of all cores that were executing its code, effectively
 performing a very coarse-grained TLB shootdown.
 
-SGX's microcode ensures the privacy, authenticity, and freshness of each
-container's evicted pages, like Bastion's hypervisor. However, SGX relies on a
-version-based Merkle tree, inspired by Aegis \cite{suh2003aegis}, and adds an innovative twist
-that allows the operating system to dynamically shape the Merkle tree. SGX also
-shares Bastion's and Aegis' vulnerability to memory access pattern leaks, namely a
-malicious OS can directly learn a container's memory accesses at page
-granularity, and any piece of software can perform cache timing attacks.
+SGX's microcode ensures the confidentiality, authenticity, and freshness of
+each container's evicted pages, like Bastion's hypervisor. However, SGX relies
+on a version-based Merkle tree, inspired by Aegis \cite{suh2003aegis}, and adds
+an innovative twist that allows the operating system to dynamically shape the
+Merkle tree. SGX also shares Bastion's and Aegis' vulnerability to memory
+access pattern leaks, namely a malicious OS can directly learn a container's
+memory accesses at page granularity, and any piece of software can perform
+cache timing attacks.
 
 SGX's software attestation is implemented using Intel's Enhanced Privacy ID
 (EPID) group signature scheme \cite{brickell2009epid}, which is too complex for
@@ -44,9 +45,9 @@ authors cannot use data-dependent memory accesses. For example, cache attacks
 on the Quoting Enclave, which computes attestation signatures, would provide
 an attack with a processor's EPID signing key and completely compromise SGX.
 
-Intel's documentation states that SGX guarantees DRAM privacy, authentication,
-and freshness by virtue of a Memory Encryption Engine (MEE). The MEE is
-informally described in an ISCA 2015 tutorial \cite{intel2015iscasgx}, and
-appears to lack a formal specification. In the absence of further information,
-we assume that SGX provides the same protection against physical DRAM attacks
-that Aegis and Bastion provide.
+Intel's documentation states that SGX guarantees DRAM confidentiality,
+authentication, and freshness by virtue of a Memory Encryption Engine (MEE).
+The MEE is informally described in an ISCA 2015
+tutorial~\cite{intel2015iscasgx}, and appears to lack a formal specification.
+In the absence of further information, we assume that SGX provides the same
+protection against physical DRAM attacks that Aegis and Bastion provide.

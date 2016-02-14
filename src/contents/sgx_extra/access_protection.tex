@@ -183,7 +183,7 @@ which provide the security guarantees described in \S~\ref{sec:sgx_paging}.
 First, virtual addresses inside the enclave's virtual memory
 range~(ELRANGE,~\S~\ref{sec:sgx_elrange}) must always translate into physical
 addresses inside the EPC. This way, an enclave is assured that all the code and
-data stored in ELRANGE receives SGX's privacy, integrity, and freshness
+data stored in ELRANGE receives SGX's confidentiality, integrity, and freshness
 guarantees. Since the memory outside ELRANGE does not enjoy these guarantees,
 the SGX design disallows having enclave code outside ELRANGE. This is most
 likely accomplished by setting the disable

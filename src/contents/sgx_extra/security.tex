@@ -17,7 +17,7 @@ Intel's Software Guard Extensions (SGX) is Intel's latest iteration of a
 trusted hardware solution to the secure remote computation problem. The SGX
 design is centered around the ability to create an isolated container whose
 contents receives special hardware protections that are intended to translate
-into privacy, integrity, and freshness guarantees.
+into confidentiality, integrity, and freshness guarantees.
 
 % ISCA 2015 SGX: Slide 93
 
@@ -79,9 +79,9 @@ The SDM and SGX papers discuss the most obvious class of bus tapping
 attacks~(\S~\ref{sec:physical_bus_attacks}), which is the DRAM bus tapping
 attack. SGX's threat model considers DRAM and the bus connecting it to the CPU
 chip to be untrusted. Therefore, SGX's Memory Encryption
-Engine~(MEE,~\S~\ref{sec:sgx_uncore_modifications}) provides privacy, integrity
-and freshness guarantees to the Enclave Page Cache~(EPC,~\S~\ref{sec:sgx_epc})
-data while it is stored in DRAM.
+Engine~(MEE,~\S~\ref{sec:sgx_uncore_modifications}) provides confidentiality,
+integrity and freshness guarantees to the Enclave Page
+Cache~(EPC,~\S~\ref{sec:sgx_epc}) data while it is stored in DRAM.
 
 However, both the SGX papers and the ISCA 2015 tutorial on SGX admit that the
 MEE does not protect the addresses of the DRAM locations accessed when cache
@@ -302,7 +302,7 @@ TLB~(\S~\ref{sec:tlbs}).
 SGX allows system software to evict~(\S~\ref{sec:sgx_epc_eviction}) EPC pages
 into untrusted DRAM, so that the EPC can be over-subscribed. The contents of
 the evicted pages and the associated EPCM metadata are protected by
-cryptographic primitives that offer privacy, integrity and freshness
+cryptographic primitives that offer confidentiality, integrity and freshness
 guarantees. This protects against the active attacks using page swapping
 described in \S~\ref{sec:page_swapping_attacks}.
 
@@ -390,10 +390,10 @@ a communication path that never leaves the CPU die, and therefore can be
 trusted.
 
 SGX regards DRAM as an untrusted storage medium, and uses cryptographic
-primitives implemented in the MEE to guarantee the privacy, integrity and
-freshness of the EPC contents that is stored into DRAM. This protects against
-software attacks on DRAM's integrity, like the rowhammer attack described in
-\S~\ref{sec:rowhammer_attack}.
+primitives implemented in the MEE to guarantee the confidentiality, integrity
+and freshness of the EPC contents that is stored into DRAM. This protects
+against software attacks on DRAM's integrity, like the rowhammer attack
+described in \S~\ref{sec:rowhammer_attack}.
 
 % Interaction with Performance Monitoring: SDM S 43.6
 
@@ -636,4 +636,3 @@ inputs, the snooping LP could learn some information about the numbers
 multiplied or divided by the other LP. While this may be a simple example, it
 is safe to assume that the Quoting Enclave will be studied by many motivated
 attackers, and that any information leak will be exploited.
-

@@ -265,10 +265,10 @@ security vulnerabilities. Third, this design admits multiple mutually
 distrusting provisioning services.
 
 \texttt{EGETKEY} only derives Provisioning keys for enclaves whose PROVISIONKEY
-attribute is set to true. \S~\ref{sec:sgx_provisioning_privacy} argues that
-this mechanism is sufficient to protect the computer owner from a malicious
-software provider that attempts to use Provisioning keys to track a CPU chip
-across OWNEREPOCH changes.
+attribute is set to true. \S~\ref{sec:sgx_provisioning_privacy} argues
+that this mechanism is sufficient to protect the computer owner from a
+malicious software provider that attempts to use Provisioning keys to track a
+CPU chip across OWNEREPOCH changes.
 
 After the Provisioning Enclave obtains a Provisioning key, it uses the key to
 authenticate itself to Intel's provisioning service. Once the provisioning
@@ -313,10 +313,10 @@ When considered independently from the rest of the SGX design, Provisioning
 Seal keys have desirable security properties. The main benefit of these keys is
 that when a computer with an SGX-enabled processor exchanges owners, it does
 not need to undergo the provisioning process again, so Intel does not need to
-be aware of the ownership change. The privacy issue that stems from not using
-OWNEREPOCH was already introduced by Provisioning keys, and is mitigated using
-the access control scheme based on the PROVISIONKEY attribute that will be
-discussed in \S~\ref{sec:sgx_provisioning_privacy}.
+be aware of the ownership change. The confidentiality issue that stems from not
+using OWNEREPOCH was already introduced by Provisioning keys, and is mitigated
+using the access control scheme based on the PROVISIONKEY attribute that will
+be discussed in \S~\ref{sec:sgx_provisioning_privacy}.
 
 Similarly to the Seal key derivation process, both the Provisioning and
 Provisioning Seal keys depend on the bitwise AND of the

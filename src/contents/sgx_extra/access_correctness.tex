@@ -174,10 +174,10 @@ the page data, and includes a 64-bit version that is stored in a version tree
 whose nodes are Version Array~(VA,~(\S~\ref{sec:sgx_va}) pages.
 
 Assuming no cryptographic weaknesses, SGX's scheme does appear to guarantee the
-privacy, integrity, and freshness of the EPC page contents and associated
-metadata while it is evicted in untrusted memory. It follows that \texttt{EWB}
-will only reload an EPCM entry if the contents is equivalent to the contents of
-an evicted entry.
+confidentiality, integrity, and freshness of the EPC page contents and
+associated metadata while it is evicted in untrusted memory. It follows that
+\texttt{EWB} will only reload an EPCM entry if the contents is equivalent to
+the contents of an evicted entry.
 
 The equivalence notion invoked here is slightly different from perfect
 equality, in order to account for the allowable operation of evicting an EPC

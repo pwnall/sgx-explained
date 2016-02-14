@@ -13,9 +13,10 @@ The enclave would contain the code for decrypting images, the image processing
 algorithm, and the code for encrypting the results. The code that receives the
 uploaded encrypted images and stores them would be left outside the enclave.
 
-An SGX-enabled processor protects the integrity and privacy of the computation
-inside an enclave by isolating the enclave's code and data from the outside
-environment, including the operating system and hypervisor, and hardware
-devices attached to the system bus. At the same time, the SGX model remains
-compatible with the traditional software layering in the Intel architecture,
-where the OS kernel and hypervisor manage the computer's resources.
+An SGX-enabled processor protects the integrity and confidentiality of the
+computation inside an enclave by isolating the enclave's code and data from the
+outside environment, including the operating system and hypervisor, and
+hardware devices attached to the system bus. At the same time, the SGX model
+remains compatible with the traditional software layering in the Intel
+architecture, where the OS kernel and hypervisor manage the computer's
+resources.

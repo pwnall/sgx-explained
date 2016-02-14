@@ -2,13 +2,13 @@
 \label{sec:crypto_primitives}
 
 This section overviews the cryptosystems used by secure architectures. We are
-interested in cryptographic primitives that guarantee privacy, integrity, and
-freshness, and we treat these primitives as black boxes, focusing on their use
-in larger systems. \cite{katz2014crypto} covers the mathematics behind
-cryptography, while \cite{ferguson2011crypto} covers the topic of building
-systems out of cryptographic primitives. Tables \ref{fig:crypto_names}
-and \ref{fig:crypto_primitives} summarize the primitives covered in this
-section.
+interested in cryptographic primitives that guarantee confidentiality,
+integrity, and freshness, and we treat these primitives as black boxes,
+focusing on their use in larger systems. \cite{katz2014crypto} covers the
+mathematics behind cryptography, while \cite{ferguson2011crypto} covers the
+topic of building systems out of cryptographic primitives. Tables
+\ref{fig:crypto_names} and \ref{fig:crypto_primitives} summarize the primitives
+covered in this section.
 
 \begin{table}[hbt]
   \centering
@@ -16,7 +16,7 @@ section.
   \hline
   \textbf{Guarantee} & \textbf{Primitive} \\
   \hline
-  Privacy & \textit{Encryption} \\
+  Confidentiality & \textit{Encryption} \\
   \hline
   Integrity & \textit{MAC} / \textit{Signatures} \\
   \hline
@@ -36,8 +36,8 @@ section.
   \textbf{Guarantee} & \textbf{Symmetric} & \textbf{Asymmetric} \\
                      & \textbf{Keys} & \textbf{Keys} \\
   \hline
-  Privacy & AES-GCM, & RSA with \\
-          & AES-CTR  & PKCS \#1 v2.0 \\
+  Confidentiality & AES-GCM, & RSA with \\
+                  & AES-CTR  & PKCS \#1 v2.0 \\
   \hline
   Integrity & HMAC-SHA-2 & DSS-RSA, \\
             & AES-GCM & DSS-ECC \\
@@ -50,8 +50,8 @@ section.
   \label{fig:crypto_primitives}
 \end{table}
 
-A message whose \textit{privacy} is protected can be transmitted over an
-insecure medium without an adversary being able to obtain the information in
+A message whose \textit{confidentiality} is protected can be transmitted over
+an insecure medium without an adversary being able to obtain the information in
 the message. When \textit{integrity} protection is used, the receiver is
 guaranteed to either obtain a message that was transmitted by the sender, or to
 notice that an attacker tampered with the message's content.
@@ -68,21 +68,21 @@ wealthy investor who wishes to either \textsc{buy} or \textsc{sell} an item
 every day. Alice cannot trade directly, and must relay her orders to her
 broker, Bob, over a network connection owned by Eve.
 
-A communication system with privacy guarantees would prevent Eve from
+A communication system with confidentiality guarantees would prevent Eve from
 distinguishing between a \textsc{buy} and a \textsc{sell} order, as illustrated
-in Figure~\ref{fig:privacy_attack}. Without privacy, Eve would know Alice's
-order before it is placed by Bob, so Eve would presumably gain a financial
-advantage at Alice's expense.
+in Figure~\ref{fig:confidentiality_attack}. Without confidentiality, Eve would
+know Alice's order before it is placed by Bob, so Eve would presumably gain a
+financial advantage at Alice's expense.
 
 \begin{figure}[hbt]
   \centering
-  \includegraphics[width=85mm]{figures/privacy_attack.pdf}
+  \includegraphics[width=85mm]{figures/confidentiality_attack.pdf}
   \caption{
-    In a privacy attack, Eve sees the message sent by Alice to Bob and can
-    understand the information inside it. In this case, Eve can tell that the
-    message is a \textbf{buy} order, and not a \textbf{sell} order.
+    In a confidentiality attack, Eve sees the message sent by Alice to Bob and
+    can understand the information inside it. In this case, Eve can tell that
+    the message is a \textbf{buy} order, and not a \textbf{sell} order.
   }
-  \label{fig:privacy_attack}
+  \label{fig:confidentiality_attack}
 \end{figure}
 
 A system with integrity guarantees would prevent Eve from replacing Alice's
@@ -106,8 +106,8 @@ price.
 Last, a communication system that guarantees freshness would ensure that Eve
 cannot perform the replay attack pictured in Figure~\ref{fig:freshness_attack},
 where she would replace Alice's message with an older message. Without
-freshness guarantees, Eve could mount the following attack, which bypasses
-both privacy and integrity guarantees. Over a few days, Eve would copy and
+freshness guarantees, Eve could mount the following attack, which bypasses both
+confidentiality and integrity guarantees. Over a few days, Eve would copy and
 store Alice's messages from the network. When an order would reach Bob, Eve
 would observe the market and determine if the order was \textsc{buy} or
 \textsc{sell}. After building up a database of messages labeled \textsc{buy} or
@@ -149,8 +149,8 @@ bits of the temperature readings coming from a hardware sensor.
 establish a shared \textit{secret key}, which is usually referred to as ``the
 key''. Typically, one party executes the key generation algorithm and securely
 transmits the resulting key to the other parties, as illustrated in
-Figure~\ref{fig:symmetric_key_generation}. The channel used to
-distribute the key must provide privacy and integrity guarantees, which is a
+Figure~\ref{fig:symmetric_key_generation}. The channel used to distribute the
+key must provide confidentiality and integrity guarantees, which is a
 non-trivial logistical burden. The symmetric key primitives mentioned here do
 not make any assumption about the key, so the key generation algorithm simply
 grabs a fixed number of bits from the CSPRNG.
@@ -165,14 +165,14 @@ grabs a fixed number of bits from the CSPRNG.
   \label{fig:symmetric_key_generation}
 \end{figure}
 
-The defining feature of \textit{asymmetric key} cryptography is that it does not
-require a private channel for key distribution. Each party executes the key
+The defining feature of \textit{asymmetric key} cryptography is that it does
+not require a private channel for key distribution. Each party executes the key
 generation algorithm, which produces a \textit{private key} and a
-\textit{public key} that are mathematically related. Each party's public key
-is distributed to the other parties over a channel with integrity guarantees,
-as shown in Figure~\ref{fig:asymmetric_key_generation}.
-Asymmetric key primitives are more flexible than their symmetric counterparts,
-but are more complicated and consume more computational resources.
+\textit{public key} that are mathematically related. Each party's public key is
+distributed to the other parties over a channel with integrity guarantees, as
+shown in Figure~\ref{fig:asymmetric_key_generation}.  Asymmetric key primitives
+are more flexible than their symmetric counterparts, but are more complicated
+and consume more computational resources.
 
 \begin{figure}[hbt]
   \centering
@@ -187,8 +187,8 @@ but are more complicated and consume more computational resources.
 \end{figure}
 
 
-\HeadingLevelC{Privacy}
-\label{sec:privacy_crypto}
+\HeadingLevelC{Confidentiality}
+\label{sec:confidentiality_crypto}
 
 Many cryptosystems that provide integrity guarantees are built upon
 \textit{block ciphers} that operate on fixed-size message blocks. The sender
@@ -238,8 +238,8 @@ The most deployed asymmetric key block cipher is the
 variable key sizes, and 3072-bit key pairs are considered to provide the same
 security as 128-bit AES keys~\cite{fips2012keysize}.
 
-A block cipher does not necessarily guarantee privacy, when used  on its own.
-A noticeable issue is that in our previous example, a block cipher would
+A block cipher does not necessarily guarantee confidentiality, when used on its
+own.  A noticeable issue is that in our previous example, a block cipher would
 generate the same encrypted output for any of Alice's \textsc{buy} orders, as
 they all have the same content. Furthermore, each block cipher has its own
 assumptions that can lead to subtle vulnerabilities if the cipher is used
@@ -268,7 +268,7 @@ recommended~\cite{fips2001ctr} by the United States \textit{National Institute
 of Standards and Technology}~(NIST), which informs the NSA's requirements.
 Combining a block cipher, such as AES, with an operating mode, such as CTR,
 results in an encryption method, such as AES-CTR, which can be used to add
-privacy guarantees.
+confidentiality guarantees.
 
 In the asymmetric key setting, there is no concept equivalent to operating
 modes. Each block cipher has its own assumptions, and requires a specialized
@@ -413,9 +413,9 @@ in shared secret settings is HMAC-SHA, an HMAC function that uses SHA for
 hashing.
 
 \textit{Authenticated encryption}, which combines a block cipher with an
-operating mode that offers both privacy and integrity guarantees, is often an
-attractive alternative to HMAC. The most popular authenticated encryption
-operating mode is \textit{Galois/Counter operation
+operating mode that offers both confidentiality and integrity guarantees, is
+often an attractive alternative to HMAC. The most popular authenticated
+encryption operating mode is \textit{Galois/Counter operation
 mode}~(GCM)~\cite{mcgrew2004gcm}, which has earned NIST's
 recommendation~\cite{fips2017gcm} when combined with AES to form AES-GCM.
 

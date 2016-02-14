@@ -45,7 +45,7 @@ into a DRAM page outside the EPC and marks the EPC page as available, by
 zeroing the VALID field in the page's EPCM entry.
 
 The SGX design relies on symmetric key cryptograpy~\ref{sec:crypto_keys} to
-guarantee the privacy and integrity of the evicted EPC pages, and on
+guarantee the confidentiality and integrity of the evicted EPC pages, and on
 nonces~(\S~\ref{sec:freshness_crypto}) to guarantee the freshness of the pages
 brought back into the EPC. These nonces are stored in Version Arrays~(VAs),
 covered in \S~\ref{sec:sgx_va}, which are EPC pages dedicated to nonce storage.
@@ -284,7 +284,7 @@ via the \texttt{ELDU} instruction, as shown in Figure~\ref{fig:sgx_eviction}.
     evicted EPC page, a subset of the fields in the page's EPCM entry, a
     MAC tag, and a nonce. All this information is used by the \texttt{ELDB} or
     \texttt{ELDU} instruction to load the evicted page back into the EPC, with
-    privacy, integrity and freshness guarantees.
+    confidentiality, integrity and freshness guarantees.
   }
   \label{fig:sgx_eviction}
 \end{figure}
@@ -298,10 +298,10 @@ code~(MAC,~\S~\ref{sec:integrity_crypto}) tag. With the exception of the nonce,
 \texttt{EWB} writes its output in DRAM outside the PRM area, so the system
 software can choose to further evict it to disk.
 
-The EPC page contents is encrypted, to protect the privacy of the enclave's
-data while the page is stored in the untrusted DRAM outside the PRM range.
-Without the use of encryption, the system software could learn the contents of
-an EPC page by evicting it from the EPC.
+The EPC page contents is encrypted, to protect the confidentiality of the
+enclave's data while the page is stored in the untrusted DRAM outside the PRM
+range. Without the use of encryption, the system software could learn the
+contents of an EPC page by evicting it from the EPC.
 
 % Security Information (SECINFO): SDM S 38.11, S 38.11.{1,2}
 

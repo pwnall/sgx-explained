@@ -53,5 +53,5 @@ hypervisor). The OS communicates its allocation decisions to the SGX
 implementation via special ring 0 CPU instructions
 (\S~\ref{sec:sgx_enclave_lifecycle}). The OS can also evict EPC pages into
 untrusted DRAM and later load them back, using dedicated CPU instructions. SGX
-uses cryptographic protections to assure the privacy, integrity and freshness
-of the evicted EPC pages while they are stored in untrusted memory.
+uses cryptographic protections to assure the confidentiality, integrity and
+freshness of the evicted EPC pages while they are stored in untrusted memory.

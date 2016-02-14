@@ -35,10 +35,10 @@ cache lines on memory writes.
 The Bastion hypervisor allows the untrusted operating system to evict secure
 container pages. The evicted pages are encrypted, HMACed, and covered by a
 Merkle tree maintained by the hypervisor. Thus, the hypervisor ensures the
-privacy, authenticity, and freshness of the swapped pages. However, the ability
-to freely evict container pages allows a malicious OS to learn a container's
-memory accesses with page granularity. Furthermore, Bastion's threat model
-excludes cache timing attacks.
+confidentiality, authenticity, and freshness of the swapped pages. However, the
+ability to freely evict container pages allows a malicious OS to learn a
+container's memory accesses with page granularity. Furthermore, Bastion's
+threat model excludes cache timing attacks.
 
 Bastion does not trust the platform's firmware, and computes the cryptographic
 hash of the hypervisor after the firmware finishes playing its part in the
