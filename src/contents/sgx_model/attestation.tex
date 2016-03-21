@@ -42,14 +42,13 @@ any other enclave hosted by the same SGX-enabled CPU. This scheme, described in
 
 The SGX attestation key used by the Quoting Enclave does not exist at the time
 SGX-enabled processors leave the factory. The attestation key is provisioned
-later, using a largely undocumented process that is known to involve at least
-one other enclave issued by Intel, and two special
-\texttt{EGETKEY}~(~\S~\ref{sec:sgx_egetkey}) key types. The publicly available
-details of this process are summarized in \S~\ref{sec:sgx_quoting_enclave}.
+later, using a process that involves a Provisioning Enclave issued by Intel,
+and two special \texttt{EGETKEY}~(~\S~\ref{sec:sgx_egetkey}) key types. The
+publicly available details of this process are summarized in
+\S~\ref{sec:sgx_quoting_enclave}.
 
 The SGX Launch Enclave and EINITTOKEN structure will be discussed in
 \S~\ref{sec:sgx_launch_control}.
-
 
 \HeadingLevelC{Local Attestation}
 \label{sec:sgx_ereport}
@@ -161,11 +160,11 @@ also saved in the attestation report, but it is not covered by the MAC tag.
 \label{sec:sgx_quoting_enclave}
 
 The SDM paints a complete picture of the local attestation mechanism that was
-described in \S~\ref{sec:sgx_ereport}. In comparison, the remote attestation
-process, which includes the Quoting Enclave and the underlying keys, is
-shrouded in mystery. This section presents the information that can be gleaned
-from the SDM, from one~\cite{anati2013sgx} of the SGX papers, and from the ISCA
-2015 SGX tutorial~\cite{intel2015iscasgx}.
+described in \S~\ref{sec:sgx_ereport}. The remote attestation process, which
+includes the Quoting Enclave and the underlying keys, is covered at a high
+level in an Intel publication~\cite{johnson2016sgxprovisioning}. This section's
+contents is based on the SDM, on one~\cite{anati2013sgx} of the SGX papers, and
+on the ISCA 2015 SGX tutorial~\cite{intel2015iscasgx}.
 
 % Keys: SDM S 39.4.3
 % ISCA 2015 SGX Slides 104, 105, 106

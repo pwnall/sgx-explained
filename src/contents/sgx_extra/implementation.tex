@@ -80,7 +80,7 @@ Cache~(EPC,~\S~\ref{sec:sgx_epc}) against physical attacks.
 
 % ISCA 2015 SGX Slides 163-201
 
-The MEE is briefly described in the ISCA 2015 SGX
+The MEE was first briefly described in the ISCA 2015 SGX
 tutorial~\cite{intel2015iscasgx}. According to the information presented there,
 the MEE roughly follows the approach introduced by Aegis \cite{suh2003aegis}
 \cite{aegis_impl}, which relies on a variation of Merkle trees to provide the
@@ -89,7 +89,8 @@ guarantees~(\S~\ref{sec:crypto_primitives}). Unlike Aegis, the MEE uses
 non-standard cryptographic primitives that include a slightly modified AES
 operating mode~(\S~\ref{sec:confidentiality_crypto}) and a
 Carter-Wegman~\cite{carter1977mac, wegman1981mac}
-MAC~(\S~\ref{sec:integrity_crypto}) construction.
+MAC~(\S~\ref{sec:integrity_crypto}) construction. The MEE was further described
+in \cite{gueron2016sgxmee}.
 
 % ISCA 2015 SGX Slide 167
 
