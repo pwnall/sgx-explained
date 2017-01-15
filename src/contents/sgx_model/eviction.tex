@@ -108,7 +108,7 @@ to be evicted using a single IPI / TLB flush sequence.
 The TLB flush verification logic relies on a 1-bit EPCM entry field called
 BLOCKED. As shown in Figure~\ref{fig:sgx_page_states}, the VALID and BLOCKED
 fields yield three possible EPC page states. A page is \textit{free} when both
-bits are zero, \textit{in use} when VALID is zero and BLOCKED is one, and
+bits are zero, \textit{in use} when VALID is one and BLOCKED is zero, and
 \textit{blocked} when both bits are one.
 
 \begin{figure}[hbt]

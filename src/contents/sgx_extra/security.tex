@@ -531,13 +531,14 @@ would prevent cache timing attacks from targeting them. This measure would
 defeat the cache timing attacks described below, and would only be vulnerable
 to more sophisticated attacks that target the shared LLC, such as
 \cite{yarom2013llctiming, liu2015llctiming}. The description above assumes that
-multi-threading has been disabled, for the reasons explained in
+hyper-threading has been disabled, for the reasons explained in
 \S~\ref{sec:sgx_vs_privileged_sw_attacks}.
 
 Barring the additional protection measures described above, a tracing kernel
 can extend the attack described in \S~\ref{sec:sgx_vs_memory_mapping_attacks}
-with the steps outlined below to take advantage of cache timing and narrow down the
-addresses in an application's memory access trace to cache line granularity.
+with the steps outlined below to take advantage of cache timing and narrow down
+the addresses in an application's memory access trace to cache line
+granularity.
 
 Right before entering an enclave via \texttt{EENTER} or \texttt{ERESUME}, the
 kernel would issue \texttt{CLFLUSH} instructions to flush the enclave's code
